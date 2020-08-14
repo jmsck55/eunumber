@@ -767,11 +767,15 @@ public function ProtoMultInvExp(sequence guess, integer exp0, sequence den1, int
 	tmp = SubtractExp(two, 0, numArray, exp2, targetLength, radix) -- 2 - tmp
 -- ? tmp -- turns to one
 	numArray = tmp[1]
-	if equal(numArray, {1}) then
-		-- signal_solution_found = 1
-		return {guess, exp0}
-	end if
 	exp2 = tmp[2]
+	if length(numArray) = 1 then
+		if numArray[1] = 1 then
+			if exp2 = 0 then
+				-- signal_solution_found = 1
+				return {guess, exp0}
+			end if
+		end if
+	end if
 	ret = MultExp(guess, exp0, numArray, exp2, targetLength, radix) -- a * tmp
 -- ? ret -- turns to ans
 	return ret
