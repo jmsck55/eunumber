@@ -7,6 +7,7 @@
 --public include numio.e
 --public include nthroot.e
 --public include mymath.e
+--public include triangulation.e
 --public include myeuroots.e
 --public include mycomplex.e
 --public include quadraticequation.e
@@ -1245,7 +1246,6 @@ public function EunfMod(Eun num, Eun den)
 	return EunMult(EunFracPart(EunDivide(num, den)), den)
 end function
 
---end of file.
 --numio.e:
 
 -- Compression functions to store an "Eun" in memory:
@@ -1488,7 +1488,6 @@ public function ToEun(object s, AtomRadix radix = defaultRadix, PositiveScalar t
 	return s
 end function
 
---end of file.
 --nthroot.e
 
 -- NthRoot algorithm
@@ -1725,7 +1724,6 @@ public function EunSqrt(Eun n1)
 	return ret
 end function
 
---end of file.
 --mymath.e
 
 -- MyMath: My Additions to myEunumber.
@@ -2911,7 +2909,6 @@ end function
 
 --END TRIG FUNCTIONS.
 
---end of file.
 --triangulation.e
 
 -- Triangulation using two (2) points
@@ -3179,7 +3176,6 @@ public function FindRootExp(integer rid, sequence n1, integer exp1,
 	return {b,s,lookatIter}
 end function
 
---end of file.
 --mycomplex.e
 
 -- Complex number functions
@@ -3336,7 +3332,6 @@ public function ComplexQuadraticEquation(Complex a, Complex b, Complex c)
 	return s
 end function
 
---end of file.
 --quadraticEquation.e
 
 -- The Quadratic Equation
