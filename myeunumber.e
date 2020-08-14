@@ -22,7 +22,7 @@ include std/convert.e
 -- with trace
 
 public function GetVersion() -- revision number
-	return 117 -- new feature: "AtomRadix radix"
+	return 118 -- re-thought "MultInv()"
 end function
 
 -- MyEunumber
@@ -568,7 +568,8 @@ public function TrimTrailingZeros(sequence numArray)
 end function
 
 public function CarryRadixOnlyEx(sequence numArray, atom radix, integer way = 1)
-	integer b, i
+	atom b
+	integer i
 	i = length(numArray)
 	while i > 0 do
 		b = numArray[i]
@@ -587,7 +588,7 @@ public function CarryRadixOnlyEx(sequence numArray, atom radix, integer way = 1)
 	return numArray
 end function
 
-public function AdjustRound(sequence num, integer exponent, PositiveScalar targetLength, AtomRadix radix, Bool isMixed = TRUE)
+public function AdjustRound(sequence num, integer exponent, integer targetLength, AtomRadix radix, Bool isMixed = TRUE)
 	integer oldlen, roundTargetLength, rounded
 	atom halfRadix, f
 	sequence ret
@@ -640,7 +641,7 @@ public function AdjustRound(sequence num, integer exponent, PositiveScalar targe
 	end if
 	if length(num) > roundTargetLength then
 		f = num[roundTargetLength + 1]
-		if IsIntegerOdd(radix) then
+		if integer(radix) and IsIntegerOdd(radix) then
 			-- feature: support for odd radixes
 			for i = roundTargetLength + 2 to length(num) do
 				if f != halfRadix and f != -halfRadix then
@@ -740,22 +741,38 @@ end function
 -- Division and Mult Inverse:
 -- https://en.wikipedia.org/wiki/Newton%27s_method#Multiplicative_inverses_of_numbers_and_power_series
 
-public function ProtoMultInvExp(sequence n0, integer exp0, sequence n1, integer exp1, PositiveScalar targetLength, AtomRadix radix)
-	-- a = in0
-	-- n1 = in1
+constant two = {2}
+
+public function ProtoMultInvExp(sequence guess, integer exp0, sequence den1, integer exp1, PositiveScalar targetLength, AtomRadix radix)
+	-- a = guess
+	-- n1 = den1
 	-- f(a) = a * (2 - n1 * a)
-	sequence two, tmp, numArray, ret
+	--
+	-- Proof: for f(x) = 1/x
+	-- f(a) = 2a - n1*a^2
+	-- a = 2a - n1*a^2
+	-- 0 = a - n1*a^2
+	-- x = a
+	-- ax^2 + bx + c = 0
+	-- a=(- n1), b=1, c=0
+	-- x = (-b +-sqrt(b^2 - 4ac)) / (2a)
+	-- x = (-1 +-1) / (-2*n1)
+	-- x = 0, 1/n1
+	sequence tmp, numArray, ret
 	integer exp2
-	two = {2}
-	tmp = MultExp(n0, exp0, n1, exp1, targetLength, radix) -- n1 * a
+	tmp = MultExp(guess, exp0, den1, exp1, targetLength, radix) -- den1 * a
 -- ? tmp -- turns to one
 	numArray = tmp[1]
 	exp2 = tmp[2]
 	tmp = SubtractExp(two, 0, numArray, exp2, targetLength, radix) -- 2 - tmp
 -- ? tmp -- turns to one
 	numArray = tmp[1]
+	if equal(numArray, {1}) then
+		-- signal_solution_found = 1
+		return {guess, exp0}
+	end if
 	exp2 = tmp[2]
-	ret = MultExp(n0, exp0, numArray, exp2, targetLength, radix) -- a * tmp
+	ret = MultExp(guess, exp0, numArray, exp2, targetLength, radix) -- a * tmp
 -- ? ret -- turns to ans
 	return ret
 end function
@@ -763,7 +780,7 @@ end function
 
 public function IntToDigits(atom x, AtomRadix radix)
 	sequence numArray
-	integer a
+	atom a
 	numArray = {}
 	while x != 0 do
 		a = remainder(x, radix)
@@ -834,9 +851,9 @@ end ifdef
 	one = power(radix, len - 1 - overflowBy)
 	ans = RoundTowardsZero(one / denom)
 	guess = IntToDigits(ans, radix) -- works on negative numbers
-	tmp = AdjustRound(guess, exp1, sigDigits - 1, radix, FALSE)
-	tmp[3] = protoTargetLength
-	return tmp
+	-- tmp = AdjustRound(guess, exp1, sigDigits - 1, radix, FALSE)
+	-- tmp[3] = protoTargetLength
+	return NewEun(guess, exp1, protoTargetLength, radix)
 end function
 
 public procedure DefaultDivideByZeroCallBack()
@@ -848,7 +865,7 @@ public integer divideByZeroCallBackId = routine_id("DefaultDivideByZeroCallBack"
 
 public function MultInvExp(sequence den1, integer exp1, PositiveScalar targetLength, AtomRadix radix)
 	sequence guess, tmp, lookat
-	integer exp0, protoTargetLength, len, lastLen, moreAccuracy
+	integer exp0, protoTargetLength, moreAccuracy
 	if length(den1) = 0 then
 		lastIterCount = 1
 		divideByZeroFlag = 1
@@ -861,6 +878,14 @@ public function MultInvExp(sequence den1, integer exp1, PositiveScalar targetLen
 			return {den1, -exp1, targetLength, radix, 0}
 		end if
 	end if
+	exp0 = -exp1 - 1
+	tmp = GetGuessExp(den1, exp0, targetLength, radix)
+	guess = tmp[1]
+-- ifdef BITS64 then
+-- 	protoTargetLength = 18
+-- elsedef
+-- 	protoTargetLength = 15
+-- end ifdef
 	if multInvMoreAccuracy then
 		moreAccuracy = multInvMoreAccuracy
 	elsif calculationSpeed then
@@ -868,41 +893,36 @@ public function MultInvExp(sequence den1, integer exp1, PositiveScalar targetLen
 	else
 		moreAccuracy = 1
 	end if
-	targetLength += moreAccuracy
 	protoTargetLength = targetLength + moreAccuracy
-	exp0 = -exp1 - 1
-	tmp = GetGuessExp(den1, exp0, protoTargetLength, radix)
-	guess = tmp[1]
-	lastLen = length(guess)
 	lastIterCount = iter
 	for i = 1 to iter do
-		lookat = tmp
 		tmp = ProtoMultInvExp(guess, exp0, den1, exp1, protoTargetLength, radix)
 		guess = tmp[1]
+		-- ? {length(guess), protoTargetLength}
 		exp0 = tmp[2]
-		len = length(guess)
-		if len > targetLength then
-			len = targetLength
-		end if
-		if len = lastLen then
-			if exp0 = lookat[2] then
-				-- if equal(guess, lookat[1]) then -- for accuracy, not speed
-				if RangeEqual(guess, lookat[1], 1, len) then
-					--if lastIterCount = i - 1 then
-					--      exit -- break
-					--end if
-					lastIterCount = i
-					exit
-				end if
+		if length(tmp) = 2 then
+			-- solution found, go to more digits of accuracy
+			
+			-- it is equal for that targetLength
+			if protoTargetLength >= targetLength then
+				lastIterCount = i
+				exit
 			end if
+			-- protoTargetLength += targetLength
+			--here
 		end if
-		lastLen = len
 	end for
-	targetLength -= moreAccuracy
 	tmp = AdjustRound(guess, exp0, targetLength, radix, FALSE)
 	return tmp
 end function
 
+-- trace(1)
+-- sequence p
+-- adjustRound = 0
+-- p = MultInvExp({7}, 0, defaultTargetLength, 10)
+-- ? p
+-- ? length(p[1])
+-- abort(1)
 
 public function DivideExp(sequence num1, integer exp1, sequence den2, integer exp2, PositiveScalar targetLength, AtomRadix radix)
 	sequence tmp
@@ -1152,7 +1172,7 @@ public function EunIntPart(Eun n1)
 	return n1
 end function
 
-public function EunRoundSig(Eun n1, PositiveScalar sigDigits = defaultTargetLength)
+public function EunRoundSig(Eun n1, integer sigDigits = defaultTargetLength)
 	integer targetLength
 	targetLength = n1[3]
 	n1 = AdjustRound(n1[1], n1[2], sigDigits, n1[4])
@@ -1160,11 +1180,12 @@ public function EunRoundSig(Eun n1, PositiveScalar sigDigits = defaultTargetLeng
 	return n1
 end function
 
-public function EunRoundSignificantDigits(Eun n1, PositiveScalar sigDigits = defaultTargetLength)
+public function EunRoundSignificantDigits(Eun n1, integer sigDigits = defaultTargetLength)
 	return EunRoundSig(n1, sigDigits)
 end function
 
 public function EunRoundToInt(Eun n1) -- Round to nearest integer
+	-- trace(1)
 	if n1[2] < -1 then
 		n1[1] = {}
 		n1[2] = 0
