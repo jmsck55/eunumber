@@ -437,17 +437,17 @@ for i = 4 to length(cmd) do
 			stack:push(nums, ans)
 			
 			--? ans
-		case "Mult" then
+		case "Multiply" then
 			s = GetNums(2)
-			ans = EunMult(s[1],s[2])
+			ans = EunMultiply(s[1],s[2])
 			
 			-- EuNumber: put "ob" into stack "nums"
 			stack:push(nums, ans)
 			
 			--? ans
-		case "MultInv" then
+		case "MulticativeInverse" then
 			s = GetNums(1)
-			ans = EunMultInv(s[1])
+			ans = EunMultiplicativeInverse(s[1])
 			
 			-- EuNumber: put "ob" into stack "nums"
 			stack:push(nums, ans)

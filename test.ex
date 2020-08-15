@@ -10,7 +10,7 @@ trace(1)
 a = ToEun(2)
 b = EunSqrt(a)
 b = b[2]
-c = EunMult(b,b)
+c = EunMultiply(b,b)
 ? c
 adjustRound = 0
 c = EunRoundToInt(c)

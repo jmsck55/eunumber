@@ -36,6 +36,6 @@ puts(1, "Calculating Pi...This could take a few minutes...")
 puts(1, "\n")
 ? FindRootExp(myfunc2,ja[1],ja[2],jb[1],jb[2],defaultTargetLength,defaultRadix)
 puts(1,"Should be: Pi\n")
-? EunPI
+? GetPI()
 
 -- end of file.
