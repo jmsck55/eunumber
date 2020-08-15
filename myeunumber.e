@@ -23,7 +23,7 @@ include std/convert.e
 -- with trace
 
 public function GetVersion() -- revision number
-	return 120 -- re-thought "MultiplicativeInverse()"
+	return 121 -- re-thought "MultiplicativeInverse()"
 end function
 
 -- MyEunumber
@@ -910,10 +910,10 @@ public function MultiplicativeInverseExp(sequence den1, integer exp1, PositiveSc
 			-- solution found, go to more digits of accuracy
 			
 			-- it is equal for that targetLength
-			if protoTargetLength >= targetLength then
+			--if protoTargetLength >= targetLength then
 				lastIterCount = i
 				exit
-			end if
+			--end if
 			-- protoTargetLength += targetLength
 			--here
 		end if
