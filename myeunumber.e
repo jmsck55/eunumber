@@ -23,7 +23,7 @@ include std/convert.e
 -- with trace
 
 public function GetVersion() -- revision number
-	return 122 -- re-thought "MultiplicativeInverse()"
+	return 123 -- re-thought "MultiplicativeInverse()"
 end function
 
 -- MyEunumber
@@ -249,7 +249,7 @@ type round2(integer i)
 end type
 
 -- public for "doFile.ex":
-public round2 ROUND = ROUND_INF -- or you could try: ROUND_INF or any other ROUND method
+public round2 ROUND = ROUND_ZERO -- or you could try: ROUND_INF or any other ROUND method
 
 public procedure SetRound(integer i)
 	ROUND = i
@@ -766,7 +766,7 @@ public function ProtoMultiplicativeInverseExp(sequence guess, integer exp0, sequ
 -- ? tmp -- turns to one
 	numArray = tmp[1]
 	exp2 = tmp[2]
-	tmp = SubtractExp(two, 0, numArray, exp2, targetLength, radix) -- 2 - tmp
+	tmp = SubtractExp(two, 0, numArray, exp2, targetLength - 1, radix) -- 2 - tmp
 -- ? tmp -- turns to one
 	numArray = tmp[1]
 	exp2 = tmp[2]
@@ -922,7 +922,6 @@ public function MultiplicativeInverseExp(sequence den1, integer exp1, PositiveSc
 	return tmp
 end function
 
--- trace(1)
 -- sequence p
 -- adjustRound = 0
 -- p = MultiplicativeInverseExp({7}, 0, defaultTargetLength, 10)
@@ -1199,7 +1198,6 @@ public function EunRoundSignificantDigits(Eun n1, integer sigDigits = defaultTar
 end function
 
 public function EunRoundToInt(Eun n1) -- Round to nearest integer
-	-- trace(1)
 	if n1[2] < -1 then
 		n1[1] = {}
 		n1[2] = 0
@@ -2077,7 +2075,7 @@ public function EunExp(Eun n1)
 	-- get the whole and fractional parts of the number:
 	sequence num, frac, whole, decimal, ret
 	integer exp1, size, more, isNeg
-	more = n1[3] -- this number may need to be changed, has to be zero or greater
+	more = 0 -- this number may need to be changed, has to be zero or greater
 	exp1 = n1[2]
 	size = exp1 + 1
 	num = n1[1]
@@ -2124,8 +2122,15 @@ end function
 
 -- ? EunExp(NewEun({-2}, 0))
 
-public integer ExpExpFastIter = 100 -- try to keep this number small.
---public integer ExpExpFastCount = -1
+public integer ExpExpFastIter = 1 -- try to keep this number small.
+
+public function GetExpFastIter()
+	return ExpExpFastIter
+end function
+
+public procedure SetExpFastIter(integer i)
+	ExpExpFastIter = i
+end procedure
 
 public function ExpExpFast(sequence x1, integer exp1, sequence y2, integer exp2, PositiveScalar targetLength, AtomRadix radix)
 -- e^(x/y) = 1 + 2x/(2y-x+x^2/(6y+x^2/(10y+x^2/(14y+x^2/(18y+x^2/(22y+...
@@ -2162,7 +2167,18 @@ public function EunExpFast(Eun numerator, Eun denominator)
 	else
 		targetLength = denominator[3]
 	end if
-	return ExpExpFast(numerator[1], numerator[2], denominator[1], denominator[2], targetLength, numerator[4])
+	object Tmp0, Tmp1
+	Tmp1 = ExpExpFast(numerator[1], numerator[2], denominator[1], denominator[2], targetLength, numerator[4])
+	while 1 do
+		Tmp0 = Tmp1
+		ExpExpFastIter *= 2
+		Tmp1 = ExpExpFast(numerator[1], numerator[2], denominator[1], denominator[2], targetLength, numerator[4])
+		if EunCompare(Tmp0, Tmp1) = 0 then
+			exit
+		end if
+	end while
+	ExpExpFastIter /= 2
+	return Tmp1
 end function
 
 public PositiveInteger logMoreAccuracy = 0 -- if 0, then use calculationSpeed
@@ -2179,10 +2195,9 @@ public integer logIterCount = -1
 
 public function LogExp(sequence n1, integer exp1, sequence guess, integer exp0, PositiveScalar targetLength, AtomRadix radix)
 	-- ln(x) = y[n] = y[n-1] + 2 * (x - exp(y[n-1]))/(x + exp(y[n-1]))
-	sequence expY, xMinus, xPlus, tmp, lookat
+	sequence expY, xMinus, xPlus, tmp, lookat, one
 	integer protoTargetLength, lastLen, len, moreAccuracy
 	lastLen = length(guess)
-	guess = {guess, exp0}
 	if logMoreAccuracy then
 		moreAccuracy = logMoreAccuracy
 	elsif calculationSpeed then
@@ -2192,12 +2207,14 @@ public function LogExp(sequence n1, integer exp1, sequence guess, integer exp0, 
 	end if
 	targetLength += moreAccuracy
 	protoTargetLength = targetLength + moreAccuracy
+	guess = NewEun(guess, exp0, protoTargetLength, radix)
+	one = NewEun({1}, 0, protoTargetLength, radix)
 	logIterCount = logIter
 	for i = 1 to logIter do
 		lookat = guess
 		-- guess = guess + 2 * (num1 - exp(guess))/(num1 + exp(guess))
-		--expY = ExpExpFast(guess[1], guess[2], {1}, 0, protoTargetLength, radix)
-		expY = EunExp({guess[1], guess[2], protoTargetLength, radix, 0})
+		expY = EunExpFast(guess, one)
+		--expY = EunExp({guess[1], guess[2], protoTargetLength, radix, 0})
 		xPlus = AddExp(n1, exp1, expY[1], expY[2], protoTargetLength, radix)
 		xMinus = AddExp(n1, exp1, Negate(expY[1]), expY[2], protoTargetLength, radix)
 		tmp = DivideExp(xMinus[1], xMinus[2], xPlus[1], xPlus[2], protoTargetLength, radix)
@@ -3430,12 +3447,8 @@ public function GetMoreAccurate(Eun value1, Eun value2)
 -- 3. Then Add the rounded result to the one with less precision.
 -- 4. Return it as your result.
 --
+-- value2 should be more accurate than value1
 	object tmp, tmp1, tmp2
-	if EunCompare(value1, value2) = 1 then
-		tmp = value1
-		value1 = value2
-		value2 = tmp
-	end if
 	tmp1 = adjustRound
 	adjustRound = 0
 	tmp = EunSubtract(value2, value1)
