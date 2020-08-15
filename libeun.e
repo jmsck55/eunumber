@@ -23,7 +23,7 @@ include classfile.e as complex
 include myeunumber.e as my
 
 public function Version()
-	return 30 -- Need to debug with Wrapper "Stub" (myeun.h)
+	return 31 -- Need to debug with Wrapper "Stub" (myeun.h)
 end function
 
 public function UsingHowManyBits()
@@ -781,7 +781,7 @@ function Func1Exp(sequence n1, integer exp1, integer targetLength, integer radix
 	DeleteEun(ret)
 	return n2
 end function
-integer rid = routine_id("func1")
+integer rid = routine_id("Func1Exp")
 
 public function FindRootExp(integer pointer_callback_func1, integer array_n1, integer exp1, 
 		integer array_n2, integer exp2, integer len, integer radix)
@@ -884,6 +884,43 @@ public function EunQuadraticEquation(integer eun_dst1, integer eun_dst2, integer
 		complex:replace_object(complex_dst2, ret[2])
 		return 2 -- for complex's being stored
 	end if
+end function
+
+pubic function GetMoreAccurate(integer eun_n1, integer eun_n2)
+	return my:GetMoreAccuracy(GetEun(eun_n1), GetEun(eun_n2))
+end function
+
+public function GetMoreAccurateFuncDigits()
+	return my:GetMoreAccurateFuncDigits()
+end function
+public procedure SetMoreAccurateFuncDigits(integer n)
+	my:SetMoreAccurateFuncDigits(n)
+end procdure
+
+integer cfuncMoreAccurate
+function FuncMoreAccurate(Eun n1)
+	integer arrayId, ret
+	sequence n2
+	arrayId = numArray:new_object_from_data(n1[1])
+	ret = c_func(cfuncMoreAccurate, {arrayId, n1[2], n1[3], n1[4]})
+	DeleteNumArray(arrayId)
+	n2 = GetEun(ret)
+	DeleteEun(ret)
+	return n2
+end function
+integer ridMoreAccurate = routine_id("FuncMoreAccurate")
+
+public function GetMoreAccurateFunc(integer pointer_callback_func1, integer eun_n1)
+	atom maFunc1
+	sequence s
+	maFunc1 = pointers:get_data_from_object(pointer_callback_func1)
+ifdef BITS64 then
+	cfuncMoreAccurate = define_c_func("", maFunc1, {C_LONGLONG, C_LONGLONG, C_LONGLONG, C_LONGLONG}, C_LONGLONG)
+elsedef
+	cfuncMoreAccurate = define_c_func("", maFunc1, {C_INT, C_INT, C_INT, C_INT}, C_INT)
+end ifdef
+	s = my:GetMoreAccurateFunc(ridMoreAccurate, GetEun(eun_n1))
+	return NewFromEun(s)
 end function
 
 -- Added functions:

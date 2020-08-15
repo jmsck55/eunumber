@@ -28,4 +28,6 @@ adjustRound = tmpAdjustRound
 ? EunCompare(RemoveLastDigits(b), b)
 ? GetEqualLength()
 
+? GetMoreAccurate(ToEun("2.0004"), ToEun("1.998"))
+
 --End-of-file.

@@ -23,7 +23,7 @@ include std/convert.e
 -- with trace
 
 public function GetVersion() -- revision number
-	return 121 -- re-thought "MultiplicativeInverse()"
+	return 122 -- re-thought "MultiplicativeInverse()"
 end function
 
 -- MyEunumber
@@ -3418,5 +3418,56 @@ end function
 public function ComplexAdjustRound(Complex c1, integer adjustBy = -1)
 	return {EunAdjustRound(c1[1], adjustBy), EunAdjustRound(c1[2], adjustBy)}
 end function
+
+
+public function GetMoreAccurate(Eun value1, Eun value2)
+--
+-- About: GetMoreAccurate()
+--
+-- 1. Take two calculations (of the same equation), one with more precision,
+--    Subtract the one with less precision from the one with more precision.
+-- 2. Round the result to one (or two) digit(s).
+-- 3. Then Add the rounded result to the one with less precision.
+-- 4. Return it as your result.
+--
+	object tmp, tmp1, tmp2
+	if EunCompare(value1, value2) = 1 then
+		tmp = value1
+		value1 = value2
+		value2 = tmp
+	end if
+	tmp1 = adjustRound
+	adjustRound = 0
+	tmp = EunSubtract(value2, value1)
+	tmp2 = tmp[3]
+	tmp[3] = 1 -- using just one digit
+	tmp = EunAdjustRound(tmp)
+	tmp[3] = tmp2
+	tmp = EunAdd(tmp, value1)
+	adjustRound = tmp1
+	return tmp
+end function
+
+integer MoreAccurateFuncDigits = 1
+public function GetMoreAccurateFuncDigits()
+	return MoreAccurateFuncDigits
+end function
+public procedure SetMoreAccurateFuncDigits(integer n)
+	MoreAccurateFuncDigits = n
+end procedure
+
+public function GetMoreAccurateFunc(integer func1, Eun value0)
+	Eun value1, value2, ret
+	value1 = call_func(func1, {value0})
+	value1[3] += MoreAccurateFuncDigits
+	value0[3] += MoreAccurateFuncDigits
+	value2 = call_func(func1, {value0})
+	ret = GetMoreAccurate(value1, value2)
+	ret[3] -= MoreAccurateFuncDigits
+	ret = EunAdjustRound(ret)
+	return ret
+end function
+
+
 
 --end of file.
