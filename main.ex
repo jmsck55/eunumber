@@ -14,7 +14,7 @@ sequence a, b, c, d, mypi
 
 puts(1, "Example: sqrt(PI)\n")
 
-mypi = EunPI
+mypi = GetPI()
 
 puts(1, ToString(mypi) & "\n")
 
@@ -33,7 +33,7 @@ defaultRadix = 10
 defaultTargetLength = 10
 
 trace(1)
-mypi = EunMult(ToEun(4), EunArcTan(ToEun(1)))
+mypi = EunMultiply(ToEun(4), EunArcTan(ToEun(1)))
 
 -- pos = get_position()
 -- position(pos[1], 1)

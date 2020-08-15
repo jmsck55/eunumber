@@ -23,7 +23,7 @@ include classfile.e as complex
 include myeunumber.e as my
 
 public function Version()
-	return 28 -- Need to debug with Wrapper "Stub" (myeun.h)
+	return 29 -- Need to debug with Wrapper "Stub" (myeun.h)
 end function
 
 public function UsingHowManyBits()
@@ -296,12 +296,12 @@ public function GetRoundToNearestOption()
 	return my:GetRoundToNearestOption()
 end function
 
-public procedure SetMultInvMoreAccuracy(integer i)
-	my:SetMultInvMoreAccuracy(i)
+public procedure SetMultiplicativeInverseMoreAccuracy(integer i)
+	my:SetMultiplicativeInverseMoreAccuracy(i)
 end procedure
 
-public function GetMultInvMoreAccuracy()
-	return my:GetMultInvMoreAccuracy()
+public function GetMultiplicativeInverseMoreAccuracy()
+	return my:GetMultiplicativeInverseMoreAccuracy()
 end function
 
 public procedure SetNthRootMoreAccuracy(integer i)
@@ -402,8 +402,8 @@ public function ConvertRadix(integer num, integer fromRadix, integer toRadix)
 	return numArray:new_object_from_data(my:ConvertRadix(numArray:get_data_from_object(num), fromRadix, toRadix))
 end function
 
-public function Mult(integer n1, integer n2)
-	return numArray:new_object_from_data(my:Mult(numArray:get_data_from_object(n1), numArray:get_data_from_object(n2)))
+public function Multiply(integer n1, integer n2)
+	return numArray:new_object_from_data(my:Multiply(numArray:get_data_from_object(n1), numArray:get_data_from_object(n2)))
 end function
 
 public function IsNegative(integer numId)
@@ -434,8 +434,8 @@ public function AdjustRound(integer num, integer exponent, integer targetLength,
 	return NewFromEun(my:AdjustRound(numArray:get_data_from_object(num), exponent, targetLength, radix))
 end function
 
-public function MultExp(integer n1, integer exp1, integer n2, integer exp2, integer targetLength, integer radix)
-	return NewFromEun(my:MultExp(numArray:get_data_from_object(n1), exp1, numArray:get_data_from_object(n2), exp2, targetLength, radix))
+public function MultiplyExp(integer n1, integer exp1, integer n2, integer exp2, integer targetLength, integer radix)
+	return NewFromEun(my:MultiplyExp(numArray:get_data_from_object(n1), exp1, numArray:get_data_from_object(n2), exp2, targetLength, radix))
 end function
 
 public function AddExp(integer n1, integer exp1, integer n2, integer exp2, integer targetLength, integer radix)
@@ -446,8 +446,8 @@ public function SubtractExp(integer n1, integer exp1, integer n2, integer exp2, 
 	return NewFromEun(my:SubtractExp(numArray:get_data_from_object(n1), exp1, numArray:get_data_from_object(n2), exp2, targetLength, radix))
 end function
 
-public function MultInvExp(integer den1, integer exp1, integer targetLength, integer radix)
-	return NewFromEun(my:MultInvExp(numArray:get_data_from_object(den1), exp1, targetLength, radix))
+public function MultiplicativeInverseExp(integer den1, integer exp1, integer targetLength, integer radix)
+	return NewFromEun(my:MultiplicativeInverseExp(numArray:get_data_from_object(den1), exp1, targetLength, radix))
 end function
 
 public function DivideExp(integer num1, integer exp1, integer den2, integer exp2, integer targetLength, integer radix)
@@ -464,8 +464,8 @@ public function EunAdjustRound(integer n1, integer adjustBy)
 	return NewFromEun(my:EunAdjustRound(GetEun(n1), adjustBy))
 end function
 
-public function EunMult(integer n1, integer n2)
-	return NewFromEun(my:EunMult(GetEun(n1), GetEun(n2)))
+public function EunMultiply(integer n1, integer n2)
+	return NewFromEun(my:EunMultiply(GetEun(n1), GetEun(n2)))
 end function
 
 public function EunAdd(integer n1, integer n2)
@@ -484,8 +484,8 @@ public function EunSubtract(integer n1, integer n2)
 	return NewFromEun(my:EunSubtract(GetEun(n1), GetEun(n2)))
 end function
 
-public function EunMultInv(integer n1)
-	return NewFromEun(my:EunMultInv(GetEun(n1)))
+public function EunMultiplicativeInverse(integer n1)
+	return NewFromEun(my:EunMultiplicativeInverse(GetEun(n1)))
 end function
 
 public function EunDivide(integer n1, integer n2)
@@ -823,15 +823,15 @@ public function ComplexSubtract(integer complex_a, integer complex_b)
 	return NewFromComplex(my:ComplexSubtract(GetComplex(complex_a), GetComplex(complex_b)))
 end function
 
-public function ComplexMult(integer complex_a, integer complex_b)
+public function ComplexMultiply(integer complex_a, integer complex_b)
 	-- n1 = (a+bi)
 	-- n2 = (c+di)
 	-- (a+bi)(c+di) <=> ac + adi + bci + bdii
 	-- <=> (ac - bd) + (ad + bc)i
-	return NewFromComplex(my:ComplexMult(GetComplex(complex_a), GetComplex(complex_b)))
+	return NewFromComplex(my:ComplexMultiply(GetComplex(complex_a), GetComplex(complex_b)))
 end function
 
-public function ComplexMultInv(integer complex_a)
+public function ComplexMultiplicativeInverse(integer complex_a)
 	-- Eun a, b, c
 	-- (a+bi)(a-bi) <=> a*a + b*b
 	-- n2 = (a+bi)
@@ -841,7 +841,7 @@ public function ComplexMultInv(integer complex_a)
 	-- 1 / n2 <=> (a-bi) / (a*a + b*b)
 	-- <=> (a / (a*a + b*b)) - (b / (a*a + b*b))i
 	-- <=> (a / c) - (b / c)i
-	return NewFromComplex(my:ComplexMultInv(GetComplex(complex_a)))
+	return NewFromComplex(my:ComplexMultiplicativeInverse(GetComplex(complex_a)))
 end function
 
 public function ComplexDivide(integer complex_a, integer complex_b)

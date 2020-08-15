@@ -42,7 +42,7 @@ while EunCompare(mypi, Sum) do
 	trace(1)
 	mypi = Sum
 	
-	denom = EunMult(EunMult(ToEun(count - 1), ToEun(count)), ToEun(count + 1))
+	denom = EunMultiply(EunMultiply(ToEun(count - 1), ToEun(count)), ToEun(count + 1))
 	
 	ans = EunDivide(numerator, denom)
 	
@@ -65,7 +65,7 @@ puts(1, ToString(mypi) & "\n")
 
 puts(1, "Another calculation of PI using: 4 * arctan(1)\n")
 
-mypi = EunMult(ToEun(4), EunArcTan(ToEun(1)))
+mypi = EunMultiply(ToEun(4), EunArcTan(ToEun(1)))
 puts(1, ToString(mypi) & "\n")
 ? length(mypi[1])
 

@@ -11,7 +11,7 @@ include std/get.e
 
 include my.e
 
-puts(1, "EuNumber Calculator [v0.9.4]\n")
+puts(1, "EuNumber Calculator [v0.9.5]\n")
 
 defaultRadix = MAX_RADIX10
 
@@ -388,7 +388,7 @@ procedure Operations()
 					c1 = EunConvert(c1, defaultRadix, defaultTargetLength)
 					c2 = EunConvert(c2, defaultRadix, defaultTargetLength)
 				end if
-				st = ComplexMult({n1, c1}, {n2, c2})
+				st = ComplexMultiply({n1, c1}, {n2, c2})
 				n1 = st[1]
 				c1 = st[2]
 				puts(1, "SUCCESS!\n")
@@ -423,7 +423,7 @@ procedure Operations()
 			puts(1, "SUCCESS!\n")
 		case 'i' then
 			puts(1, "MultiplicativeInverse:\n")
-			st = ComplexMultInv({n1, c1})
+			st = ComplexMultiplicativeInverse({n1, c1})
 			n1 = st[1]
 			c1 = st[2]
 			puts(1, "SUCCESS!\n")
