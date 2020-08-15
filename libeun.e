@@ -886,8 +886,8 @@ public function EunQuadraticEquation(integer eun_dst1, integer eun_dst2, integer
 	end if
 end function
 
-pubic function GetMoreAccurate(integer eun_n1, integer eun_n2)
-	return my:GetMoreAccuracy(GetEun(eun_n1), GetEun(eun_n2))
+public function GetMoreAccurate(integer eun_n1, integer eun_n2)
+	return my:GetMoreAccurate(GetEun(eun_n1), GetEun(eun_n2))
 end function
 
 public function GetMoreAccurateFuncDigits()
@@ -895,7 +895,7 @@ public function GetMoreAccurateFuncDigits()
 end function
 public procedure SetMoreAccurateFuncDigits(integer n)
 	my:SetMoreAccurateFuncDigits(n)
-end procdure
+end procedure
 
 integer cfuncMoreAccurate
 function FuncMoreAccurate(Eun n1)
