@@ -23,7 +23,7 @@ include std/convert.e
 -- with trace
 
 public function GetVersion() -- revision number
-	return 123 -- re-thought "MultiplicativeInverse()"
+	return 124 -- re-thought "MultiplicativeInverse()"
 end function
 
 -- MyEunumber
@@ -3469,12 +3469,14 @@ public procedure SetMoreAccurateFuncDigits(integer n)
 	MoreAccurateFuncDigits = n
 end procedure
 
-public function GetMoreAccurateFunc(integer func1, Eun value0)
+public function GetMoreAccurateFunc(integer func1, sequence args)
 	Eun value1, value2, ret
-	value1 = call_func(func1, {value0})
+	value1 = call_func(func1, args)
 	value1[3] += MoreAccurateFuncDigits
-	value0[3] += MoreAccurateFuncDigits
-	value2 = call_func(func1, {value0})
+	for i = 1 to length(args) do
+		args[i][3] += MoreAccurateFuncDigits
+	end for
+	value2 = call_func(func1, args)
 	ret = GetMoreAccurate(value1, value2)
 	ret[3] -= MoreAccurateFuncDigits
 	ret = EunAdjustRound(ret)

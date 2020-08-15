@@ -46,6 +46,6 @@ a[3] -= 10
 
 ? myfunc(a)
 trace(1)
-? GetMoreAccurateFunc(routine_id("myfunc"), a)
+? GetMoreAccurateFunc(routine_id("myfunc"), {a})
 
 --End-of-file.

@@ -23,7 +23,7 @@ include classfile.e as complex
 include myeunumber.e as my
 
 public function Version()
-	return 31 -- Need to debug with Wrapper "Stub" (myeun.h)
+	return 32 -- Need to debug with Wrapper "Stub" (myeun.h)
 end function
 
 public function UsingHowManyBits()
@@ -886,43 +886,6 @@ public function EunQuadraticEquation(integer eun_dst1, integer eun_dst2, integer
 	end if
 end function
 
-public function GetMoreAccurate(integer eun_n1, integer eun_n2)
-	return my:GetMoreAccurate(GetEun(eun_n1), GetEun(eun_n2))
-end function
-
-public function GetMoreAccurateFuncDigits()
-	return my:GetMoreAccurateFuncDigits()
-end function
-public procedure SetMoreAccurateFuncDigits(integer n)
-	my:SetMoreAccurateFuncDigits(n)
-end procedure
-
-integer cfuncMoreAccurate
-function FuncMoreAccurate(Eun n1)
-	integer arrayId, ret
-	sequence n2
-	arrayId = numArray:new_object_from_data(n1[1])
-	ret = c_func(cfuncMoreAccurate, {arrayId, n1[2], n1[3], n1[4]})
-	DeleteNumArray(arrayId)
-	n2 = GetEun(ret)
-	DeleteEun(ret)
-	return n2
-end function
-integer ridMoreAccurate = routine_id("FuncMoreAccurate")
-
-public function GetMoreAccurateFunc(integer pointer_callback_func1, integer eun_n1)
-	atom maFunc1
-	sequence s
-	maFunc1 = pointers:get_data_from_object(pointer_callback_func1)
-ifdef BITS64 then
-	cfuncMoreAccurate = define_c_func("", maFunc1, {C_LONGLONG, C_LONGLONG, C_LONGLONG, C_LONGLONG}, C_LONGLONG)
-elsedef
-	cfuncMoreAccurate = define_c_func("", maFunc1, {C_INT, C_INT, C_INT, C_INT}, C_INT)
-end ifdef
-	s = my:GetMoreAccurateFunc(ridMoreAccurate, GetEun(eun_n1))
-	return NewFromEun(s)
-end function
-
 -- Added functions:
 
 -- Statistics
@@ -1091,6 +1054,46 @@ end ifdef
 	poke4(ma, s)
 	return pointers:new_object_from_data(ma)
 end function
+
+-- "Accurate" functions:
+
+public function GetMoreAccurate(integer eun_n1, integer eun_n2)
+	return my:GetMoreAccurate(GetEun(eun_n1), GetEun(eun_n2))
+end function
+
+public function GetMoreAccurateFuncDigits()
+	return my:GetMoreAccurateFuncDigits()
+end function
+public procedure SetMoreAccurateFuncDigits(integer n)
+	my:SetMoreAccurateFuncDigits(n)
+end procedure
+
+integer cfuncMoreAccurate
+function FuncMoreAccurate(sequence args)
+	integer ret
+	sequence n1
+	ret = c_func(cfuncMoreAccurate, args)
+	n1 = GetEun(ret)
+	DeleteEun(ret)
+	return n1
+end function
+integer ridMoreAccurate = routine_id("FuncMoreAccurate")
+
+public function GetMoreAccurateFunc(integer pointer_callback_func1, integer pointer_to_ids_null_terminating_array)
+	atom maFunc1, ma
+	sequence s
+	maFunc1 = pointers:get_data_from_object(pointer_callback_func1)
+	ma = pointers:get_data_from_object(pointer_to_ids_null_terminating_array)
+	s = get4s_from_null_terminating_array(ma)
+ifdef BITS64 then
+	cfuncMoreAccurate = define_c_func("", maFunc1, {C_LONGLONG, C_LONGLONG, C_LONGLONG, C_LONGLONG}, C_LONGLONG)
+elsedef
+	cfuncMoreAccurate = define_c_func("", maFunc1, {C_INT, C_INT, C_INT, C_INT}, C_INT)
+end ifdef
+	s = my:GetMoreAccurateFunc(ridMoreAccurate, {s})
+	return NewFromEun(s)
+end function
+
 
 
 -- end of file.
