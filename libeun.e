@@ -23,7 +23,7 @@ include classfile.e as complex
 include myeunumber.e as my
 
 public function Version()
-	return 29 -- Need to debug with Wrapper "Stub" (myeun.h)
+	return 30 -- Need to debug with Wrapper "Stub" (myeun.h)
 end function
 
 public function UsingHowManyBits()
@@ -498,6 +498,10 @@ end function
 
 public function CompareExp(sequence n1, integer exp1, sequence n2, integer exp2)
 	return my:CompareExp(numArray:get_data_from_object(n1), exp1, numArray:get_data_from_object(n2), exp2)
+end function
+
+public function GetEqualLength()
+	return my:GetEqualLength()
 end function
 
 public function EunCompare(integer n1, integer n2)

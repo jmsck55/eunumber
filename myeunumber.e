@@ -23,7 +23,7 @@ include std/convert.e
 -- with trace
 
 public function GetVersion() -- revision number
-	return 119 -- re-thought "MultiplicativeInverse()"
+	return 120 -- re-thought "MultiplicativeInverse()"
 end function
 
 -- MyEunumber
@@ -92,6 +92,7 @@ end function
 -- EunConvert
 
 -- CompareExp
+-- GetEqualLength
 -- EunCompare
 -- EunReverse -- reverse endian
 -- EunFracPart -- returns the fraction part (no Rounding)
@@ -1085,11 +1086,14 @@ public function EunConvert(Eun n1, atom toRadix, integer targetLength)
 	return ConvertExp(n1[1], n1[2], targetLength, n1[4], toRadix)
 end function
 
+integer equalLength = 0
+
 public function CompareExp(sequence n1, integer exp1, sequence n2, integer exp2)
 -- It doesn't look at targetLength or radix, so they should be the same.
 -- still fixing, Fixed for negative values.
 	integer minlen, f
 	-- Case of zero (0)
+	equalLength = 0
 	if length(n1) = 0 then
 		if length(n2) = 0 then
 			return 0
@@ -1119,10 +1123,10 @@ public function CompareExp(sequence n1, integer exp1, sequence n2, integer exp2)
 	end if
 	-- exponents and signs are the same:
 	if length(n1) > length(n2) then
-		n2 = n2 & {0}
+		n2 = n2 & {0} -- use zero as "sentinel" last digit
 		minlen = length(n2)
 	elsif length(n1) < length(n2) then
-		n1 = n1 & {0}
+		n1 = n1 & {0} -- use zero as "sentinel" last digit
 		minlen = length(n1)
 	else
 		minlen = length(n1)
@@ -1132,8 +1136,13 @@ public function CompareExp(sequence n1, integer exp1, sequence n2, integer exp2)
 		if f then
 			return f
 		end if
+		equalLength += 1
 	end for
 	return 0 -- numbers are equal
+end function
+
+public function GetEqualLength()
+	return equalLength
 end function
 
 public function EunCompare(Eun n1, Eun n2)
