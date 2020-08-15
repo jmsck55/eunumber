@@ -249,7 +249,7 @@ type round2(integer i)
 end type
 
 -- public for "doFile.ex":
-public round2 ROUND = ROUND_ZERO -- or you could try: ROUND_INF or any other ROUND method
+public round2 ROUND = ROUND_INF -- or you could try: ROUND_INF or any other ROUND method
 
 public procedure SetRound(integer i)
 	ROUND = i
