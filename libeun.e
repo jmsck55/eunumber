@@ -10,14 +10,9 @@
 
 -- NOTE: Don't mix ids of different types.
 
-include machine.e
+include allocate.e
 include dll.e
--- include std/machine.e
--- include std/dll.e
 include std/pretty.e
--- include std/search.e
--- include std/sort.e
--- include std/stats.e
 include classfile.e as pointers
 include classfile.e as numArray
 include classfile.e as eun
@@ -25,7 +20,7 @@ include classfile.e as complex
 include myeunumber.e as my
 
 public function Version()
-	return 33 -- Need to debug with Wrapper "Stub" (myeun.h)
+	return 34 -- Need to debug with Wrapper "Stub" (myeun.h)
 end function
 
 public function UsingHowManyBits()
@@ -55,10 +50,10 @@ end procedure
 public function NewPointer()
 -- In case you don't want to register one of your pointers, it will allocate one of its own for you (server-side).
 ifdef BITS64 then
-	atom pointer = allocate(8)
+	atom pointer = allocate_data(8)
 	poke8(pointer, 0)
 elsedef
-	atom pointer = allocate(4)
+	atom pointer = allocate_data(4)
 	poke4(pointer, 0)
 end ifdef
 	return pointers:new_object_from_data(pointer)
@@ -90,11 +85,11 @@ end function
 public function NewCIntArrayFromNumArray(integer pointer_dstId, integer idOfNumArray)
 	sequence num = numArray:get_data_from_object(idOfNumArray)
 ifdef BITS64 then
-	atom ma = allocate(length(num) * 8) -- 64bit integers are 8 bytes in size
+	atom ma = allocate_data(length(num) * 8) -- 64bit integers are 8 bytes in size
 	poke8(ma, num)
 	poke8(pointers:get_data_from_object(pointer_dstId), ma)
 elsedef
-	atom ma = allocate(length(num) * 4) -- 32bit integers are 4 bytes in size
+	atom ma = allocate_data(length(num) * 4) -- 32bit integers are 4 bytes in size
 	poke4(ma, num)
 	poke4(pointers:get_data_from_object(pointer_dstId), ma)
 end ifdef
@@ -1229,9 +1224,9 @@ public function EunMode(integer pointer_to_ids_null_terminating_array)
 	end for
 	s = s & {0}
 ifdef BITS64 then
-	ma = allocate(length(s) * 8)
+	ma = allocate_data(length(s) * 8)
 elsedef
-	ma = allocate(length(s) * 4)
+	ma = allocate_data(length(s) * 4)
 end ifdef
 	poke4(ma, s)
 	return pointers:new_object_from_data(ma)
@@ -1250,9 +1245,9 @@ public function ComplexMode(integer pointer_to_ids_null_terminating_array)
 	end for
 	s = s & {0}
 ifdef BITS64 then
-	ma = allocate(length(s) * 8)
+	ma = allocate_data(length(s) * 8)
 elsedef
-	ma = allocate(length(s) * 4)
+	ma = allocate_data(length(s) * 4)
 end ifdef
 	poke4(ma, s)
 	return pointers:new_object_from_data(ma)

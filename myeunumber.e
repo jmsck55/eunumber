@@ -19,7 +19,7 @@ ifdef BITS64 then
 	include std/machine.e
 	include std/convert.e
 elsedef
-	include machine.e
+	include allocate.e
 end ifdef
 
 include misc.e
@@ -28,7 +28,7 @@ include get.e
 -- with trace
 
 public function GetVersion() -- revision number
-	return 125 -- re-thought "MultiplicativeInverse()"
+	return 126 -- re-thought "MultiplicativeInverse()"
 end function
 
 -- MyEunumber
@@ -1290,7 +1290,7 @@ ifdef BITS64 then
 	poke(ma + offset, n2)
 elsedef
 	offset = 3 * 4 + 8
-	ma = allocate(length(n2) + offset)
+	ma = allocate_data(length(n2) + offset)
 	if ma = 0 then
 		return 0 -- couldn't allocate data
 	end if
