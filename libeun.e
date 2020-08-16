@@ -10,12 +10,14 @@
 
 -- NOTE: Don't mix ids of different types.
 
-include std/machine.e
-include std/dll.e
+include machine.e
+include dll.e
+-- include std/machine.e
+-- include std/dll.e
 include std/pretty.e
-include std/search.e
-include std/sort.e
-include std/stats.e
+-- include std/search.e
+-- include std/sort.e
+-- include std/stats.e
 include classfile.e as pointers
 include classfile.e as numArray
 include classfile.e as eun
@@ -23,7 +25,7 @@ include classfile.e as complex
 include myeunumber.e as my
 
 public function Version()
-	return 32 -- Need to debug with Wrapper "Stub" (myeun.h)
+	return 33 -- Need to debug with Wrapper "Stub" (myeun.h)
 end function
 
 public function UsingHowManyBits()
@@ -53,10 +55,10 @@ end procedure
 public function NewPointer()
 -- In case you don't want to register one of your pointers, it will allocate one of its own for you (server-side).
 ifdef BITS64 then
-	atom pointer = machine:allocate_data(8)
+	atom pointer = allocate(8)
 	poke8(pointer, 0)
 elsedef
-	atom pointer = machine:allocate_data(4)
+	atom pointer = allocate(4)
 	poke4(pointer, 0)
 end ifdef
 	return pointers:new_object_from_data(pointer)
@@ -69,7 +71,7 @@ end procedure
 public procedure FreePointer(integer id)
 -- Free one of the DLL's pointers and unregister it.
 	atom ma = pointers:get_data_from_object(id)
-	machine:free(ma)
+	free(ma)
 	-- It points to nothing now, so un-register pointer.
 	UnRegisterPointer(id)
 end procedure
@@ -88,11 +90,11 @@ end function
 public function NewCIntArrayFromNumArray(integer pointer_dstId, integer idOfNumArray)
 	sequence num = numArray:get_data_from_object(idOfNumArray)
 ifdef BITS64 then
-	atom ma = allocate_data(length(num) * 8) -- 64bit integers are 8 bytes in size
+	atom ma = allocate(length(num) * 8) -- 64bit integers are 8 bytes in size
 	poke8(ma, num)
 	poke8(pointers:get_data_from_object(pointer_dstId), ma)
 elsedef
-	atom ma = allocate_data(length(num) * 4) -- 32bit integers are 4 bytes in size
+	atom ma = allocate(length(num) * 4) -- 32bit integers are 4 bytes in size
 	poke4(ma, num)
 	poke4(pointers:get_data_from_object(pointer_dstId), ma)
 end ifdef
@@ -105,7 +107,7 @@ ifdef BITS64 then
 elsedef
 	atom ma = peek4u(pointers:get_data_from_object(pointer_dstId))
 end ifdef
-	machine:free(ma)
+	free(ma)
 end procedure
 
 public procedure DeleteNumArray(integer id)
@@ -179,7 +181,7 @@ end function
 
 public function EunToCString(integer id)
 	sequence st = my:ToString(GetEun(id))
-	atom ma = machine:allocate_string(st)
+	atom ma = allocate_string(st)
 	return pointers:new_object_from_data(ma)
 	-- be sure to call "FreePointer()" after you are done with it
 end function
@@ -189,11 +191,56 @@ public function CStringToEun(integer id_ma, integer radix, integer targetLength)
 	return my:ToEun(st, radix, targetLength)
 end function
 
+function match_replace(object needle, sequence haystack, object replacement, 
+			integer max=0)
+	integer posn
+	integer needle_len
+	integer replacement_len
+	integer scan_from
+	integer cnt
+	
+	
+	if max < 0 then
+		return haystack
+	end if
+	
+	cnt = length(haystack)
+	if max != 0 then
+		cnt = max
+	end if
+	
+	if atom(needle) then
+		needle = {needle}
+	end if
+	if atom(replacement) then
+		replacement = {replacement}
+	end if
+
+	needle_len = length(needle) - 1
+	replacement_len = length(replacement)
+
+	scan_from = 1
+	while posn with entry do
+		haystack = replace(haystack, replacement, posn, posn + needle_len)
+
+		cnt -= 1
+		if cnt = 0 then
+			exit
+		end if
+		scan_from = posn + replacement_len
+	entry
+		posn = match(needle, haystack, scan_from)
+	end while
+
+	return haystack
+end function
+
+
 public function EunPrintToCString(integer x)
 	sequence st = pretty_sprint(GetEun(x), {0, 8}) -- 8 spaces for indent
 	atom ma
 	st = match_replace("\n", st, "\r\n")
-	ma = machine:allocate_string(st)
+	ma = allocate_string(st)
 	return pointers:new_object_from_data(ma)
 	-- be sure to call "FreePointer()" after you are done with it
 end function
@@ -893,6 +940,59 @@ end function
 integer eun_sort_id = routine_id("EunCompare")
 integer complex_sort_id = routine_id("ComplexCompare")
 
+function custom_sort(integer custom_compare, sequence x, object data = {}, integer order = 1)
+	integer gap, j, first, last
+	object tempi, tempj, result
+	sequence args = {0, 0}
+
+	if order >= 0 then
+		order = -1
+	else
+		order = 1
+	end if
+
+	if atom(data) then
+		args &= data
+	elsif length(data) then
+		args = append(args, data[1])
+	end if
+
+	last = length(x)
+	gap = floor(last / 10) + 1
+	while 1 do
+		first = gap + 1
+		for i = first to last do
+			tempi = x[i]
+			args[1] = tempi
+			j = i - gap
+			while 1 do
+				tempj = x[j]
+				args[2] = tempj
+				result = call_func(custom_compare, args)
+				if sequence(result) then
+					args[3] = result[2]
+					result = result[1]
+				end if
+				if eu:compare(result, 0) != order then
+					j += gap
+					exit
+				end if
+				x[j+gap] = tempj
+				if j <= gap then
+					exit
+				end if
+				j -= gap
+			end while
+			x[j] = tempi
+		end for
+		if gap = 1 then
+			return x
+		else
+			gap = floor(gap / 7) + 1
+		end if
+	end while
+end function
+
 function get4s_from_null_terminating_array(atom ma)
 	atom findnull
 	integer len
@@ -1012,6 +1112,109 @@ end function
 
 -- mode -- numbers that show up 2 or more times, the max of them.
 
+function sort(sequence x, integer order = 1)
+	integer gap, j, first, last
+	object tempi, tempj
+
+	if order >= 0 then
+		order = -1
+	else
+		order = 1
+	end if
+
+
+	last = length(x)
+	gap = floor(last / 10) + 1
+	while 1 do
+		first = gap + 1
+		for i = first to last do
+			tempi = x[i]
+			j = i - gap
+			while 1 do
+				tempj = x[j]
+				if eu:compare(tempi, tempj) != order then
+					j += gap
+					exit
+				end if
+				x[j+gap] = tempj
+				if j <= gap then
+					exit
+				end if
+				j -= gap
+			end while
+			x[j] = tempi
+		end for
+		if gap = 1 then
+			return x
+		else
+			gap = floor(gap / 7) + 1
+		end if
+	end while
+end function
+
+
+function raw_frequency(object data_set) --, object subseq_opt = ST_ALLNUM)
+	
+	sequence lCounts
+	sequence lKeys
+	integer lNew = 0
+	integer lPos
+	integer lMax = -1
+	
+	if atom(data_set) then
+		return {{1,data_set}}
+	end if
+	
+	-- data_set = massage(data_set, subseq_opt)
+	
+	if length(data_set) = 0 then
+		return {{1,data_set}}
+	end if
+	lCounts = repeat({0,0}, length(data_set))
+	lKeys   = repeat(0, length(data_set))
+	for i = 1 to length(data_set) do
+		lPos = find(data_set[i], lKeys)
+		if lPos = 0 then
+			lNew += 1
+			lPos = lNew
+			lCounts[lPos][2] = data_set[i]
+			lKeys[lPos] = data_set[i]
+			if lPos > lMax then
+				lMax = lPos
+			end if
+		end if
+		lCounts[lPos][1] += 1
+	end for
+	return sort(lCounts[1..lMax], -1)
+	
+end function
+
+function mode(sequence data_set) --, object subseq_opt = ST_ALLNUM)
+	
+	sequence lCounts
+	sequence lRes
+	
+	-- data_set = massage(data_set, subseq_opt)
+	
+	if not length( data_set ) then
+		return {}
+	end if
+
+	lCounts = raw_frequency(data_set) --, subseq_opt)
+	
+	lRes = {lCounts[1][2]}
+	for i = 2 to length(lCounts) do
+		if lCounts[i][1] < lCounts[1][1] then
+			exit
+		end if
+		lRes = append(lRes, lCounts[i][2])
+	end for
+	
+	return lRes
+	
+end function
+
+
 public function EunMode(integer pointer_to_ids_null_terminating_array)
 	atom ma
 	sequence s
@@ -1020,15 +1223,15 @@ public function EunMode(integer pointer_to_ids_null_terminating_array)
 	for i = 1 to length(s) do
 		s[i] = GetEun(s[i])
 	end for
-	s = stats:mode(s)
+	s = mode(s)
 	for i = 1 to length(s) do
 		s[i] = NewFromEun(s[i])
 	end for
 	s = s & {0}
 ifdef BITS64 then
-	ma = machine:allocate_data(length(s) * 8)
+	ma = allocate(length(s) * 8)
 elsedef
-	ma = machine:allocate_data(length(s) * 4)
+	ma = allocate(length(s) * 4)
 end ifdef
 	poke4(ma, s)
 	return pointers:new_object_from_data(ma)
@@ -1041,15 +1244,15 @@ public function ComplexMode(integer pointer_to_ids_null_terminating_array)
 	for i = 1 to length(s) do
 		s[i] = GetComplex(s[i])
 	end for
-	s = stats:mode(s)
+	s = mode(s)
 	for i = 1 to length(s) do
 		s[i] = NewFromComplex(s[i])
 	end for
 	s = s & {0}
 ifdef BITS64 then
-	ma = machine:allocate_data(length(s) * 8)
+	ma = allocate(length(s) * 8)
 elsedef
-	ma = machine:allocate_data(length(s) * 4)
+	ma = allocate(length(s) * 4)
 end ifdef
 	poke4(ma, s)
 	return pointers:new_object_from_data(ma)

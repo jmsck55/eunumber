@@ -15,15 +15,20 @@
 
 namespace myeunumber
 
+ifdef BITS64 then
+	include std/machine.e
+	include std/convert.e
+elsedef
+	include machine.e
+end ifdef
+
 include misc.e
 include get.e
-include std/machine.e
-include std/convert.e
 
 -- with trace
 
 public function GetVersion() -- revision number
-	return 124 -- re-thought "MultiplicativeInverse()"
+	return 125 -- re-thought "MultiplicativeInverse()"
 end function
 
 -- MyEunumber
@@ -870,7 +875,7 @@ end procedure
 public integer divideByZeroCallBackId = routine_id("DefaultDivideByZeroCallBack")
 
 public function MultiplicativeInverseExp(sequence den1, integer exp1, PositiveScalar targetLength, AtomRadix radix)
-	sequence guess, tmp, lookat
+	sequence guess, tmp
 	integer exp0, protoTargetLength, moreAccuracy
 	if length(den1) = 0 then
 		lastIterCount = 1
@@ -1285,7 +1290,7 @@ ifdef BITS64 then
 	poke(ma + offset, n2)
 elsedef
 	offset = 3 * 4 + 8
-	ma = allocate_data(length(n2) + offset)
+	ma = allocate(length(n2) + offset)
 	if ma = 0 then
 		return 0 -- couldn't allocate data
 	end if
