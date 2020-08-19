@@ -20,7 +20,7 @@ include classfile.e as complex
 include myeunumber.e as my
 
 public function Version()
-	return 34 -- Need to debug with Wrapper "Stub" (myeun.h)
+	return 35 -- Need to debug with Wrapper "Stub" (myeun.h)
 end function
 
 public function UsingHowManyBits()
@@ -448,6 +448,10 @@ public function Multiply(integer n1, integer n2)
 	return numArray:new_object_from_data(my:Multiply(numArray:get_data_from_object(n1), numArray:get_data_from_object(n2)))
 end function
 
+public function Square(integer n1)
+	return numArray:new_object_from_data(my:Square(numArray:get_data_from_object(n1)))
+end function
+
 public function IsNegative(integer numId)
 	return my:IsNegative(numArray:get_data_from_object(numId))
 end function
@@ -480,6 +484,10 @@ public function MultiplyExp(integer n1, integer exp1, integer n2, integer exp2, 
 	return NewFromEun(my:MultiplyExp(numArray:get_data_from_object(n1), exp1, numArray:get_data_from_object(n2), exp2, targetLength, radix))
 end function
 
+public function SquareExp(integer n1, integer exp1, integer targetLength, integer radix)
+	return NewFromEun(my:SquareExp(numArray:get_data_from_object(n1), exp1, targetLength, radix))
+end function
+
 public function AddExp(integer n1, integer exp1, integer n2, integer exp2, integer targetLength, integer radix)
 	return NewFromEun(my:AddExp(numArray:get_data_from_object(n1), exp1, numArray:get_data_from_object(n2), exp2, targetLength, radix))
 end function
@@ -508,6 +516,10 @@ end function
 
 public function EunMultiply(integer n1, integer n2)
 	return NewFromEun(my:EunMultiply(GetEun(n1), GetEun(n2)))
+end function
+
+public function EunSquare(integer n1)
+	return NewFromEun(my:EunSquare(GetEun(n1)))
 end function
 
 public function EunAdd(integer n1, integer n2)

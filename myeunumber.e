@@ -28,7 +28,7 @@ include get.e
 -- with trace
 
 public function GetVersion() -- revision number
-	return 126 -- re-thought "MultiplicativeInverse()"
+	return 127
 end function
 
 -- MyEunumber
@@ -65,6 +65,7 @@ end function
 -- Sum
 -- ConvertRadix
 -- Multiply
+-- Square
 -- IsNegative
 -- Negate
 -- AbsoluteValue
@@ -88,6 +89,7 @@ end function
 -- NewEun
 -- EunAdjustRound(Eun n1, integer adjustBy = -1)
 -- EunMultiply
+-- EunSquare
 -- EunAdd
 -- EunNegate
 -- EunAbsoluteValue
@@ -490,6 +492,10 @@ public function Multiply(sequence n1, sequence n2)
 	return numArray
 end function
 
+public function Square(sequence n1)
+	return Multiply(n1, n1)
+end function
+
 
 public function IsNegative(sequence numArray)
 	if length(numArray) then
@@ -704,6 +710,13 @@ public function MultiplyExp(sequence n1, integer exp1, sequence n2, integer exp2
 	sequence numArray, ret
 	numArray = Multiply(n1, n2)
 	ret = AdjustRound(numArray, exp1 + exp2, targetLength, radix)
+	return ret
+end function
+
+public function SquareExp(sequence n1, integer exp1, PositiveScalar targetLength, AtomRadix radix)
+	sequence numArray, ret
+	numArray = Multiply(n1, n1)
+	ret = AdjustRound(numArray, exp1 + exp1, targetLength, radix)
 	return ret
 end function
 
@@ -1023,6 +1036,11 @@ public function EunMultiply(Eun n1, Eun n2)
 	end if
 	return MultiplyExp(n1[1], n1[2], n2[1], n2[2], targetLength, n1[4])
 end function
+
+public function EunSquare(Eun n1)
+	return SquareExp(n1[1], n1[2], n1[3], n1[4])
+end function
+
 -- EunAdd
 public function EunAdd(Eun n1, Eun n2)
 	integer targetLength
