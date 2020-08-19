@@ -1,4 +1,3 @@
-
 -- Eunumber, advanced sequence based arithmetic with exponents
 
 --FILES: (All as one file.)
@@ -28,7 +27,7 @@ include get.e
 with trace
 
 public function GetVersion() -- revision number
-	return 127
+	return 128
 end function
 
 -- MyEunumber
@@ -3470,12 +3469,7 @@ end function
 
 public function GetMoreAccuratePrec(Eun value1, PositiveScalar prec)
 -- prec should be less than or equal to value1[3]
-	object tmp, tmp1
-	tmp1 = adjustRound
-	adjustRound = value1[3] - prec
-	tmp = EunAdjustRound(value1)
-	adjustRound = tmp1
-	return tmp
+	return AdjustRound(value1[1], value1[2], prec + adjustRound, value1[4])
 end function
 
 --end of file.
