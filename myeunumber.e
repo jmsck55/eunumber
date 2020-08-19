@@ -25,7 +25,7 @@ end ifdef
 include misc.e
 include get.e
 
--- with trace
+with trace
 
 public function GetVersion() -- revision number
 	return 127
@@ -123,6 +123,14 @@ public constant MAX_RADIX = power(2,floor(30/2)-4) -- value: 2048
 public constant INT_MAX10 = power(10,9) -- value: 1000000000
 public constant MAX_RADIX10 = power(10,4-1) -- value: 1000
 end ifdef
+
+public function abs(atom a)
+	if a >= 0 then
+		return a
+	else
+		return - a
+	end if
+end function
 
 public function Ceil(atom a)
 	return -floor(-a)
@@ -3460,52 +3468,14 @@ public function ComplexAdjustRound(Complex c1, integer adjustBy = -1)
 end function
 
 
-public function GetMoreAccurate(Eun value1, Eun value2)
---
--- About: GetMoreAccurate()
---
--- 1. Take two calculations (of the same equation), one with more precision,
---    Subtract the one with less precision from the one with more precision.
--- 2. Round the result to one (or two) digit(s).
--- 3. Then Add the rounded result to the one with less precision.
--- 4. Return it as your result.
---
--- value2 should be more accurate than value1
-	object tmp, tmp1, tmp2
+public function GetMoreAccuratePrec(Eun value1, PositiveScalar prec)
+-- prec should be less than or equal to value1[3]
+	object tmp, tmp1
 	tmp1 = adjustRound
-	adjustRound = 0
-	tmp = EunSubtract(value2, value1)
-	tmp2 = tmp[3]
-	tmp[3] = 1 -- using just one digit
-	tmp = EunAdjustRound(tmp)
-	tmp[3] = tmp2
-	tmp = EunAdd(tmp, value1)
+	adjustRound = value1[3] - prec
+	tmp = EunAdjustRound(value1)
 	adjustRound = tmp1
 	return tmp
 end function
-
-integer MoreAccurateFuncDigits = 1
-public function GetMoreAccurateFuncDigits()
-	return MoreAccurateFuncDigits
-end function
-public procedure SetMoreAccurateFuncDigits(integer n)
-	MoreAccurateFuncDigits = n
-end procedure
-
-public function GetMoreAccurateFunc(integer func1, sequence args)
-	Eun value1, value2, ret
-	value1 = call_func(func1, args)
-	value1[3] += MoreAccurateFuncDigits
-	for i = 1 to length(args) do
-		args[i][3] += MoreAccurateFuncDigits
-	end for
-	value2 = call_func(func1, args)
-	ret = GetMoreAccurate(value1, value2)
-	ret[3] -= MoreAccurateFuncDigits
-	ret = EunAdjustRound(ret)
-	return ret
-end function
-
-
 
 --end of file.
