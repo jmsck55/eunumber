@@ -139,7 +139,7 @@ function GetEun(integer id)
 	return eun:get_data_from_object(id)
 end function
 
-public procedure StoreEun(integer id_dst, integer id_src)
+public procedure StoreEun(integer id_dst, integer id_src) -- move operator
 	eun:replace_object(id_dst, GetEun(id_src))
 end procedure
 

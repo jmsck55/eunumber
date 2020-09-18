@@ -1,6 +1,8 @@
 
 // "Stub" test program.
 
+#include <stdio.h>
+
 #include "myeun.h"
 
 // For GCC:

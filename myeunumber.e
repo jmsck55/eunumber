@@ -1,3 +1,4 @@
+
 -- Eunumber, advanced sequence based arithmetic with exponents
 
 --FILES: (All as one file.)
@@ -24,10 +25,10 @@ end ifdef
 include misc.e
 include get.e
 
-with trace
+-- with trace
 
 public function GetVersion() -- revision number
-	return 128
+	return 129
 end function
 
 -- MyEunumber
@@ -769,6 +770,7 @@ end function
 -- https://en.wikipedia.org/wiki/Newton%27s_method#Multiplyiplicative_inverses_of_numbers_and_power_series
 
 constant two = {2}
+integer protoMoreAccuracy
 
 public function ProtoMultiplicativeInverseExp(sequence guess, integer exp0, sequence den1, integer exp1, PositiveScalar targetLength, AtomRadix radix)
 	-- a = guess
@@ -896,7 +898,7 @@ public integer divideByZeroCallBackId = routine_id("DefaultDivideByZeroCallBack"
 
 public function MultiplicativeInverseExp(sequence den1, integer exp1, PositiveScalar targetLength, AtomRadix radix)
 	sequence guess, tmp
-	integer exp0, protoTargetLength, moreAccuracy
+	integer exp0, protoTargetLength
 	if length(den1) = 0 then
 		lastIterCount = 1
 		divideByZeroFlag = 1
@@ -918,13 +920,13 @@ public function MultiplicativeInverseExp(sequence den1, integer exp1, PositiveSc
 -- 	protoTargetLength = 15
 -- end ifdef
 	if multInvMoreAccuracy then
-		moreAccuracy = multInvMoreAccuracy
+		protoMoreAccuracy = multInvMoreAccuracy
 	elsif calculationSpeed then
-		moreAccuracy = Ceil(targetLength / calculationSpeed)
+		protoMoreAccuracy = Ceil(targetLength / calculationSpeed)
 	else
-		moreAccuracy = 1
+		protoMoreAccuracy = 1
 	end if
-	protoTargetLength = targetLength + moreAccuracy
+	protoTargetLength = targetLength + protoMoreAccuracy
 	lastIterCount = iter
 	for i = 1 to iter do
 		tmp = ProtoMultiplicativeInverseExp(guess, exp0, den1, exp1, protoTargetLength, radix)
@@ -3002,7 +3004,7 @@ end function
 -- End of Proof
 
 public function EunTriangulation(Eun A, Eun B, Eun D)
-	Eun C, E, F
+	Eun C, E, F, tmp
 	sequence s
 	integer mode
 	if IsNegative(A[1]) or IsNegative(B[1]) or IsNegative(D[1]) then
@@ -3012,18 +3014,21 @@ public function EunTriangulation(Eun A, Eun B, Eun D)
 	mode = realMode
 	realMode = TRUE
 	C = EunDivide(EunSin(A), EunSin(B))
+	tmp = EunSquare(D)
 	s = EunSqrt(
 		EunDivide(
-			EunMultiply(D, D),
-			EunAdd({{1}, 0, A[3], A[4]}, C)
-		))
+			tmp,
+			EunAdd({{1}, 0, A[3], A[4]}, EunSquare(C))
+		)
+	)
 	E = s[2]
 	C = EunMultiplicativeInverse(C)
 	s = EunSqrt(
 		EunDivide(
-			EunMultiply(D, D),
-			EunAdd({{1}, 0, A[3], A[4]}, C)
-		))
+			tmp,
+			EunAdd({{1}, 0, A[3], A[4]}, EunSquare(C))
+		)
+	)
 	F = s[2]
 	realMode = mode
 	return {E, F}

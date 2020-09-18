@@ -6,8 +6,8 @@
 #ifndef myeun_h__
 #define myeun_h__
 
-#include <Windows.h>
 #include <stdio.h>
+#include <windows.h>
 
 // For GCC:
 #if __SIZEOF_POINTER__ == 8
@@ -25,7 +25,7 @@ HMODULE libmyeun = 0;
 
 typedef int (*VersionFunc)(void);
 VersionFunc Version;
-
+VersionFunc EunVersion;
 
 void myeun_init_library()
 {
@@ -37,7 +37,7 @@ void myeun_init_library()
     }
 
     Version = (VersionFunc)GetProcAddress(libmyeun, "Version");
-
+    EunVersion = (VersionFunc)GetProcAddress(libmyeun, "GetVersion");
 }
 
 void myeun_free_library()
@@ -52,7 +52,7 @@ void myeun_free_library()
 
 void myeun_PrintVersion()
 {
-    printf("[libmyeun.dll] Version is: %d\n", Version());
+    printf("[libmyeun.dll] Version is: %d, EunVersion is: %d\n", Version(), EunVersion());
 }
 
 #endif // myeun_h__
