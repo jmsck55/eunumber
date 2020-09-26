@@ -28,7 +28,7 @@ include get.e
 -- with trace
 
 public function GetVersion() -- revision number
-	return 129
+	return 130
 end function
 
 -- MyEunumber
@@ -771,6 +771,15 @@ end function
 
 constant two = {2}
 integer protoMoreAccuracy
+PositiveInteger forSmallRadix = 1 -- this number can be 1 or greater
+
+public procedure SetForSmallRadix(integer i)
+	forSmallRadix = i -- increase this number for smaller radixes
+end procedure
+
+public function GetForSmallRadix()
+	return forSmallRadix
+end function
 
 public function ProtoMultiplicativeInverseExp(sequence guess, integer exp0, sequence den1, integer exp1, PositiveScalar targetLength, AtomRadix radix)
 	-- a = guess
@@ -793,7 +802,7 @@ public function ProtoMultiplicativeInverseExp(sequence guess, integer exp0, sequ
 -- ? tmp -- turns to one
 	numArray = tmp[1]
 	exp2 = tmp[2]
-	tmp = SubtractExp(two, 0, numArray, exp2, targetLength - 1, radix) -- 2 - tmp
+	tmp = SubtractExp(two, 0, numArray, exp2, targetLength - forSmallRadix, radix) -- 2 - tmp
 -- ? tmp -- turns to one
 	numArray = tmp[1]
 	exp2 = tmp[2]

@@ -20,7 +20,7 @@ include classfile.e as complex
 include myeunumber.e as my
 
 public function Version()
-	return 36 -- Need to debug with Wrapper "Stub" (myeun.h)
+	return 37 -- Need to debug with Wrapper "Stub" (myeun.h)
 end function
 
 public function UsingHowManyBits()
@@ -1273,5 +1273,13 @@ end function
 
 -- dropped support for the other "accurate" functions
 -- use the larger of the two, and then the smaller of the two's precision or targetLength
+
+public procedure SetForSmallRadix(integer i)
+	return my:SetForSmallRadix(i)
+end procedure
+
+public function GetForSmallRadix()
+	return my:GetForSmallRadix()
+end function
 
 -- end of file.
