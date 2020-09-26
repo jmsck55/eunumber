@@ -28,7 +28,7 @@ include get.e
 -- with trace
 
 public function GetVersion() -- revision number
-	return 131
+	return 132
 end function
 
 -- MyEunumber
@@ -956,7 +956,7 @@ public function MultiplicativeInverseExp(sequence den1, integer exp1, PositiveSc
 	end for
 	tmp = AdjustRound(guess, exp0, targetLength, radix, FALSE)
 	if lastIterCount = iter then
-		puts(1, "Error:  In MyEuNumber, forSmallRadix not large enough, try increasing\n SetForSmallRadix() to a larger integer.  See file: ex.err\n")
+		printf(1, "Error:  In MyEuNumber, forSmallRadix is %d, try increasing\n SetForSmallRadix() to a larger integer.  See file: ex.err\n", {forSmallRadix})
 		abort(1/0)
 	end if
 	return tmp
