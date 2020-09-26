@@ -28,7 +28,7 @@ include get.e
 -- with trace
 
 public function GetVersion() -- revision number
-	return 130
+	return 131
 end function
 
 -- MyEunumber
@@ -955,6 +955,10 @@ public function MultiplicativeInverseExp(sequence den1, integer exp1, PositiveSc
 		end if
 	end for
 	tmp = AdjustRound(guess, exp0, targetLength, radix, FALSE)
+	if lastIterCount = iter then
+		puts(1, "Error:  In MyEuNumber, forSmallRadix not large enough, try increasing\n SetForSmallRadix() to a larger integer.  See file: ex.err\n")
+		abort(1/0)
+	end if
 	return tmp
 end function
 
