@@ -1275,7 +1275,7 @@ end function
 -- use the larger of the two, and then the smaller of the two's precision or targetLength
 
 public procedure SetForSmallRadix(integer i)
-	return my:SetForSmallRadix(i)
+	my:SetForSmallRadix(i)
 end procedure
 
 public function GetForSmallRadix()
