@@ -20,7 +20,7 @@ include classfile.e as complex
 include myeunumber.e as my
 
 public function Version()
-	return 37 -- Need to debug with Wrapper "Stub" (myeun.h)
+	return 38 -- Need to debug with Wrapper "Stub" (myeun.h)
 end function
 
 public function UsingHowManyBits()
@@ -1280,6 +1280,13 @@ end procedure
 
 public function GetForSmallRadix()
 	return my:GetForSmallRadix()
+end function
+
+public procedure SetIsRoundToZero(integer i)
+	my:SetIsRoundToZero(i)
+end procedure
+public function GetIsRoundToZero()
+	return my:GetIsRoundToZero()
 end function
 
 -- end of file.

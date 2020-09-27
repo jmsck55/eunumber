@@ -28,7 +28,7 @@ include get.e
 -- with trace
 
 public function GetVersion() -- revision number
-	return 132
+	return 133
 end function
 
 -- MyEunumber
@@ -186,9 +186,17 @@ end function
 
 public PositiveScalar defaultTargetLength = 60 -- 40 -- 70 -- 70 * 3 = 210 (I tried to keep it under 212)
 public AtomRadix defaultRadix = 10 -- 10 is good for everything from 16-bit shorts, to 32-bit ints, to 64-bit long longs.
+public Bool isRoundToZero = FALSE -- make TRUE to allow rounding small numbers to zero.
 public PositiveInteger adjustRound = 5 -- 3 -- can be 0 to a small integer, removes digits of inaccuracy, or adds digits of accuracy under ROUND_TO_NEAREST_OPTION
 public PositiveAtom calculationSpeed = 60 -- can be 0 or from 1 to targetLength
 public PositiveInteger multInvMoreAccuracy = 0 -- if 0, then use calculationSpeed
+
+public procedure SetIsRoundToZero(integer i)
+	isRoundToZero = i
+end procedure
+public function GetIsRoundToZero()
+	return isRoundToZero
+end function
 
 public procedure SetMultiplicativeInverseMoreAccuracy(integer i)
 	multInvMoreAccuracy = i
@@ -625,8 +633,8 @@ public function AdjustRound(sequence num, integer exponent, integer targetLength
 	num = TrimLeadingZeros(num)
 	exponent += (length(num) - oldlen)
 	rounded = 0
-	if length(num) = 0 then
-		ret = {num, exponent, targetLength, radix, rounded}
+	if length(num) = 0 or (isRoundToZero and exponent < -targetLength) then
+		ret = {{}, exponent, targetLength, radix, rounded}
 		return ret
 	end if
 	-- Round2: num, exponent, targetLength, radix
