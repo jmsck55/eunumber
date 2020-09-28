@@ -28,7 +28,7 @@ include get.e
 -- with trace
 
 public function GetVersion() -- revision number
-	return 133
+	return 134
 end function
 
 -- MyEunumber
@@ -633,8 +633,13 @@ public function AdjustRound(sequence num, integer exponent, integer targetLength
 	num = TrimLeadingZeros(num)
 	exponent += (length(num) - oldlen)
 	rounded = 0
-	if length(num) = 0 or (isRoundToZero and exponent < -targetLength) then
+	if length(num) = 0 then
 		ret = {{}, exponent, targetLength, radix, rounded}
+		return ret
+	end if
+	if isRoundToZero and exponent < -targetLength then
+		rounded = num[1] > 0 - num[1] < 0
+		ret = {{}, exponent, targetLength, radix, rounded} -- "rounded" returns the sign of zero
 		return ret
 	end if
 	-- Round2: num, exponent, targetLength, radix

@@ -169,7 +169,7 @@ public function GetEunTargetLength(integer id)
 	return n1[4]
 end function
 
-public function GetEunFlags(integer id)
+public function GetEunFlags(integer id) -- get rounding information
 	sequence n1 = GetEun(id)
 	return n1[5]
 end function
