@@ -27,7 +27,7 @@ include get.e
 -- with trace
 
 public function GetVersion() -- revision number
-	return 135
+	return 136
 end function
 
 -- MyEunumber
@@ -1030,6 +1030,9 @@ public function NewEun(sequence num = {}, integer exp = 0, PositiveScalar target
 end function
 
 public function EunAdjustRound(Eun n1, integer adjustBy = -1)
+	if length(n1[1]) = 0 then
+		return n1
+	end if
 	if adjustBy != -1 then
 		integer tmp
 		sequence s
