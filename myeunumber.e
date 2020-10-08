@@ -1,4 +1,3 @@
-
 -- Eunumber, advanced sequence based arithmetic with exponents
 
 --FILES: (All as one file.)
@@ -28,7 +27,7 @@ include get.e
 -- with trace
 
 public function GetVersion() -- revision number
-	return 134
+	return 135
 end function
 
 -- MyEunumber
@@ -638,8 +637,7 @@ public function AdjustRound(sequence num, integer exponent, integer targetLength
 		return ret
 	end if
 	if isRoundToZero and exponent < -targetLength then
-		rounded = num[1] > 0 - num[1] < 0
-		ret = {{}, exponent, targetLength, radix, rounded} -- "rounded" returns the sign of zero
+		ret = {{}, exponent, targetLength, radix, (num[1] > 0) - (num[1] < 0)} -- "rounded" returns the sign of zero
 		return ret
 	end if
 	-- Round2: num, exponent, targetLength, radix
@@ -705,18 +703,9 @@ public function AdjustRound(sequence num, integer exponent, integer targetLength
 			num[$] += rounded
 			num = CarryRadixOnlyEx(num, radix * rounded, rounded)
 			exponent += (length(num) - roundTargetLength)
+		else
+			rounded = (num[1] < 0) - (num[1] > 0) -- give the opposite of the sign
 		end if
---              if halfRadix < f then
---                      rounded = 1
---                      num[$] += 1
---                      num = CarryRadixOnly(num, radix)
---                      exponent += (length(num) - roundTargetLength)
---              elsif f < -halfRadix then
---                      rounded = -1
---                      num[$] -= 1
---                      num = NegativeCarryRadixOnly(num, radix)
---                      exponent += (length(num) - roundTargetLength)
---              end if
 	end if
 	num = TrimTrailingZeros(num)
 	oldlen = length(num)
