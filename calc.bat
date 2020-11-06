@@ -1,6 +1,6 @@
 IF NOT "%EUDIR%"=="" GOTO label
-set eudir=c:\euphoria405
-set path=c:\euphoria405\bin;%path%
+set EUDIR=%ONEDRIVE%\euphoria40
+set path=%EUDIR%\bin;%path%
 :label
 eui calc.ex
 pause

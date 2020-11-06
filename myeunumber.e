@@ -27,7 +27,7 @@ include get.e
 -- with trace
 
 public function GetVersion() -- revision number
-	return 137
+	return 138
 end function
 
 -- MyEunumber
@@ -188,7 +188,7 @@ public AtomRadix defaultRadix = 10 -- 10 is good for everything from 16-bit shor
 public Bool isRoundToZero = FALSE -- make TRUE to allow rounding small numbers to zero.
 public PositiveInteger adjustRound = 5 -- 3 -- can be 0 to a small integer, removes digits of inaccuracy, or adds digits of accuracy under ROUND_TO_NEAREST_OPTION
 public PositiveAtom calculationSpeed = 60 -- can be 0 or from 1 to targetLength
-public PositiveInteger multInvMoreAccuracy = 0 -- if 0, then use calculationSpeed
+public PositiveInteger multInvMoreAccuracy = 0 -- 15, if 0, then use calculationSpeed
 
 public procedure SetIsRoundToZero(integer i)
 	isRoundToZero = i
@@ -772,7 +772,6 @@ end function
 -- https://en.wikipedia.org/wiki/Newton%27s_method#Multiplyiplicative_inverses_of_numbers_and_power_series
 
 constant two = {2}
-integer protoMoreAccuracy
 PositiveInteger forSmallRadix = 1 -- this number can be 1 or greater
 
 public procedure SetForSmallRadix(integer i)
@@ -908,8 +907,8 @@ end procedure
 public integer divideByZeroCallBackId = routine_id("DefaultDivideByZeroCallBack")
 
 public function MultiplicativeInverseExp(sequence den1, integer exp1, PositiveScalar targetLength, AtomRadix radix)
-	sequence guess, tmp
-	integer exp0, protoTargetLength
+	sequence guess, tmp, lookat, ret
+	integer exp0, protoTargetLength, protoMoreAccuracy
 	if length(den1) = 0 then
 		lastIterCount = 1
 		divideByZeroFlag = 1
@@ -922,14 +921,6 @@ public function MultiplicativeInverseExp(sequence den1, integer exp1, PositiveSc
 			return {den1, -exp1, targetLength, radix, 0}
 		end if
 	end if
-	exp0 = -exp1 - 1
-	tmp = GetGuessExp(den1, exp0, targetLength, radix)
-	guess = tmp[1]
--- ifdef BITS64 then
--- 	protoTargetLength = 18
--- elsedef
--- 	protoTargetLength = 15
--- end ifdef
 	if multInvMoreAccuracy then
 		protoMoreAccuracy = multInvMoreAccuracy
 	elsif calculationSpeed then
@@ -938,30 +929,35 @@ public function MultiplicativeInverseExp(sequence den1, integer exp1, PositiveSc
 		protoMoreAccuracy = 1
 	end if
 	protoTargetLength = targetLength + protoMoreAccuracy
+	exp0 = -exp1 - 1
+	tmp = GetGuessExp(den1, exp0, protoTargetLength, radix)
+	guess = tmp[1]
+	ret = AdjustRound(guess, exp0, targetLength, radix, FALSE)
 	lastIterCount = iter
 	for i = 1 to iter do
 		tmp = ProtoMultiplicativeInverseExp(guess, exp0, den1, exp1, protoTargetLength, radix)
 		guess = tmp[1]
 		-- ? {length(guess), protoTargetLength}
 		exp0 = tmp[2]
+		lookat = ret
+		ret = AdjustRound(guess, exp0, targetLength, radix, FALSE)
 		if length(tmp) = 2 then
-			-- solution found, go to more digits of accuracy
-			
-			-- it is equal for that targetLength
-			--if protoTargetLength >= targetLength then
+			-- solution found
+			lastIterCount = i
+			exit
+		end if
+		if ret[2] = lookat[2] then
+			if equal(ret[1], lookat[1]) then
 				lastIterCount = i
 				exit
-			--end if
-			-- protoTargetLength += targetLength
-			--here
+			end if
 		end if
 	end for
-	tmp = AdjustRound(guess, exp0, targetLength, radix, FALSE)
 	if lastIterCount = iter then
 		printf(1, "Error:  In MyEuNumber, forSmallRadix is %d, try increasing\n SetForSmallRadix() to a larger integer.  See file: ex.err\n", {forSmallRadix})
 		abort(1/0)
 	end if
-	return tmp
+	return ret
 end function
 
 -- sequence p
@@ -1611,8 +1607,8 @@ public integer lastNthRootIter = -1
 
 public function NthRootExp(PositiveScalar n, sequence x1, integer x1Exp, sequence guess, 
 			integer guessExp, PositiveScalar targetLength, AtomRadix radix)
-	sequence tmp, lookat
-	integer len, lastLen, protoTargetLength, moreAccuracy
+	sequence tmp, lookat, ret
+	integer protoTargetLength, moreAccuracy
 	if length(x1) = 0 then
 		lastNthRootIter = 1
 		return {x1, x1Exp, targetLength, radix, 0}
@@ -1630,37 +1626,27 @@ public function NthRootExp(PositiveScalar n, sequence x1, integer x1Exp, sequenc
 	else
 		moreAccuracy = 1
 	end if
-	targetLength += moreAccuracy
 	protoTargetLength = targetLength + moreAccuracy
-	tmp = {guess, guessExp, protoTargetLength, radix, 0}
-	lastLen = length(guess)
+	ret = AdjustRound(guess, guessExp, targetLength, radix, FALSE)
 	lastNthRootIter = nthRootIter
 	for i = 1 to nthRootIter do
-		lookat = tmp
 		tmp = NthRootProtoExp(n, x1, x1Exp, guess, guessExp, protoTargetLength, radix)
 		guess = tmp[1]
 		guessExp = tmp[2]
-		len = length(guess)
-		if len > targetLength then
-			len = targetLength
-		end if
-		if len = lastLen then
-			if guessExp = lookat[2] then
-				-- if equal(guess, lookat[1]) then
-				if RangeEqual(guess, lookat[1], 1, len) then
-					--if lastNthRootIter = i - 1 then
-					--      exit -- break
-					--end if
-					lastNthRootIter = i
-					exit
-				end if
+		lookat = ret
+		ret = AdjustRound(guess, guessExp, targetLength, radix, FALSE)
+		if ret[2] = lookat[2] then
+			if equal(ret[1], lookat[1]) then
+				lastNthRootIter = i
+				exit
 			end if
 		end if
-		lastLen = len
 	end for
-	targetLength -= moreAccuracy
-	tmp = AdjustRound(guess, guessExp, targetLength, radix)
-	return tmp
+	if lastNthRootIter = nthRootIter then
+		puts(1, "Error(4):  In MyEuNumber, too many iterations.  Unable to calculate number.\n  See file: ex.err\n")
+		abort(1/0)
+	end if
+	return ret
 end function
 
 public procedure DefaultRealModeErrorCallBack()
@@ -1809,8 +1795,8 @@ public integer arcTanIter = 1000000000
 public integer arcTanCount = -1
 
 public function ArcTanExp(sequence n1, integer exp1, PositiveScalar targetLength, AtomRadix radix)
-	sequence sum, a, b, c, d, e, f, tmp, count, xSquared, xSquaredPlusOne, lookat
-	integer protoTargetLength, len, lastLen, moreAccuracy
+	sequence sum, a, b, c, d, e, f, tmp, count, xSquared, xSquaredPlusOne, lookat, ret
+	integer protoTargetLength, moreAccuracy
 	if arcTanMoreAccuracy then
 		moreAccuracy = arcTanMoreAccuracy
 	elsif calculationSpeed then
@@ -1818,7 +1804,6 @@ public function ArcTanExp(sequence n1, integer exp1, PositiveScalar targetLength
 	else
 		moreAccuracy = 1
 	end if
-	targetLength += moreAccuracy
 	protoTargetLength = targetLength + moreAccuracy
 	-- First iteration:
 	-- x*x + 1
@@ -1835,10 +1820,9 @@ public function ArcTanExp(sequence n1, integer exp1, PositiveScalar targetLength
 	xSquaredPlusOne = AddExp(xSquared[1],xSquared[2],{1},0,protoTargetLength,radix)
 	e = xSquaredPlusOne
 	-- Second iteration(s):
-	lastLen = length(sum[1])
+	ret = AdjustRound(sum[1], sum[2], targetLength, radix, FALSE)
 	arcTanCount = arcTanIter
 	for n = 1 to arcTanIter do
-		lookat = sum
 		a = MultiplyExp(a[1],a[2],{4},0,protoTargetLength,radix)
 		tmp = AdjustRound({n},0,protoTargetLength,radix)
 		b = MultiplyExp(b[1],b[2],tmp[1],tmp[2],protoTargetLength,radix)
@@ -1855,27 +1839,20 @@ public function ArcTanExp(sequence n1, integer exp1, PositiveScalar targetLength
 		f = MultiplyExp(f[1],f[2],d[1],d[2],protoTargetLength,radix)
 		f = DivideExp(f[1],f[2],e[1],e[2],protoTargetLength,radix)
 		sum = AddExp(sum[1],sum[2],f[1],f[2],protoTargetLength,radix)
-		len = length(sum[1])
-		if len > targetLength then
-			len = targetLength
-		end if
-		if len = lastLen then
-			if sum[2] = lookat[2] then
-				-- if equal(sum[1], lookat[1]) then
-				if RangeEqual(sum[1], lookat[1], 1, len) then
-					--if arcTanCount = i - 1 then
-					--      exit -- break
-					--end if
-					arcTanCount = n
-					exit
-				end if
+		lookat = ret
+		ret = AdjustRound(sum[1], sum[2], targetLength, radix, FALSE)
+		if ret[2] = lookat[2] then
+			if equal(ret[1], lookat[1]) then
+				arcTanCount = n
+				exit
 			end if
 		end if
-		lastLen = len
 	end for
-	targetLength -= moreAccuracy
-	sum = AdjustRound(sum[1], sum[2], targetLength, sum[4])
-	return sum
+	if arcTanCount = arcTanIter then
+		puts(1, "Error(4):  In MyEuNumber, too many iterations.  Unable to calculate number.\n  See file: ex.err\n")
+		abort(1/0)
+	end if
+	return ret
 end function
 
 public function EunArcTan(Eun a)
@@ -2059,8 +2036,8 @@ public function ExpExp(sequence n1, integer exp1, PositiveScalar targetLength, A
 -- end for
 -- 
 -- ? sum
-	sequence num, den, sum, tmp, lookat
-	integer protoTargetLength, len, lastLen, moreAccuracy
+	sequence num, den, sum, tmp, lookat, ret
+	integer protoTargetLength, moreAccuracy
 	if expMoreAccuracy then
 		moreAccuracy = expMoreAccuracy
 	elsif calculationSpeed then
@@ -2068,41 +2045,31 @@ public function ExpExp(sequence n1, integer exp1, PositiveScalar targetLength, A
 	else
 		moreAccuracy = 1
 	end if
-	targetLength += moreAccuracy
 	protoTargetLength = targetLength + moreAccuracy
 	num = {{1}, 0}
 	den = {{1}, 0}
 	sum = {{1}, 0}
-	lastLen = length(sum[1])
+	ret = NewEun({1}, 0, targetLength, radix)
 	expExpCount = expExpIter
 	for i = 1 to expExpIter do
-		lookat = sum
 		num = MultiplyExp(num[1], num[2], n1, exp1, protoTargetLength, radix)
 		den = MultiplyExp(den[1], den[2], {i}, 0, protoTargetLength, radix)
 		tmp = DivideExp(num[1], num[2], den[1], den[2], protoTargetLength, radix)
 		sum = AddExp(sum[1], sum[2], tmp[1], tmp[2], protoTargetLength, radix)
-		-- it might need a "if length(guess) > targetLength then" statement
-		len = length(sum[1])
-		if len > targetLength then
-			len = targetLength
-		end if
-		if len = lastLen then
-			if sum[2] = lookat[2] then
-				-- if equal(sum[1], lookat[1]) then
-				if RangeEqual(sum[1], lookat[1], 1, len) then
-					--if expExpCount = i - 1 then
-					--      exit -- break
-					--end if
-					expExpCount = i
-					exit
-				end if
+		lookat = ret
+		ret = AdjustRound(sum[1], sum[2], targetLength, radix, FALSE)
+		if ret[2] = lookat[2] then
+			if equal(ret[1], lookat[1]) then
+				expExpCount = i
+				exit
 			end if
 		end if
-		lastLen = len
 	end for
-	targetLength -= moreAccuracy
-	sum = AdjustRound(sum[1], sum[2], targetLength, sum[4])
-	return sum
+	if expExpCount = expExpIter then
+		puts(1, "Error(4):  In MyEuNumber, too many iterations.  Unable to calculate number.\n  See file: ex.err\n")
+		abort(1/0)
+	end if
+	return ret
 end function
 
 sequence eunE
@@ -2245,9 +2212,9 @@ public integer logIterCount = -1
 
 public function LogExp(sequence n1, integer exp1, sequence guess, integer exp0, PositiveScalar targetLength, AtomRadix radix)
 	-- ln(x) = y[n] = y[n-1] + 2 * (x - exp(y[n-1]))/(x + exp(y[n-1]))
-	sequence expY, xMinus, xPlus, tmp, lookat, one
-	integer protoTargetLength, lastLen, len, moreAccuracy
-	lastLen = length(guess)
+	sequence expY, xMinus, xPlus, tmp, lookat, ret, one
+	integer protoTargetLength, moreAccuracy
+	one = NewEun({1}, 0, protoTargetLength, radix)
 	if logMoreAccuracy then
 		moreAccuracy = logMoreAccuracy
 	elsif calculationSpeed then
@@ -2255,13 +2222,11 @@ public function LogExp(sequence n1, integer exp1, sequence guess, integer exp0, 
 	else
 		moreAccuracy = 1
 	end if
-	targetLength += moreAccuracy
 	protoTargetLength = targetLength + moreAccuracy
 	guess = NewEun(guess, exp0, protoTargetLength, radix)
-	one = NewEun({1}, 0, protoTargetLength, radix)
+	ret = guess
 	logIterCount = logIter
 	for i = 1 to logIter do
-		lookat = guess
 		-- guess = guess + 2 * (num1 - exp(guess))/(num1 + exp(guess))
 		expY = EunExpFast(guess, one)
 		--expY = EunExp({guess[1], guess[2], protoTargetLength, radix, 0})
@@ -2270,29 +2235,21 @@ public function LogExp(sequence n1, integer exp1, sequence guess, integer exp0, 
 		tmp = DivideExp(xMinus[1], xMinus[2], xPlus[1], xPlus[2], protoTargetLength, radix)
 		tmp = MultiplyExp({2}, 0, tmp[1], tmp[2], protoTargetLength, radix)
 		guess = AddExp(guess[1], guess[2], tmp[1], tmp[2], protoTargetLength, radix)
-		len = length(guess[1])
-		if len > targetLength then
-			len = targetLength
-		end if
-		if len = lastLen then
-			if guess[2] = lookat[2] then
-				-- if equal(guess[1], lookat[1]) then
-				if RangeEqual(guess[1], lookat[1], 1, len) then
-					--if logIterCount = i - 1 then
-					--      exit -- break
-					--end if
-					logIterCount = i
-					exit
-				end if
+		lookat = ret
+		ret = AdjustRound(guess[1], guess[2], targetLength, radix, FALSE)
+		if ret[2] = lookat[2] then
+			if equal(ret[1], lookat[1]) then
+				logIterCount = i
+				exit
 			end if
 		end if
-		lastLen = len
 	end for
-	targetLength -= moreAccuracy
-	guess = AdjustRound(guess[1], guess[2], targetLength, guess[4])
-	return guess
+	if logIterCount = logIter then
+		puts(1, "Error(4):  In MyEuNumber, too many iterations.  Unable to calculate number.\n  See file: ex.err\n")
+		abort(1/0)
+	end if
+	return ret
 end function
-
 
 public function EunLog(Eun n1)
 	object tmp
@@ -2404,10 +2361,10 @@ public function SinExp(sequence n1, integer exp1, PositiveScalar targetLength, A
 -- sine(x) = x - ((x^3)/(3!)) + ((x^5)/(5!)) - ((x^7)/(7!)) + ((x^9)/(9!)) - ...
 	-- Cases: 0 equals zero (0)
 	-- Range: -PI/2 to PI/2, inclusive
-	sequence ans, a, b, tmp, xSquared, lookat
-	integer step, len, lastLen, protoTargetLength, moreAccuracy
+	sequence ans, a, b, tmp, xSquared, lookat, ret
+	integer step, protoTargetLength, moreAccuracy
 	if length(n1) = 0 then
-		return {{}, exp1, targetLength, radix, 0}
+		return NewEun({}, exp1, targetLength, radix)
 	end if
 	if sinMoreAccuracy then
 		moreAccuracy = sinMoreAccuracy
@@ -2416,18 +2373,16 @@ public function SinExp(sequence n1, integer exp1, PositiveScalar targetLength, A
 	else
 		moreAccuracy = 1
 	end if
-	targetLength += moreAccuracy
 	protoTargetLength = targetLength + moreAccuracy
-	lastLen = -1
-	sinIterCount = sinIter
 	step = 1 -- SinExp() uses 1
 	xSquared = MultiplyExp(n1, exp1, n1, exp1, protoTargetLength, radix)
 	a = {n1, exp1} -- a is the numerator, SinExp() starts with x.
 	b = {{1}, 0} -- b is the denominator.
 	-- copy x to ans:
 	ans = a -- in SinExp(), ans starts with x.
+	ret = AdjustRound(ans[1], ans[2], targetLength, radix, FALSE)
+	sinIterCount = sinIter
 	for i = 1 to sinIter do -- start at 1 for all computer languages.
-		lookat = ans
 		-- first step is 3, for SinExp()
 		step += 2
 		tmp = MultiplyExp({step-1}, 0, {step}, 0, protoTargetLength, radix)
@@ -2439,26 +2394,19 @@ public function SinExp(sequence n1, integer exp1, PositiveScalar targetLength, A
 			tmp[1] = Negate(tmp[1])
 		end if
 		ans = AddExp(ans[1], ans[2], tmp[1], tmp[2], protoTargetLength, radix)
-		len = length(ans[1])
-		if len > targetLength then
-			len = targetLength
-		end if
-		if len = lastLen then
-			if ans[2] = lookat[2] then
-				-- if equal(ans[1], lookat[1]) then
-				if RangeEqual(ans[1], lookat[1], 1, len) then
-					--if sinIterCount = i - 1 then
-					--      exit -- break
-					--end if
-					sinIterCount = i
-					exit
-				end if
+		lookat = ret
+		ret = AdjustRound(ans[1], ans[2], targetLength, radix, FALSE)
+		if ret[2] = lookat[2] then
+			if equal(ret[1], lookat[1]) then
+				sinIterCount = i
+				exit
 			end if
 		end if
-		lastLen = len
 	end for
-	targetLength -= moreAccuracy
-	ans = AdjustRound(ans[1], ans[2], targetLength, radix)
+	if sinIterCount = sinIter then
+		puts(1, "Error(4):  In MyEuNumber, too many iterations.  Unable to calculate number.\n  See file: ex.err\n")
+		abort(1/0)
+	end if
 	return ans
 end function
 
@@ -2479,8 +2427,8 @@ public integer cosIterCount = -1
 public function CosExp(sequence n1, integer exp1, PositiveScalar targetLength, AtomRadix radix)
 -- cos(x) = 1 - ((x^2)/(2!)) + ((x^4)/(4!)) - ((x^6)/(6!)) + ((x^8)/(8!)) - ...
 	-- Range: -PI/2 to PI/2, exclusive
-	sequence ans, a, b, tmp, xSquared, lookat
-	integer step, len, lastLen, protoTargetLength, moreAccuracy
+	sequence ans, a, b, tmp, xSquared, lookat, ret
+	integer step, protoTargetLength, moreAccuracy
 	if cosMoreAccuracy then
 		moreAccuracy = cosMoreAccuracy
 	elsif calculationSpeed then
@@ -2488,18 +2436,16 @@ public function CosExp(sequence n1, integer exp1, PositiveScalar targetLength, A
 	else
 		moreAccuracy = 1
 	end if
-	targetLength += moreAccuracy
 	protoTargetLength = targetLength + moreAccuracy
-	lastLen = -1
-	cosIterCount = cosIter
 	step = 0 -- CosExp() uses 0
 	xSquared = MultiplyExp(n1, exp1, n1, exp1, protoTargetLength, radix)
 	a = {{1}, 0} -- a is the numerator, CosExp() starts with 1.
 	b = {{1}, 0} -- b is the denominator.
 	-- copy "1" to ans:
 	ans = a -- in CosExp(), ans starts with 1.
+	ret = AdjustRound(ans[1], ans[2], targetLength, radix, FALSE)
+	cosIterCount = cosIter
 	for i = 1 to cosIter do -- start at 1 for all computer languages.
-		lookat = ans
 		-- first step is 2, for CosExp()
 		step += 2
 		tmp = MultiplyExp({step-1}, 0, {step}, 0, protoTargetLength, radix)
@@ -2511,26 +2457,19 @@ public function CosExp(sequence n1, integer exp1, PositiveScalar targetLength, A
 			tmp[1] = Negate(tmp[1])
 		end if
 		ans = AddExp(ans[1], ans[2], tmp[1], tmp[2], protoTargetLength, radix)
-		len = length(ans[1])
-		if len > targetLength then
-			len = targetLength
-		end if
-		if len = lastLen then
-			if ans[2] = lookat[2] then
-				-- if equal(ans[1], lookat[1]) then
-				if RangeEqual(ans[1], lookat[1], 1, len) then
-					--if cosIterCount = i - 1 then
-					--      exit -- break
-					--end if
-					cosIterCount = i
-					exit
-				end if
+		lookat = ret
+		ret = AdjustRound(ans[1], ans[2], targetLength, radix, FALSE)
+		if ret[2] = lookat[2] then
+			if equal(ret[1], lookat[1]) then
+				cosIterCount = i
+				exit
 			end if
 		end if
-		lastLen = len
 	end for
-	targetLength -= moreAccuracy
-	ans = AdjustRound(ans[1], ans[2], targetLength, radix)
+	if cosIterCount = cosIter then
+		puts(1, "Error(4):  In MyEuNumber, too many iterations.  Unable to calculate number.\n  See file: ex.err\n")
+		abort(1/0)
+	end if
 	return ans
 end function
 
@@ -2630,10 +2569,10 @@ public integer arcSinIter = 1000000000
 public integer arcSinIterCount = -1
 
 public function ArcSinExp(sequence n1, integer exp1, PositiveScalar targetLength, AtomRadix radix)
---something wrong with arcsin()
+--something wrong with arcsin()?
 -- arcsin(z) = z + (1/2)(z^3/3) + (1*3/(2*4))(z^5/5) + (1*3*5/(2*4*6))(z^7/7) + ...
-	sequence sum, xSquared, top, bottom, odd, even, x, tmp, lookat
-	integer protoTargetLength, len, lastLen, moreAccuracy
+	sequence sum, xSquared, top, bottom, odd, even, x, tmp, lookat, ret
+	integer protoTargetLength, moreAccuracy
 	if arcSinMoreAccuracy then
 		moreAccuracy = arcSinMoreAccuracy
 	elsif calculationSpeed then
@@ -2641,7 +2580,6 @@ public function ArcSinExp(sequence n1, integer exp1, PositiveScalar targetLength
 	else
 		moreAccuracy = 1
 	end if
-	targetLength += moreAccuracy
 	protoTargetLength = targetLength + moreAccuracy
 	sum = {n1,exp1}
 	x = {n1,exp1}
@@ -2656,10 +2594,9 @@ public function ArcSinExp(sequence n1, integer exp1, PositiveScalar targetLength
 	-- Second iteration(s):
 	top = {{1}, 0}
 	even = {{2}, 0}
-	lastLen = length(sum[1])
+	ret = sum
 	arcSinIterCount = arcSinIter
 	for n = 1 to arcSinIter do
-		lookat = sum
 		even = AddExp(even[1],even[2],{2},0,protoTargetLength,radix)
 		bottom = MultiplyExp(bottom[1],bottom[2],even[1],even[2],protoTargetLength,radix)
 		top  = MultiplyExp(top[1],top[2],odd[1],odd[2],protoTargetLength,radix)
@@ -2669,27 +2606,20 @@ public function ArcSinExp(sequence n1, integer exp1, PositiveScalar targetLength
 		tmp = DivideExp(x[1],x[2],tmp[1],tmp[2],protoTargetLength,radix)
 		tmp = MultiplyExp(tmp[1],tmp[2],top[1],top[2],protoTargetLength,radix)
 		sum = AddExp(sum[1],sum[2],tmp[1],tmp[2],protoTargetLength,radix)
-		len = length(sum[1])
-		if len > targetLength then
-			len = targetLength
-		end if
-		if len = lastLen then
-			if sum[2] = lookat[2] then
-				-- if equal(sum[1], lookat[1]) then
-				if RangeEqual(sum[1], lookat[1], 1, len) then
-					--if arcSinIterCount = n - 1 then
-					--      exit -- break
-					--end if
-					arcSinIterCount = n
-					exit
-				end if
+		lookat = ret
+		ret = AdjustRound(sum[1], sum[2], targetLength, radix, FALSE)
+		if ret[2] = lookat[2] then
+			if equal(ret[1], lookat[1]) then
+				arcSinIterCount = n
+				exit
 			end if
 		end if
-		lastLen = len
 	end for
-	targetLength -= moreAccuracy
-	sum = AdjustRound(sum[1], sum[2], targetLength, sum[4])
-	return sum
+	if arcSinIterCount = arcSinIter then
+		puts(1, "Error(4):  In MyEuNumber, too many iterations.  Unable to calculate number.\n  See file: ex.err\n")
+		abort(1/0)
+	end if
+	return ret
 end function
 
 public function EunArcSin(Eun a)
