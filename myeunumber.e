@@ -27,7 +27,7 @@ include get.e
 -- with trace
 
 public function GetVersion() -- revision number
-	return 138
+	return 139
 end function
 
 -- MyEunumber
@@ -1050,7 +1050,8 @@ end function
 public function EunMultiply(Eun n1, Eun n2)
 	integer targetLength
 	if n1[4] != n2[4] then
-		return -1
+		puts(1, "Error(5):  In MyEuNumber, radixes do not equal.  See file: ex.err\n")
+		abort(1/0)
 	end if
 	if n1[3] > n2[3] then
 		targetLength = n1[3]
@@ -1068,7 +1069,8 @@ end function
 public function EunAdd(Eun n1, Eun n2)
 	integer targetLength
 	if n1[4] != n2[4] then
-		return -1
+		puts(1, "Error(5):  In MyEuNumber, radixes do not equal.  See file: ex.err\n")
+		abort(1/0)
 	end if
 	if n1[3] > n2[3] then
 		targetLength = n1[3]
@@ -1100,7 +1102,8 @@ end function
 public function EunSubtract(Eun n1, Eun n2)
 	integer targetLength
 	if n1[4] != n2[4] then
-		return -1
+		puts(1, "Error(5):  In MyEuNumber, radixes do not equal.  See file: ex.err\n")
+		abort(1/0)
 	end if
 	if n1[3] > n2[3] then
 		targetLength = n1[3]
@@ -1117,7 +1120,8 @@ end function
 public function EunDivide(Eun n1, Eun n2)
 	integer targetLength
 	if n1[4] != n2[4] then
-		return -1
+		puts(1, "Error(5):  In MyEuNumber, radixes do not equal.  See file: ex.err\n")
+		abort(1/0)
 	end if
 	if n1[3] > n2[3] then
 		targetLength = n1[3]
@@ -1692,7 +1696,8 @@ public function EunNthRoot(PositiveScalar n, Eun n1, object option = {})
 		guess = option
 	end if
 	if n1[4] != guess[4] then
-		return -1
+		puts(1, "Error(5):  In MyEuNumber, radixes do not equal.  See file: ex.err\n")
+		abort(1/0)
 	end if
 	if n1[3] > guess[3] then
 		targetLength = n1[3]
@@ -1726,7 +1731,8 @@ end function
 
 public function EunSquareRoot(Eun n1, object guess = {})
 --      if (length(n1[1]) and n1[1][1] < 0) or (length(guess[1]) and guess[1][1] < 0) then
---              return -1
+--              puts(1, "Error.  See file: ex.err\n")
+--              abort(1/0)
 --      end if
 	return EunNthRoot(2, n1, guess)
 end function
@@ -2177,7 +2183,8 @@ public function EunExpFast(Eun numerator, Eun denominator)
 -- e^(x/y) = 1 + 2x/(2y-x+x^2/(6y+x^2/(10y+x^2/(14y+x^2/(18y+x^2/(22y+...
 	integer targetLength
 	if numerator[4] != denominator[4] then
-		return -1
+		puts(1, "Error(5):  In MyEuNumber, radixes do not equal.  See file: ex.err\n")
+		abort(1/0)
 	end if
 	if numerator[3] > denominator[3] then
 		targetLength = numerator[3]
@@ -3284,12 +3291,14 @@ public function ComplexSqrt(Complex a)
 	n2 = EunSubtract(tmp, x) -- a.real, (sqrt(x^2 + y^2) - x), round down
 	s = EunSqrt(n1) -- could check "isImaginaryFlag", but will always return real number
 	if s[1] then
-		return {} -- Error: something went wrong
+		puts(1, "Error(6):  In MyEuNumber, something went wrong in ComplexSqrt().\n  See file: ex.err\n")
+		abort(1/0)
 	end if
 	n1 = s[2] -- sqrt(sqrt(x^2 + y^2) + x)
 	s = EunSqrt(n2) -- could check "isImaginaryFlag", but will always return real number
 	if s[1] then
-		return {} -- Error: something went wrong
+		puts(1, "Error(6):  In MyEuNumber, something went wrong in ComplexSqrt().\n  See file: ex.err\n")
+		abort(1/0)
 	end if
 	n2 = s[2] -- sqrt(sqrt(x^2 + y^2) - x)
 	if length(y[1]) then -- a.imag
