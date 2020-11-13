@@ -27,7 +27,7 @@ include get.e
 -- with trace
 
 public function GetVersion() -- revision number
-	return 139
+	return 140
 end function
 
 -- MyEunumber
@@ -53,7 +53,7 @@ end function
 -- GetRoundToNearestOption()
 
 -- RoundTowardsZero
--- RangeEqual
+-- Equaln
 -- IsIntegerOdd(integer i)
 -- IsIntegerEven(integer i)
 
@@ -302,6 +302,24 @@ public function RangeEqual(sequence a, sequence b, PositiveInteger start, Positi
 		return 1
 	end if
 	return 0
+end function
+
+public function Equaln(sequence a, sequence b)
+	integer minlen, maxlen
+	task_yield()
+	if length(a) > length(b) then
+		maxlen = length(a)
+		minlen = length(b)
+	else
+		maxlen = length(b)
+		minlen = length(a)
+	end if
+	for i = 1 to minlen do
+		if a[i] != b[i] then
+			return {i - 1, maxlen}
+		end if
+	end for
+	return {minlen, maxlen}
 end function
 
 public function IsIntegerOdd(integer i)
@@ -620,6 +638,7 @@ public function AdjustRound(sequence num, integer exponent, integer targetLength
 	integer oldlen, roundTargetLength, rounded
 	atom halfRadix, f
 	sequence ret
+	task_yield()
 	oldlen = length(num)
 	num = TrimLeadingZeros(num)
 	exponent += (length(num) - oldlen)
@@ -906,9 +925,12 @@ end procedure
 
 public integer divideByZeroCallBackId = routine_id("DefaultDivideByZeroCallBack")
 
+public sequence howComplete = {-1, 0}
+
 public function MultiplicativeInverseExp(sequence den1, integer exp1, PositiveScalar targetLength, AtomRadix radix)
 	sequence guess, tmp, lookat, ret
 	integer exp0, protoTargetLength, protoMoreAccuracy
+	howComplete = {-1, 0}
 	if length(den1) = 0 then
 		lastIterCount = 1
 		divideByZeroFlag = 1
@@ -917,6 +939,7 @@ public function MultiplicativeInverseExp(sequence den1, integer exp1, PositiveSc
 	end if
 	if length(den1) = 1 then
 		if den1[1] = 1 or den1[1] = -1 then -- optimization
+			howComplete = {1, 1}
 			lastIterCount = 1
 			return {den1, -exp1, targetLength, radix, 0}
 		end if
@@ -943,11 +966,14 @@ public function MultiplicativeInverseExp(sequence den1, integer exp1, PositiveSc
 		ret = AdjustRound(guess, exp0, targetLength, radix, FALSE)
 		if length(tmp) = 2 then
 			-- solution found
+			howComplete = repeat(length(ret[1]), 2)
 			lastIterCount = i
 			exit
 		end if
 		if ret[2] = lookat[2] then
-			if equal(ret[1], lookat[1]) then
+			howComplete = Equaln(ret[1], lookat[1])
+			if howComplete[1] = howComplete[2] then
+			-- if equal(ret[1], lookat[1]) then
 				lastIterCount = i
 				exit
 			end if
@@ -1609,16 +1635,21 @@ end function
 public integer nthRootIter = 1000000000
 public integer lastNthRootIter = -1
 
+public sequence nthRootHowComplete = {-1, 0}
+
 public function NthRootExp(PositiveScalar n, sequence x1, integer x1Exp, sequence guess, 
 			integer guessExp, PositiveScalar targetLength, AtomRadix radix)
 	sequence tmp, lookat, ret
 	integer protoTargetLength, moreAccuracy
+	nthRootHowComplete = {-1, 0}
 	if length(x1) = 0 then
+		nthRootHowComplete = {0, 0}
 		lastNthRootIter = 1
 		return {x1, x1Exp, targetLength, radix, 0}
 	end if
 	if length(x1) = 1 then
 		if x1[1] = 1 or x1[1] = -1 then
+			nthRootHowComplete = {1, 1}
 			lastNthRootIter = 1
 			return {x1, x1Exp, targetLength, radix, 0}
 		end if
@@ -1640,7 +1671,9 @@ public function NthRootExp(PositiveScalar n, sequence x1, integer x1Exp, sequenc
 		lookat = ret
 		ret = AdjustRound(guess, guessExp, targetLength, radix, FALSE)
 		if ret[2] = lookat[2] then
-			if equal(ret[1], lookat[1]) then
+			nthRootHowComplete = Equaln(ret[1], lookat[1])
+			if nthRootHowComplete[1] = nthRootHowComplete[2] then
+			-- if equal(ret[1], lookat[1]) then
 				lastNthRootIter = i
 				exit
 			end if
@@ -1800,9 +1833,12 @@ end function
 public integer arcTanIter = 1000000000
 public integer arcTanCount = -1
 
+public sequence arcTanHowComplete = {-1, 0}
+
 public function ArcTanExp(sequence n1, integer exp1, PositiveScalar targetLength, AtomRadix radix)
 	sequence sum, a, b, c, d, e, f, tmp, count, xSquared, xSquaredPlusOne, lookat, ret
 	integer protoTargetLength, moreAccuracy
+	arcTanHowComplete = {-1, 0}
 	if arcTanMoreAccuracy then
 		moreAccuracy = arcTanMoreAccuracy
 	elsif calculationSpeed then
@@ -1848,7 +1884,9 @@ public function ArcTanExp(sequence n1, integer exp1, PositiveScalar targetLength
 		lookat = ret
 		ret = AdjustRound(sum[1], sum[2], targetLength, radix, FALSE)
 		if ret[2] = lookat[2] then
-			if equal(ret[1], lookat[1]) then
+			arcTanHowComplete = Equaln(ret[1], lookat[1])
+			if arcTanHowComplete[1] = arcTanHowComplete[2] then
+			-- if equal(ret[1], lookat[1]) then
 				arcTanCount = n
 				exit
 			end if
@@ -1887,6 +1925,7 @@ end function
 
 
 public integer ExpExp1Iter = 1000
+public sequence exp1HowComplete = {-1, 0}
 
 public function ExpExp1(sequence n1, integer exp1, PositiveScalar targetLength, AtomRadix radix)
 -- not quite accurate enough for large numbers.
@@ -1909,6 +1948,7 @@ public function ExpExp1(sequence n1, integer exp1, PositiveScalar targetLength, 
 --      return sum
 --end My algorithm.
 	sequence sum, tmp, den
+	exp1HowComplete = {-1, 0}
 	sum = {{1}, 0}
 	den = {{ExpExp1Iter + 1}, 0}
 	for i = ExpExp1Iter to 1 by -1 do
@@ -1916,6 +1956,7 @@ public function ExpExp1(sequence n1, integer exp1, PositiveScalar targetLength, 
 		tmp = DivideExp(n1, exp1, den[1], den[2], targetLength, radix)
 		sum = MultiplyExp(sum[1], sum[2], tmp[1], tmp[2], targetLength, radix)
 		sum = AddExp(sum[1], sum[2], {1}, 0, targetLength, radix)
+		exp1HowComplete = {i, ExpExp1Iter}
 	end for
 	return sum
 end function
@@ -1968,10 +2009,13 @@ public function Remainder2Exp(sequence n1, integer exp1)
 	return IsIntegerOdd(n1[n])
 end function
 
+public sequence expWholeHowComplete = {0, -1}
+
 public function EunExpWhole(Eun u, Eun m)
 -- exp function for whole numbers
 	Eun q, prod, current
 	integer targetLength, radix
+	expWholeHowComplete = {0, -1}
 	targetLength = m[3]
 	radix = m[4]
 	if u[4] != radix then
@@ -1984,6 +2028,7 @@ public function EunExpWhole(Eun u, Eun m)
 	prod = {{1}, 0, targetLength, radix, 0}
 	if CompareExp(q[1], q[2], {}, 0) = 1 then
 		while CompareExp(q[1], q[2], {}, 0) = 1 do
+			expWholeHowComplete = {q[2], -1}
 			if Remainder2Exp(q[1], q[2]) = 1 then
 				prod = EunMultiply(prod, current)
 				q = AddExp({-1}, 0, q[1], q[2], targetLength, radix)
@@ -1993,6 +2038,7 @@ public function EunExpWhole(Eun u, Eun m)
 		end while
 	else
 		while CompareExp(q[1], q[2], {}, 0) = -1 do
+			expWholeHowComplete = {q[2], -1}
 			if Remainder2Exp(q[1], q[2]) = -1 then
 				prod = EunDivide(prod, current)
 				q = AddExp({1}, 0, q[1], q[2], targetLength, radix)
@@ -2015,6 +2061,8 @@ end function
 
 public integer expExpIter = 1000000000
 public integer expExpCount = -1
+
+public sequence expHowComplete = {-1, 0}
 
 public function ExpExp(sequence n1, integer exp1, PositiveScalar targetLength, AtomRadix radix)
 -- it doesn't like large numbers.
@@ -2044,6 +2092,7 @@ public function ExpExp(sequence n1, integer exp1, PositiveScalar targetLength, A
 -- ? sum
 	sequence num, den, sum, tmp, lookat, ret
 	integer protoTargetLength, moreAccuracy
+	expHowComplete = {-1, 0}
 	if expMoreAccuracy then
 		moreAccuracy = expMoreAccuracy
 	elsif calculationSpeed then
@@ -2065,7 +2114,9 @@ public function ExpExp(sequence n1, integer exp1, PositiveScalar targetLength, A
 		lookat = ret
 		ret = AdjustRound(sum[1], sum[2], targetLength, radix, FALSE)
 		if ret[2] = lookat[2] then
-			if equal(ret[1], lookat[1]) then
+			expHowComplete = Equaln(ret[1], lookat[1])
+			if expHowComplete[1] = expHowComplete[2] then -- how equal are they? Use tasks to report on how close we are to the answer.
+			-- if equal(ret[1], lookat[1]) then
 				expExpCount = i
 				exit
 			end if
@@ -2086,6 +2137,7 @@ public function GetE(PositiveScalar targetLength = defaultTargetLength, AtomRadi
 	end if
 	return eunE
 end function
+
 
 public function EunExp(Eun n1)
 -- 
@@ -2155,6 +2207,8 @@ public procedure SetExpFastIter(integer i)
 	ExpExpFastIter = i
 end procedure
 
+public sequence expFastHowComplete = {-1, 0}
+
 public function ExpExpFast(sequence x1, integer exp1, sequence y2, integer exp2, PositiveScalar targetLength, AtomRadix radix)
 -- e^(x/y) = 1 + 2x/(2y-x+x^2/(6y+x^2/(10y+x^2/(14y+x^2/(18y+x^2/(22y+...
 	-- precalculate:
@@ -2162,6 +2216,7 @@ public function ExpExpFast(sequence x1, integer exp1, sequence y2, integer exp2,
 	-- i = targetLength to 0.
 	-- Subtract 4y
 	sequence xSquared, fourY, targetLengthY, tmp
+	expFastHowComplete = {-1, 0}
 	xSquared = MultiplyExp(x1, exp1, x1, exp1, targetLength, radix)
 	fourY = MultiplyExp({-4}, 0, y2, exp2, targetLength, radix)
 	targetLengthY = MultiplyExp({2+4*ExpExpFastIter},0,y2,exp2,targetLength,radix)
@@ -2170,12 +2225,14 @@ public function ExpExpFast(sequence x1, integer exp1, sequence y2, integer exp2,
 		tmp = DivideExp(xSquared[1], xSquared[2], tmp[1], tmp[2], targetLength, radix)
 		targetLengthY = AddExp(targetLengthY[1], targetLengthY[2], fourY[1], fourY[2], targetLength, radix)
 		tmp = AddExp(tmp[1], tmp[2], targetLengthY[1], targetLengthY[2], targetLength, radix)
+		expFastHowComplete = {i, 0}
 	end for
 	tmp = DivideExp(xSquared[1], xSquared[2], tmp[1], tmp[2], targetLength, radix)
 	tmp = AddExp(tmp[1], tmp[2], -x1, exp1, targetLength, radix)
 	tmp = AddExp(tmp[1], tmp[2], y2 * 2, exp2, targetLength, radix)
 	tmp = DivideExp(x1 * 2, exp1, tmp[1], tmp[2], targetLength, radix)
 	tmp = AddExp({1}, 0, tmp[1], tmp[2], targetLength, radix)
+	expFastHowComplete = {1, 0}
 	return tmp
 end function
 
@@ -2191,18 +2248,21 @@ public function EunExpFast(Eun numerator, Eun denominator)
 	else
 		targetLength = denominator[3]
 	end if
-	object Tmp0, Tmp1
-	Tmp1 = ExpExpFast(numerator[1], numerator[2], denominator[1], denominator[2], targetLength, numerator[4])
+	object tmp0, tmp1
+	tmp1 = ExpExpFast(numerator[1], numerator[2], denominator[1], denominator[2], targetLength, numerator[4])
 	while 1 do
-		Tmp0 = Tmp1
+		tmp0 = tmp1
 		ExpExpFastIter *= 2
-		Tmp1 = ExpExpFast(numerator[1], numerator[2], denominator[1], denominator[2], targetLength, numerator[4])
-		if EunCompare(Tmp0, Tmp1) = 0 then
-			exit
+		tmp1 = ExpExpFast(numerator[1], numerator[2], denominator[1], denominator[2], targetLength, numerator[4])
+		if tmp1[2] = tmp0[2] then
+			expFastHowComplete = Equaln(tmp1[1], tmp0[1])
+			if expFastHowComplete[1] = expFastHowComplete[2] then
+				exit
+			end if
 		end if
 	end while
 	ExpExpFastIter /= 2
-	return Tmp1
+	return tmp1
 end function
 
 public PositiveInteger logMoreAccuracy = 0 -- if 0, then use calculationSpeed
@@ -2217,10 +2277,13 @@ end function
 public integer logIter = 1000000000 -- 50
 public integer logIterCount = -1
 
+public sequence logHowComplete = {-1, 0}
+
 public function LogExp(sequence n1, integer exp1, sequence guess, integer exp0, PositiveScalar targetLength, AtomRadix radix)
 	-- ln(x) = y[n] = y[n-1] + 2 * (x - exp(y[n-1]))/(x + exp(y[n-1]))
 	sequence expY, xMinus, xPlus, tmp, lookat, ret, one
 	integer protoTargetLength, moreAccuracy
+	logHowComplete = {-1, 0}
 	one = NewEun({1}, 0, protoTargetLength, radix)
 	if logMoreAccuracy then
 		moreAccuracy = logMoreAccuracy
@@ -2245,7 +2308,9 @@ public function LogExp(sequence n1, integer exp1, sequence guess, integer exp0, 
 		lookat = ret
 		ret = AdjustRound(guess[1], guess[2], targetLength, radix, FALSE)
 		if ret[2] = lookat[2] then
-			if equal(ret[1], lookat[1]) then
+			logHowComplete = Equaln(ret[1], lookat[1])
+			if logHowComplete[1] = logHowComplete[2] then
+			-- if equal(ret[1], lookat[1]) then
 				logIterCount = i
 				exit
 			end if
@@ -2364,6 +2429,8 @@ public function IsPositiveEven(integer i)
     return and_bits(i, 0)
 end function
 
+public sequence trigHowComplete = {-1, 0} -- for sin() and cos()
+
 public function SinExp(sequence n1, integer exp1, PositiveScalar targetLength, AtomRadix radix)
 -- sine(x) = x - ((x^3)/(3!)) + ((x^5)/(5!)) - ((x^7)/(7!)) + ((x^9)/(9!)) - ...
 	-- Cases: 0 equals zero (0)
@@ -2371,8 +2438,10 @@ public function SinExp(sequence n1, integer exp1, PositiveScalar targetLength, A
 	sequence ans, a, b, tmp, xSquared, lookat, ret
 	integer step, protoTargetLength, moreAccuracy
 	if length(n1) = 0 then
+		trigHowComplete = {0, 0}
 		return NewEun({}, exp1, targetLength, radix)
 	end if
+	trigHowComplete = {-1, 0}
 	if sinMoreAccuracy then
 		moreAccuracy = sinMoreAccuracy
 	elsif calculationSpeed then
@@ -2404,7 +2473,9 @@ public function SinExp(sequence n1, integer exp1, PositiveScalar targetLength, A
 		lookat = ret
 		ret = AdjustRound(ans[1], ans[2], targetLength, radix, FALSE)
 		if ret[2] = lookat[2] then
-			if equal(ret[1], lookat[1]) then
+			trigHowComplete = Equaln(ret[1], lookat[1])
+			if trigHowComplete[1] = trigHowComplete[2] then
+			-- if equal(ret[1], lookat[1]) then
 				sinIterCount = i
 				exit
 			end if
@@ -2436,6 +2507,7 @@ public function CosExp(sequence n1, integer exp1, PositiveScalar targetLength, A
 	-- Range: -PI/2 to PI/2, exclusive
 	sequence ans, a, b, tmp, xSquared, lookat, ret
 	integer step, protoTargetLength, moreAccuracy
+	trigHowComplete = {-1, 0}
 	if cosMoreAccuracy then
 		moreAccuracy = cosMoreAccuracy
 	elsif calculationSpeed then
@@ -2467,7 +2539,9 @@ public function CosExp(sequence n1, integer exp1, PositiveScalar targetLength, A
 		lookat = ret
 		ret = AdjustRound(ans[1], ans[2], targetLength, radix, FALSE)
 		if ret[2] = lookat[2] then
-			if equal(ret[1], lookat[1]) then
+			trigHowComplete = Equaln(ret[1], lookat[1])
+			if trigHowComplete[1] = trigHowComplete[2] then
+			-- if equal(ret[1], lookat[1]) then
 				cosIterCount = i
 				exit
 			end if
@@ -2575,11 +2649,14 @@ end function
 public integer arcSinIter = 1000000000
 public integer arcSinIterCount = -1
 
+public sequence arcSinHowComplete = {-1, 0}
+
 public function ArcSinExp(sequence n1, integer exp1, PositiveScalar targetLength, AtomRadix radix)
 --something wrong with arcsin()?
 -- arcsin(z) = z + (1/2)(z^3/3) + (1*3/(2*4))(z^5/5) + (1*3*5/(2*4*6))(z^7/7) + ...
 	sequence sum, xSquared, top, bottom, odd, even, x, tmp, lookat, ret
 	integer protoTargetLength, moreAccuracy
+	arcSinHowComplete = {-1, 0}
 	if arcSinMoreAccuracy then
 		moreAccuracy = arcSinMoreAccuracy
 	elsif calculationSpeed then
@@ -2616,7 +2693,9 @@ public function ArcSinExp(sequence n1, integer exp1, PositiveScalar targetLength
 		lookat = ret
 		ret = AdjustRound(sum[1], sum[2], targetLength, radix, FALSE)
 		if ret[2] = lookat[2] then
-			if equal(ret[1], lookat[1]) then
+			arcSinHowComplete = Equaln(ret[1], lookat[1])
+			if arcSinHowComplete[1] = arcSinHowComplete[2] then
+			-- if equal(ret[1], lookat[1]) then
 				arcSinIterCount = n
 				exit
 			end if
@@ -2829,7 +2908,8 @@ end function
 public function EunCoth(Eun a)
 -- coth(x) = x != 0; 1/tanh(x)
 	if not CompareExp(a[1], a[2], {}, 0) then
-		return 1/0 -- invalid number passed to "EunCoth()", cannot be zero (0).
+		puts(1, "Error(7):  In MyEuNumber, trig functions: Invalid number passed to\n \"EunCoth()\", cannot be zero (0).\n  See file: ex.err\n")
+		abort(1/0)
 	end if
 	return EunMultiplicativeInverse(EunTanh(a))
 end function
@@ -2842,7 +2922,8 @@ end function
 public function EunCsch(Eun a)
 -- csch(x) = x != 0; 1/sinh(x)
 	if not CompareExp(a[1], a[2], {}, 0) then
-		return 1/0 -- invalid number passed to "EunCsch()", cannot be zero (0).
+		puts(1, "Error(7):  In MyEuNumber, trig functions: Invalid number passed to\n \"EunCsch()\", cannot be zero (0).\n  See file: ex.err\n")
+		abort(1/0)
 	end if
 	return EunMultiplicativeInverse(EunSinh(a))
 end function
@@ -2855,7 +2936,8 @@ public function EunArcSinh(Eun a)
 	sequence tmp
 	tmp = EunSqrt(EunAdd(EunMultiply(a, NewEun({2}, 0, a[3], a[4])), NewEun({1}, 0, a[3], a[4])))
 	if tmp[1] then
-		return 1/0 -- error, encountered imaginary number, something went wrong internally.
+		puts(1, "Error(7):  In MyEuNumber, EunArcSinh(): error, encountered imaginary number,\n something went wrong internally.\n  See file: ex.err\n")
+		abort(1/0)
 	end if
 	return EunLog(EunAdd(a, tmp[2]))
 end function
@@ -2864,11 +2946,13 @@ public function EunArcCosh(Eun a)
 -- arccosh(x) = x >= 1; ln(x + sqrt(x^2 - 1))
 	sequence tmp
 	if CompareExp(a[1], a[2], {1}, 0) = -1 then
-		return 1/0 -- invalid number passed to "EunArcCosh()", cannot be zero (0).
+		puts(1, "Error(7):  In MyEuNumber, trig functions: Invalid number passed to\n \"EunArcCosh()\", cannot be zero (0).\n  See file: ex.err\n")
+		abort(1/0)
 	end if
 	tmp = EunSqrt(EunSubtract(EunMultiply(a, NewEun({2}, 0, a[3], a[4])), NewEun({1}, 0, a[3], a[4])))
 	if tmp[1] then
-		return 1/0 -- error, encountered imaginary number, something went wrong internally.
+		puts(1, "Error(7):  In MyEuNumber, EunArcCosh(): error, encountered imaginary number,\n something went wrong internally.\n  See file: ex.err\n")
+		abort(1/0)
 	end if
 	return EunLog(EunAdd(a, tmp[2]))
 end function
@@ -2877,7 +2961,8 @@ public function EunArcTanh(Eun a)
 -- arctanh(x) = abs(x) < 1; ln((1 + x)/(1 - x)) / 2
 	sequence tmp, local
 	if CompareExp(AbsoluteValue(a[1]), a[2], {1}, 0) >= 0 then
-		return 1/0 -- supplied number is out of domain/range for EunArcTanh()
+		puts(1, "Error(7):  In MyEuNumber, EunArcTanh(): supplied number is out of domain/range\n  See file: ex.err\n")
+		abort(1/0)
 	end if
 	local = NewEun({1}, 0, a[3], a[4])
 	tmp = EunDivide(EunAdd(local, a), EunSubtract(local, a))
@@ -2889,7 +2974,8 @@ public function EunArcCoth(Eun a)
 -- arccoth(x) = abs(x) > 1; ln((x + 1)/(x - 1)) / 2
 	sequence tmp, local
 	if CompareExp(AbsoluteValue(a[1]), a[2], {1}, 0) <= 0 then
-		return 1/0 -- supplied number is out of domain/range for EunArcTanh()
+		puts(1, "Error(7):  In MyEuNumber, EunArcCoth(): supplied number is out of domain/range\n  See file: ex.err\n")
+		abort(1/0)
 	end if
 	local = NewEun({1}, 0, a[3], a[4])
 	tmp = EunDivide(EunAdd(a, local), EunSubtract(a, local))
@@ -2901,7 +2987,8 @@ public function EunArcSech(Eun a)
 -- arcsech(x) = 0 < x <= 1; 1 / x => a; ln(a + sqrt(a^2 - 1)) :: ln((1 + sqrt(1 - x^2)) / x)
 	sequence tmp, s
 	if CompareExp(a[1], a[2], {}, 0) <= 0 or CompareExp(a[1], a[2], {1}, 0) = 1 then
-		return 1/0 -- supplied number is out of domain/range for EunArcSech()
+		puts(1, "Error(7):  In MyEuNumber, EunArcSech(): supplied number is out of domain/range\n  See file: ex.err\n")
+		abort(1/0)
 	end if
 	tmp = EunMultiplicativeInverse(a)
 	s = EunSqrt(EunSubtract(EunMultiply(tmp, tmp), NewEun({1}, 0, a[3], a[4])))
@@ -2912,7 +2999,8 @@ public function EunArcCsch(Eun a)
 -- arccsch(x) = x != 0; 1 / x => a; ln(a + sqrt(a^2 + 1))
 	sequence tmp, s
 	if not length(a[1]) then
-		return 1/0 -- supplied number is out of domain/range for EunArcCsch()
+		puts(1, "Error(7):  In MyEuNumber, EunArcCsch(): supplied number is out of domain/range\n  See file: ex.err\n")
+		abort(1/0)
 	end if
 	tmp = EunMultiplicativeInverse(a)
 	s = EunSqrt(EunAdd(EunMultiply(tmp, tmp), NewEun({1}, 0, a[3], a[4])))

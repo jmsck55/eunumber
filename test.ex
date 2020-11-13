@@ -1,51 +1,76 @@
 
-with trace
+-- with trace
+
+atom t, t0
+
+t0 = time()
 
 include my.e
 
-object a, b, c, d
-integer tmpAdjustRound
-sequence s
+constant TRUE = 1, FALSE = 0
 
-trace(1)
+type boolean(integer x)
+	return x = 0 or x = 1
+end type
 
-defaultTargetLength = 68
+boolean calc_running
 
-a = ToEun("2")
-b = EunSqrt(a)
-b = b[2]
-c = EunMultiply(b,b)
-? c
-tmpAdjustRound = adjustRound
-adjustRound = 0
-c = EunRoundToInt(c)
-adjustRound = tmpAdjustRound
-? c
 
-? EunCompare(c, a)
-? GetEqualLength()
+procedure checkHowComplete()
+	while 1 do
+		printf(1, "expHowComplete: %d out of %d\n", expHowComplete)
+		task_yield()
+	end while
+end procedure
 
-? EunCompare(b, b)
-? GetEqualLength()
 
-? EunCompare(RemoveLastDigits(b), b)
-? GetEqualLength()
+procedure calc(integer len)
 
-function myfunc(Eun n1)
-	sequence s
-	s = EunSqrt(n1)
-	trace(1)
-	return EunLog(s[2])
-end function
 
-trace(1)
+object a
 
-a[3] += 10
-? myfunc(a)
-a[3] -= 10
+task_yield()
 
-? myfunc(a)
-trace(1)
-? GetMoreAccurateFunc(routine_id("myfunc"), {a})
+calculationSpeed = floor(len / 2)
+adjustRound = floor(len / 10)
 
---End-of-file.
+a = GetE(len)
+? a
+? length(a[1])
+
+task_yield()
+
+calc_running = FALSE
+
+end procedure
+
+
+puts(1, "main task: start, press \"q\" to force stop\n")
+
+atom t1, t2
+
+t1 = task_create(routine_id("checkHowComplete"), {})
+t2 = task_create(routine_id("calc"), {1000})
+
+task_schedule(t1, {1, 2})
+task_schedule(t2, 1)
+
+calc_running = TRUE
+
+
+while calc_running do
+	if get_key() = 'q' then
+		abort(1/0)
+	end if
+	task_yield()
+end while
+
+puts(1, "main task: stop\n")
+
+t = time() - t0
+printf(1, "%f seconds\n", t)
+
+puts(1, "done.\n")
+abort(0)
+
+-- program ends when main task is finished
