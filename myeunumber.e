@@ -27,7 +27,7 @@ include get.e
 -- with trace
 
 public function GetVersion() -- revision number
-	return 140
+	return 141
 end function
 
 -- MyEunumber
@@ -177,6 +177,8 @@ public type Bool(integer i)
 	return i = FALSE or i = TRUE
 end type
 
+public Bool useTaskYield = FALSE -- TRUE
+
 public Bool divideByZeroFlag = FALSE
 
 public function GetDivideByZeroFlag()
@@ -306,7 +308,9 @@ end function
 
 public function Equaln(sequence a, sequence b)
 	integer minlen, maxlen
-	task_yield()
+	if useTaskYield then
+		task_yield()
+	end if
 	if length(a) > length(b) then
 		maxlen = length(a)
 		minlen = length(b)
@@ -638,7 +642,9 @@ public function AdjustRound(sequence num, integer exponent, integer targetLength
 	integer oldlen, roundTargetLength, rounded
 	atom halfRadix, f
 	sequence ret
-	task_yield()
+	if useTaskYield then
+		task_yield()
+	end if
 	oldlen = length(num)
 	num = TrimLeadingZeros(num)
 	exponent += (length(num) - oldlen)
