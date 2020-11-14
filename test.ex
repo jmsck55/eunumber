@@ -7,10 +7,10 @@ t0 = time()
 
 include my.e
 
-constant TRUE = 1, FALSE = 0
+useTaskYield = TRUE
 
 type boolean(integer x)
-	return x = 0 or x = 1
+	return Bool(x)
 end type
 
 boolean calc_running
