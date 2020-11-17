@@ -1,4 +1,6 @@
 
+with define USE_TASK_YIELD
+
 -- with trace
 
 atom t, t0
