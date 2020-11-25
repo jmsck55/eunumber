@@ -27,7 +27,7 @@ include get.e
 -- with trace
 
 public function GetVersion() -- revision number
-	return 143
+	return 144
 end function
 
 -- MyEunumber
@@ -961,7 +961,7 @@ public function MultiplicativeInverseExp(sequence den1, integer exp1, PositiveSc
 	elsif calculationSpeed then
 		protoMoreAccuracy = Ceil(targetLength / calculationSpeed)
 	else
-		protoMoreAccuracy = 1
+		protoMoreAccuracy = 0 -- changed to 0
 	end if
 	protoTargetLength = targetLength + protoMoreAccuracy
 	exp0 = -exp1 - 1
@@ -1671,7 +1671,7 @@ public function NthRootExp(PositiveScalar n, sequence x1, integer x1Exp, sequenc
 	elsif calculationSpeed then
 		moreAccuracy = Ceil(targetLength / calculationSpeed)
 	else
-		moreAccuracy = 1
+		moreAccuracy = 0 -- changed to 0
 	end if
 	protoTargetLength = targetLength + moreAccuracy
 	ret = AdjustRound(guess, guessExp, targetLength, radix, FALSE)
@@ -1856,7 +1856,7 @@ public function ArcTanExp(sequence n1, integer exp1, PositiveScalar targetLength
 	elsif calculationSpeed then
 		moreAccuracy = Ceil(targetLength / calculationSpeed)
 	else
-		moreAccuracy = 1
+		moreAccuracy = 0 -- changed to 0
 	end if
 	protoTargetLength = targetLength + moreAccuracy
 	-- First iteration:
@@ -2110,7 +2110,7 @@ public function ExpExp(sequence n1, integer exp1, PositiveScalar targetLength, A
 	elsif calculationSpeed then
 		moreAccuracy = Ceil(targetLength / calculationSpeed)
 	else
-		moreAccuracy = 1
+		moreAccuracy = 0 -- changed to 0
 	end if
 	protoTargetLength = targetLength + moreAccuracy
 	num = {{1}, 0}
@@ -2302,7 +2302,7 @@ public function LogExp(sequence n1, integer exp1, sequence guess, integer exp0, 
 	elsif calculationSpeed then
 		moreAccuracy = Ceil(targetLength / calculationSpeed)
 	else
-		moreAccuracy = 1
+		moreAccuracy = 0 -- changed to 0
 	end if
 	protoTargetLength = targetLength + moreAccuracy
 	guess = NewEun(guess, exp0, protoTargetLength, radix)
@@ -2459,7 +2459,7 @@ public function SinExp(sequence n1, integer exp1, PositiveScalar targetLength, A
 	elsif calculationSpeed then
 		moreAccuracy = Ceil(targetLength / calculationSpeed)
 	else
-		moreAccuracy = 1
+		moreAccuracy = 0 -- changed to 0
 	end if
 	protoTargetLength = targetLength + moreAccuracy
 	step = 1 -- SinExp() uses 1
@@ -2525,7 +2525,7 @@ public function CosExp(sequence n1, integer exp1, PositiveScalar targetLength, A
 	elsif calculationSpeed then
 		moreAccuracy = Ceil(targetLength / calculationSpeed)
 	else
-		moreAccuracy = 1
+		moreAccuracy = 0 -- changed to 0
 	end if
 	protoTargetLength = targetLength + moreAccuracy
 	step = 0 -- CosExp() uses 0
@@ -2674,7 +2674,7 @@ public function ArcSinExp(sequence n1, integer exp1, PositiveScalar targetLength
 	elsif calculationSpeed then
 		moreAccuracy = Ceil(targetLength / calculationSpeed)
 	else
-		moreAccuracy = 1
+		moreAccuracy = 0 -- changed to 0
 	end if
 	protoTargetLength = targetLength + moreAccuracy
 	sum = {n1,exp1}
@@ -3533,5 +3533,9 @@ public function GetMoreAccuratePrec(Eun value1, PositiveScalar prec)
 -- prec should be less than or equal to value1[3]
 	return AdjustRound(value1[1], value1[2], prec + adjustRound, value1[4])
 end function
+
+
+-- Todo: Try to adjust the variables to give an accurate number.
+
 
 --end of file.
