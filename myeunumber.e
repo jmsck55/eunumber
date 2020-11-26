@@ -1,3 +1,4 @@
+-- Copyright (c) 2020 James J. Cook
 -- Eunumber, advanced sequence based arithmetic with exponents
 
 --FILES: (All as one file.)
@@ -27,7 +28,7 @@ include get.e
 -- with trace
 
 public function GetVersion() -- revision number
-	return 144
+	return 145 -- copyrighted version
 end function
 
 -- MyEunumber

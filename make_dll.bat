@@ -1,3 +1,4 @@
+REM Copyright (c) 2020 James J. Cook
 set eudir=%ONEDRIVE%\euphoria40
 set path=%eudir%\bin;%path%
 echo Open Watcom Build Environment

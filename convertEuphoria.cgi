@@ -1,3 +1,4 @@
+-- Copyright (c) 2020 James J. Cook
 
 include std/console.e
 include std/filesys.e

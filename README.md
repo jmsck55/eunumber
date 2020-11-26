@@ -1,6 +1,8 @@
 # eunumber
 Original Eunumber for fast, accurate calculations of Big Numbers
 
+Copyrighted version.
+
 Change your units so that they are close to one (1). If you have 1000 grams, use 1 kilogram for instance.
 This would be represented as the sequence: {{1} , 0 , maxlength , radix} of type "eun";
 

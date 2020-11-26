@@ -1,3 +1,4 @@
+-- Copyright (c) 2020 James J. Cook
 
 -- How to calculate PI with Eunumber:
 

@@ -1,3 +1,4 @@
+-- Copyright (c) 2020 James J. Cook
 
 -- See also videos and resources on the web about imaginary and complex numbers:
 -- https://www.youtube.com/watch?v=T647CGsuOVU
