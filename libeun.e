@@ -21,7 +21,7 @@ include classfile.e as complex
 include myeunumber.e as my
 
 public function Version()
-	return 38 -- Need to debug with Wrapper "Stub" (myeun.h)
+	return 39 -- Need to debug with Wrapper "Stub" (myeun.h)
 end function
 
 public function UsingHowManyBits()
@@ -60,8 +60,12 @@ end ifdef
 	return pointers:new_object_from_data(pointer)
 end function
 
-public procedure CopyPointerToAddress(integer dstId, integer srcid)
-	poke4(pointers:get_data_from_object(dstId), pointers:get_data_from_object(srcid))
+public procedure CopyPointerToAddress(integer dstId, integer srcId)
+ifdef BITS64 then
+	poke8(pointers:get_data_from_object(dstId), pointers:get_data_from_object(srcId))
+elsedef
+	poke4(pointers:get_data_from_object(dstId), pointers:get_data_from_object(srcId))
+end ifdef
 end procedure
 
 public procedure FreePointer(integer id)
@@ -155,10 +159,14 @@ public function GetEunArray(integer id)
 	return arrayId
 end function
 
-public function GetEunExponent(integer id)
-	sequence n1 = GetEun(id)
-	return n1[2]
-end function
+public procedure GetEunExponent(integer dstptrId, integer eunId)
+	sequence n1 = GetEun(eunId)
+ifdef BITS64 then
+	poke8(pointers:get_data_from_object(dstptrId), n1[2])
+elsedef
+	poke4(pointers:get_data_from_object(dstptrId), n1[2])
+end ifdef
+end procedure
 
 public function GetEunRadix(integer id)
 	sequence n1 = GetEun(id)
@@ -170,10 +178,14 @@ public function GetEunTargetLength(integer id)
 	return n1[4]
 end function
 
-public function GetEunFlags(integer id) -- get rounding information
-	sequence n1 = GetEun(id)
-	return n1[5]
-end function
+public procedure GetEunFlags(integer dstptrId, integer eunId) -- get rounding information
+	sequence n1 = GetEun(eunId)
+ifdef BITS64 then
+	poke8(pointers:get_data_from_object(dstptrId), n1[5])
+elsedef
+	poke4(pointers:get_data_from_object(dstptrId), n1[5])
+end ifdef
+end procedure
 
 public function EunToCString(integer id)
 	sequence st = my:ToString(GetEun(id))
@@ -299,13 +311,15 @@ public function GetDefaultTargetLength()
 	return my:GetDefaultTargetLength()
 end function
 
-public procedure SetDefaultRadix(integer i)
-	my:SetDefaultRadix(i)
+public procedure SetDefaultRadix(integer ptrToDblId)
+	atom a = float64_to_atom(peek({pointers:get_data_from_object(ptrToDblId), 8}))
+	my:SetDefaultRadix(a)
 end procedure
 
-public function GetDefaultRadix()
-	return my:GetDefaultRadix()
-end function
+public procedure GetDefaultRadix(integer dstptrToDblId)
+	sequence s = atom_to_float64(my:GetDefaultRadix())
+	poke(pointers:get_data_from_object(dstptrToDblId), s)
+end procedure
 
 public procedure SetAdjustRound(integer i)
 	my:SetAdjustRound(i)
@@ -315,13 +329,15 @@ public function GetAdjustRound()
 	return my:GetAdjustRound()
 end function
 
-public procedure SetCalcSpeed(integer speed)
+public procedure SetCalcSpeed(integer ptrToDblId)
+	atom speed = float64_to_atom(peek({pointers:get_data_from_object(ptrToDblId), 8}))
 	my:SetCalcSpeed(speed)
 end procedure
 
-public function GetCalcSpeed()
-	return my:GetCalcSpeed()
-end function
+public procedure GetCalcSpeed(integer dstptrToDblId)
+	sequence s = atom_to_float64(my:GetCalcSpeed())
+	poke(pointers:get_data_from_object(dstptrToDblId), s)
+end procedure
 
 public procedure SetRound(integer i)
 	my:SetRound(i)
@@ -339,68 +355,146 @@ public function GetRoundToNearestOption()
 	return my:GetRoundToNearestOption()
 end function
 
-public procedure SetMultiplicativeInverseMoreAccuracy(integer i)
+Bool local_sign = 0
+
+public function GetSignOfMoreAccuracy()
+	return local_sign
+end function
+
+public procedure SetMultiplicativeInverseMoreAccuracy(integer i, integer sign)
+	if sign then
+		i = -1
+	end if
 	my:SetMultiplicativeInverseMoreAccuracy(i)
 end procedure
 
 public function GetMultiplicativeInverseMoreAccuracy()
-	return my:GetMultiplicativeInverseMoreAccuracy()
+	integer a = my:GetMultiplicativeInverseMoreAccuracy()
+	local_sign = a < 0
+	if local_sign then
+		return 0
+	else
+		return a
+	end if
 end function
 
-public procedure SetNthRootMoreAccuracy(integer i)
+public procedure SetNthRootMoreAccuracy(integer i, integer sign)
+	if sign then
+		i = -1
+	end if
 	my:SetNthRootMoreAccuracy(i)
 end procedure
 
 public function GetNthRootMoreAccuracy()
-	return my:GetNthRootMoreAccuracy()
+	integer a = my:GetNthRootMoreAccuracy()
+	local_sign = a < 0
+	if local_sign then
+		return 0
+	else
+		return a
+	end if
 end function
 
-public procedure SetExpMoreAccuracy(integer i)
+public procedure SetExpMoreAccuracy(integer i, integer sign)
+	if sign then
+		i = -1
+	end if
 	my:SetExpMoreAccuracy(i)
 end procedure
 
 public function GetExpMoreAccuracy()
-	return my:GetExpMoreAccuracy()
+	integer a = my:GetExpMoreAccuracy()
+	local_sign = a < 0
+	if local_sign then
+		return 0
+	else
+		return a
+	end if
 end function
 
-public procedure SetLogMoreAccuracy(integer i)
+public procedure SetLogMoreAccuracy(integer i, integer sign)
+	if sign then
+		i = -1
+	end if
 	my:SetLogMoreAccuracy(i)
 end procedure
 
 public function GetLogMoreAccuracy()
-	return my:GetLogMoreAccuracy()
+	integer a = my:GetLogMoreAccuracy()
+	local_sign = a < 0
+	if local_sign then
+		return 0
+	else
+		return a
+	end if
 end function
 
-public procedure SetSinMoreAccuracy(integer i)
+public procedure SetSinMoreAccuracy(integer i, integer sign)
+	if sign then
+		i = -1
+	end if
 	my:SetSinMoreAccuracy(i)
 end procedure
 
 public function GetSinMoreAccuracy()
-	return my:GetSinMoreAccuracy()
+	integer a = my:GetSinMoreAccuracy()
+	local_sign = a < 0
+	if local_sign then
+		return 0
+	else
+		return a
+	end if
 end function
 
-public procedure SetCosMoreAccuracy(integer i)
+public procedure SetCosMoreAccuracy(integer i, integer sign)
+	if sign then
+		i = -1
+	end if
 	my:SetCosMoreAccuracy(i)
 end procedure
 
 public function GetCosMoreAccuracy()
-	return my:GetCosMoreAccuracy()
+	integer a = my:GetCosMoreAccuracy()
+	local_sign = a < 0
+	if local_sign then
+		return 0
+	else
+		return a
+	end if
 end function
 
-public procedure SetArcSinMoreAccuracy(integer i)
+public procedure SetArcSinMoreAccuracy(integer i, integer sign)
+	if sign then
+		i = -1
+	end if
 	my:SetArcSinMoreAccuracy(i)
 end procedure
 
 public function GetArcSinMoreAccuracy()
-	return my:GetArcSinMoreAccuracy()
+	integer a = my:GetArcSinMoreAccuracy()
+	local_sign = a < 0
+	if local_sign then
+		return 0
+	else
+		return a
+	end if
 end function
 
-public procedure SetArcTanMoreAccuracy(integer i)
+public procedure SetArcTanMoreAccuracy(integer i, integer sign)
+	if sign then
+		i = -1
+	end if
 	my:SetArcTanMoreAccuracy(i)
 end procedure
 
 public function GetArcTanMoreAccuracy()
-	return my:GetArcTanMoreAccuracy()
+	integer a = my:GetArcTanMoreAccuracy()
+	local_sign = a < 0
+	if local_sign then
+		return 0
+	else
+		return a
+	end if
 end function
 
 -- MyEuNumber Functions:
@@ -707,7 +801,7 @@ public function EunLog(integer n1)
 	if length(s) != 2 then
 		return NewFromEun(s)
 	end if
-	return -1 -- not doing complex mode, yet.
+	return 0 -- not doing complex mode, yet.
 end function
 
 -- Begin Trig Functions:
@@ -816,13 +910,13 @@ end procedure
 
 -- Find the roots of the equation, (a callback function)
 
-public function GetDelta()
-	return my:delta[2]
+public function GetDelta() -- returns positive value of delta (which is negative)
+	return - my:delta[2]
 end function
 
-public procedure SetDelta(integer i)
-	-- argument 'i' should be a "small" negative number, such as (-10) to (-80)
-	my:delta[2] = i
+public procedure SetDelta(integer i) -- positive number to negate
+	-- "delta" should be a "small" negative number, such as (-10) to (-80)
+	my:delta[2] = -i
 end procedure
 
 integer cfunc1
@@ -1017,6 +1111,9 @@ public procedure EunSort(integer pointer_to_ids_null_terminating_array, integer 
 	sequence s
 	ma = pointers:get_data_from_object(pointer_to_ids_null_terminating_array)
 	s = get4s_from_null_terminating_array(ma)
+	if order = 0 then
+		order = -1
+	end if
 	s = custom_sort(eun_sort_id, s, {}, order) -- order is either: 1 or (-1).
 	poke4(ma, s)
 end procedure
@@ -1025,6 +1122,9 @@ public procedure ComplexSort(integer pointer_to_ids_null_terminating_array, inte
 	sequence s
 	ma = pointers:get_data_from_object(pointer_to_ids_null_terminating_array)
 	s = get4s_from_null_terminating_array(ma)
+	if order = 0 then
+		order = -1
+	end if
 	s = custom_sort(complex_sort_id, s, {}, order) -- order is either: 1 or (-1).
 	poke4(ma, s)
 end procedure
