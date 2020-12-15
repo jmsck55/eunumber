@@ -21,7 +21,7 @@ include classfile.e as complex
 include myeunumber.e as my
 
 public function Version()
-	return 39 -- Need to debug with Wrapper "Stub" (myeun.h)
+	return 40 -- Need to debug with Wrapper "Stub" (myeun.h)
 end function
 
 public function UsingHowManyBits()
@@ -132,8 +132,8 @@ function NewFromEun(Eun n1)
 	return eun:new_object_from_data(n1)
 end function
 
-public function NewEun(integer arrayid, integer exp, integer radix, integer targetLength)
-	return NewFromEun(my:NewEun(numArray:get_data_from_object(arrayid), exp, radix, targetLength))
+public function NewEun(integer arrayid, integer exp, integer radix, integer targetLength, Bool sign_of_exp)
+	return NewFromEun(my:NewEun(numArray:get_data_from_object(arrayid), iff(sign_of_exp, -exp, exp), radix, targetLength))
 end function
 
 public procedure DeleteEun(integer id)
@@ -311,15 +311,13 @@ public function GetDefaultTargetLength()
 	return my:GetDefaultTargetLength()
 end function
 
-public procedure SetDefaultRadix(integer ptrToDblId)
-	atom a = float64_to_atom(peek({pointers:get_data_from_object(ptrToDblId), 8}))
-	my:SetDefaultRadix(a)
+public procedure SetDefaultRadix(integer i)
+	my:SetDefaultRadix(i)
 end procedure
 
-public procedure GetDefaultRadix(integer dstptrToDblId)
-	sequence s = atom_to_float64(my:GetDefaultRadix())
-	poke(pointers:get_data_from_object(dstptrToDblId), s)
-end procedure
+public function GetDefaultRadix()
+	return my:GetDefaultRadix()
+end function
 
 public procedure SetAdjustRound(integer i)
 	my:SetAdjustRound(i)
