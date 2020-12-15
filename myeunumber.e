@@ -28,7 +28,7 @@ include get.e
 -- with trace
 
 public function GetVersion() -- revision number
-	return 145 -- copyrighted version
+	return 146 -- copyrighted version
 end function
 
 -- MyEunumber
@@ -192,8 +192,8 @@ public PositiveScalar defaultTargetLength = 60 -- 40 -- 70 -- 70 * 3 = 210 (I tr
 public AtomRadix defaultRadix = 10 -- 10 is good for everything from 16-bit shorts, to 32-bit ints, to 64-bit long longs.
 public Bool isRoundToZero = FALSE -- make TRUE to allow rounding small numbers to zero.
 public PositiveInteger adjustRound = 5 -- 3 -- can be 0 to a small integer, removes digits of inaccuracy, or adds digits of accuracy under ROUND_TO_NEAREST_OPTION
-public PositiveAtom calculationSpeed = 60 / 2 -- can be 0 or from 1 to targetLength
-public PositiveInteger multInvMoreAccuracy = 0 -- 15, if 0, then use calculationSpeed
+public PositiveAtom calculationSpeed = floor(defaultTargetLength / 2) -- can be 0 or from 1 to targetLength
+public integer multInvMoreAccuracy = -1 -- 15, if -1, then use calculationSpeed
 
 public procedure SetIsRoundToZero(integer i)
 	isRoundToZero = i
@@ -248,6 +248,7 @@ public constant LOG_ATOM_MIN = log(1.0e-308) -- LOG_DBL_MIN is: -7.0839641853226
 
 public constant ROUND_INF = 1 -- Round towards +infinity or -infinity, (positive or negative infinity)
 public constant ROUND_ZERO = 2 -- Round towards zero
+public constant ROUND_TRUNCATE = 3 -- Don't round, truncate
 public constant ROUND_POS_INF = 4 -- Round towards positive +infinity
 public constant ROUND_NEG_INF = 5 -- Round towards negative -infinity
 -- round even:
@@ -272,7 +273,7 @@ public constant ROUND_DOWN = ROUND_NEG_INF -- Round downward.
 public constant ROUND_UP = ROUND_POS_INF -- Round upward.
 
 type round2(integer i)
-	return i >= 1 and i <= 7 and i != 3
+	return i >= 1 and i <= 7
 end type
 
 -- public for "doFile.ex":
@@ -704,39 +705,44 @@ end ifdef
 		end if
 	end if
 	if length(num) > roundTargetLength then
-		f = num[roundTargetLength + 1]
-		if integer(radix) and IsIntegerOdd(radix) then
-			-- feature: support for odd radixes
-			for i = roundTargetLength + 2 to length(num) do
-				if f != halfRadix and f != -halfRadix then
-					exit
-				end if
-				f = num[i]
-			end for
-		end if
-		if f = halfRadix or f = -halfRadix then
-			if ROUND = ROUND_EVEN then
-				halfRadix -= IsIntegerOdd(num[roundTargetLength])
-			elsif ROUND = ROUND_ODD then
-				halfRadix -= IsIntegerEven(num[roundTargetLength])
-			elsif ROUND = ROUND_ZERO then
-				f = 0
-			end if
-		elsif ROUND = ROUND_INF then -- round towards plus(+) and minus(-) infinity
-			halfRadix -= 1
-		elsif ROUND = ROUND_POS_INF then -- round towards plus(+) infinity
-			f += 1
-		elsif ROUND = ROUND_NEG_INF then -- round towards minus(-) infinity
-			f -= 1
-		end if
-		num = num[1..roundTargetLength]
-		rounded = (halfRadix < f) - (f < -halfRadix)
-		if rounded then
-			num[$] += rounded
-			num = CarryRadixOnlyEx(num, radix * rounded, rounded)
-			exponent += (length(num) - roundTargetLength)
-		else
+		if ROUND = ROUND_TRUNCATE then
+			num = num[1..roundTargetLength]
 			rounded = (num[1] < 0) - (num[1] > 0) -- give the opposite of the sign
+		else
+			f = num[roundTargetLength + 1]
+			if integer(radix) and IsIntegerOdd(radix) then
+				-- feature: support for odd radixes
+				for i = roundTargetLength + 2 to length(num) do
+					if f != halfRadix and f != -halfRadix then
+						exit
+					end if
+					f = num[i]
+				end for
+			end if
+			if f = halfRadix or f = -halfRadix then
+				if ROUND = ROUND_EVEN then
+					halfRadix -= IsIntegerOdd(num[roundTargetLength])
+				elsif ROUND = ROUND_ODD then
+					halfRadix -= IsIntegerEven(num[roundTargetLength])
+				elsif ROUND = ROUND_ZERO then
+					f = 0
+				end if
+			elsif ROUND = ROUND_INF then -- round towards plus(+) and minus(-) infinity
+				halfRadix -= 1
+			elsif ROUND = ROUND_POS_INF then -- round towards plus(+) infinity
+				f += 1
+			elsif ROUND = ROUND_NEG_INF then -- round towards minus(-) infinity
+				f -= 1
+			end if
+			num = num[1..roundTargetLength]
+			rounded = (halfRadix < f) - (f < -halfRadix)
+			if rounded then
+				num[roundTargetLength] += rounded
+				num = CarryRadixOnlyEx(num, radix * rounded, rounded)
+				exponent += (length(num) - roundTargetLength)
+			else
+				rounded = (num[1] < 0) - (num[1] > 0) -- give the opposite of the sign
+			end if
 		end if
 	end if
 	num = TrimTrailingZeros(num)
@@ -804,7 +810,7 @@ end function
 -- https://en.wikipedia.org/wiki/Newton%27s_method#Multiplyiplicative_inverses_of_numbers_and_power_series
 
 constant two = {2}
-PositiveInteger forSmallRadix = 1 -- this number can be 1 or greater
+PositiveInteger forSmallRadix = 0 -- this number can be 0 or greater
 
 public procedure SetForSmallRadix(integer i)
 	forSmallRadix = i -- increase this number for smaller radixes
@@ -957,7 +963,7 @@ public function MultiplicativeInverseExp(sequence den1, integer exp1, PositiveSc
 			return {den1, -exp1, targetLength, radix, 0}
 		end if
 	end if
-	if multInvMoreAccuracy then
+	if multInvMoreAccuracy >= 0 then
 		protoMoreAccuracy = multInvMoreAccuracy
 	elsif calculationSpeed then
 		protoMoreAccuracy = Ceil(targetLength / calculationSpeed)
@@ -1636,7 +1642,7 @@ public function NthRootProtoExp(PositiveScalar n, sequence x1, integer x1Exp,
 	return average
 end function
 
-public PositiveInteger nthRootMoreAccuracy = 0 -- if 0, then use calculationSpeed
+public integer nthRootMoreAccuracy = -1 -- if -1, then use calculationSpeed
 
 public procedure SetNthRootMoreAccuracy(integer i)
 	nthRootMoreAccuracy = i
@@ -1667,7 +1673,7 @@ public function NthRootExp(PositiveScalar n, sequence x1, integer x1Exp, sequenc
 			return {x1, x1Exp, targetLength, radix, 0}
 		end if
 	end if
-	if nthRootMoreAccuracy then
+	if nthRootMoreAccuracy >= 0 then
 		moreAccuracy = nthRootMoreAccuracy
 	elsif calculationSpeed then
 		moreAccuracy = Ceil(targetLength / calculationSpeed)
@@ -1834,7 +1840,7 @@ end function
 
 -- Begin ArcTan():
 
-public PositiveInteger arcTanMoreAccuracy = 0 -- if 0, then use calculationSpeed
+public integer arcTanMoreAccuracy = -1 -- if -1, then use calculationSpeed
 
 public procedure SetArcTanMoreAccuracy(integer i)
 	arcTanMoreAccuracy = i
@@ -1852,7 +1858,7 @@ public function ArcTanExp(sequence n1, integer exp1, PositiveScalar targetLength
 	sequence sum, a, b, c, d, e, f, tmp, count, xSquared, xSquaredPlusOne, lookat, ret
 	integer protoTargetLength, moreAccuracy
 	arcTanHowComplete = {-1, 0}
-	if arcTanMoreAccuracy then
+	if arcTanMoreAccuracy >= 0 then
 		moreAccuracy = arcTanMoreAccuracy
 	elsif calculationSpeed then
 		moreAccuracy = Ceil(targetLength / calculationSpeed)
@@ -2063,7 +2069,7 @@ public function EunExpWhole(Eun u, Eun m)
 	return prod
 end function
 
-public PositiveInteger expMoreAccuracy = 0 -- if 0, then use calculationSpeed
+public integer expMoreAccuracy = -1 -- if -1, then use calculationSpeed
 
 public procedure SetExpMoreAccuracy(integer i)
 	expMoreAccuracy = i
@@ -2106,7 +2112,7 @@ public function ExpExp(sequence n1, integer exp1, PositiveScalar targetLength, A
 	sequence num, den, sum, tmp, lookat, ret
 	integer protoTargetLength, moreAccuracy
 	expHowComplete = {-1, 0}
-	if expMoreAccuracy then
+	if expMoreAccuracy >= 0 then
 		moreAccuracy = expMoreAccuracy
 	elsif calculationSpeed then
 		moreAccuracy = Ceil(targetLength / calculationSpeed)
@@ -2278,7 +2284,7 @@ public function EunExpFast(Eun numerator, Eun denominator)
 	return tmp1
 end function
 
-public PositiveInteger logMoreAccuracy = 0 -- if 0, then use calculationSpeed
+public integer logMoreAccuracy = -1 -- if -1, then use calculationSpeed
 
 public procedure SetLogMoreAccuracy(integer i)
 	logMoreAccuracy = i
@@ -2298,7 +2304,7 @@ public function LogExp(sequence n1, integer exp1, sequence guess, integer exp0, 
 	integer protoTargetLength, moreAccuracy
 	logHowComplete = {-1, 0}
 	one = NewEun({1}, 0, protoTargetLength, radix)
-	if logMoreAccuracy then
+	if logMoreAccuracy >= 0 then
 		moreAccuracy = logMoreAccuracy
 	elsif calculationSpeed then
 		moreAccuracy = Ceil(targetLength / calculationSpeed)
@@ -2423,7 +2429,7 @@ end function
 
 -- !!! Remember to use Radians (Rad) on these functions !!!
 
-public PositiveInteger sinMoreAccuracy = 0 -- if 0, then use calculationSpeed
+public integer sinMoreAccuracy = -1 -- if -1, then use calculationSpeed
 
 public procedure SetSinMoreAccuracy(integer i)
 	sinMoreAccuracy = i
@@ -2455,7 +2461,7 @@ public function SinExp(sequence n1, integer exp1, PositiveScalar targetLength, A
 		return NewEun({}, exp1, targetLength, radix)
 	end if
 	trigHowComplete = {-1, 0}
-	if sinMoreAccuracy then
+	if sinMoreAccuracy >= 0 then
 		moreAccuracy = sinMoreAccuracy
 	elsif calculationSpeed then
 		moreAccuracy = Ceil(targetLength / calculationSpeed)
@@ -2503,7 +2509,7 @@ end function
 
 -- !!! Remember to use Radians (Rad) on these functions !!!
 
-public PositiveInteger cosMoreAccuracy = 0 -- if 0, then use calculationSpeed
+public integer cosMoreAccuracy = -1 -- if -1, then use calculationSpeed
 
 public procedure SetCosMoreAccuracy(integer i)
 	cosMoreAccuracy = i
@@ -2521,7 +2527,7 @@ public function CosExp(sequence n1, integer exp1, PositiveScalar targetLength, A
 	sequence ans, a, b, tmp, xSquared, lookat, ret
 	integer step, protoTargetLength, moreAccuracy
 	trigHowComplete = {-1, 0}
-	if cosMoreAccuracy then
+	if cosMoreAccuracy >= 0 then
 		moreAccuracy = cosMoreAccuracy
 	elsif calculationSpeed then
 		moreAccuracy = Ceil(targetLength / calculationSpeed)
@@ -2650,7 +2656,7 @@ end function
 
 --Note: Too slow.
 
-public PositiveInteger arcSinMoreAccuracy = 0 -- if 0, then use calculationSpeed
+public integer arcSinMoreAccuracy = -1 -- if -1, then use calculationSpeed
 
 public procedure SetArcSinMoreAccuracy(integer i)
 	arcSinMoreAccuracy = i
@@ -2670,7 +2676,7 @@ public function ArcSinExp(sequence n1, integer exp1, PositiveScalar targetLength
 	sequence sum, xSquared, top, bottom, odd, even, x, tmp, lookat, ret
 	integer protoTargetLength, moreAccuracy
 	arcSinHowComplete = {-1, 0}
-	if arcSinMoreAccuracy then
+	if arcSinMoreAccuracy >= 0 then
 		moreAccuracy = arcSinMoreAccuracy
 	elsif calculationSpeed then
 		moreAccuracy = Ceil(targetLength / calculationSpeed)
