@@ -1,4 +1,4 @@
--- Copyright (c) 2020 James J. Cook
+-- Copyright (c) 2020 James Cook
 
 -- Compiles into a dll
 

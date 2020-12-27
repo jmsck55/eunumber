@@ -1,4 +1,4 @@
--- Copyright (c) 2020 James J. Cook
+-- Copyright (c) 2020 James Cook
 -- Eunumber, using tasks.
 
 with define USE_TASK_YIELD
