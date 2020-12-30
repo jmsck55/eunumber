@@ -21,7 +21,7 @@ include classfile.e as complex
 include myeunumber.e as my
 
 public function Version()
-	return 40 -- Need to debug with Wrapper "Stub" (myeun.h)
+	return 41 -- Need to debug with Wrapper "Stub" (myeun.h)
 end function
 
 public function UsingHowManyBits()
@@ -1386,6 +1386,16 @@ public procedure SetIsRoundToZero(integer i)
 end procedure
 public function GetIsRoundToZero()
 	return my:GetIsRoundToZero()
+end function
+
+public function EunGetPrec(integer eun_n1)
+	return my:EunGetPrec(GetEun(eun_n1))
+end function
+
+public function EunTest(integer eun_n1, integer eun_n2)
+	sequence range
+	range = my:EunTest(GetEun(eun_n1), GetEun(eun_n2))
+	return range[1]
 end function
 
 -- end of file.

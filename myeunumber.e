@@ -28,7 +28,7 @@ include get.e
 -- with trace
 
 public function GetVersion() -- revision number
-	return 146 -- copyrighted version
+	return 147 -- copyrighted version
 end function
 
 -- MyEunumber
@@ -263,6 +263,13 @@ end procedure
 public function GetRoundToNearestOption()
 	return ROUND_TO_NEAREST_OPTION
 end function
+
+public procedure IntegerModeOn()
+	ROUND_TO_NEAREST_OPTION = 1
+end procedure
+public procedure IntegerModeOff()
+	ROUND_TO_NEAREST_OPTION = 0
+end procedure
 
 public constant ROUND_AWAY_FROM_ZERO = ROUND_INF
 public constant ROUND_TOWARDS_ZERO = ROUND_ZERO
@@ -946,8 +953,8 @@ public integer divideByZeroCallBackId = routine_id("DefaultDivideByZeroCallBack"
 
 public sequence howComplete = {-1, 0}
 
-public function MultiplicativeInverseExp(sequence den1, integer exp1, PositiveScalar targetLength, AtomRadix radix)
-	sequence guess, tmp, lookat, ret
+public function MultiplicativeInverseExp(sequence den1, integer exp1, PositiveScalar targetLength, AtomRadix radix, sequence guess = {})
+	sequence tmp, lookat, ret
 	integer exp0, protoTargetLength, protoMoreAccuracy
 	howComplete = {-1, 0}
 	if length(den1) = 0 then
@@ -972,8 +979,10 @@ public function MultiplicativeInverseExp(sequence den1, integer exp1, PositiveSc
 	end if
 	protoTargetLength = targetLength + protoMoreAccuracy
 	exp0 = -exp1 - 1
-	tmp = GetGuessExp(den1, exp0, protoTargetLength, radix)
-	guess = tmp[1]
+	if length(guess) = 0 then
+		tmp = GetGuessExp(den1, exp0, protoTargetLength, radix)
+		guess = tmp[1]
+	end if
 	ret = AdjustRound(guess, exp0, targetLength, radix, FALSE)
 	lastIterCount = iter
 	for i = 1 to iter do
@@ -1158,8 +1167,8 @@ public function EunSubtract(Eun n1, Eun n2)
 	return SubtractExp(n1[1], n1[2], n2[1], n2[2], targetLength, n1[4])
 end function
 -- EunMultiplicativeInverse
-public function EunMultiplicativeInverse(Eun n1)
-	return MultiplicativeInverseExp(n1[1], n1[2], n1[3], n1[4])
+public function EunMultiplicativeInverse(Eun n1, sequence guess = {})
+	return MultiplicativeInverseExp(n1[1], n1[2], n1[3], n1[4], guess)
 end function
 -- EunDivide
 public function EunDivide(Eun n1, Eun n2)
@@ -3541,8 +3550,23 @@ public function GetMoreAccuratePrec(Eun value1, PositiveScalar prec)
 	return AdjustRound(value1[1], value1[2], prec + adjustRound, value1[4])
 end function
 
+public function EunGetPrec(Eun val)
+	return val[3] - adjustRound
+end function
+
 
 -- Todo: Try to adjust the variables to give an accurate number.
+
+public function EunTest(Eun val0, Eun ans)
+	sequence val1, val2, range
+	-- val0 = EunMultiplicativeInvserse(val)
+	val1 = ans
+	val1[3] = val0[3]
+	val1 = EunAdjustRound(val1)
+	range = Equaln(val0[1], val1[1])
+	return range
+end function
+
 
 
 --end of file.
