@@ -21,7 +21,7 @@ include classfile.e as complex
 include myeunumber.e as my
 
 public function Version()
-	return 41 -- Need to debug with Wrapper "Stub" (myeun.h)
+	return 42 -- Need to debug with Wrapper "Stub" (myeun.h)
 end function
 
 public function UsingHowManyBits()
@@ -1396,6 +1396,14 @@ public function EunTest(integer eun_n1, integer eun_n2)
 	sequence range
 	range = my:EunTest(GetEun(eun_n1), GetEun(eun_n2))
 	return range[1]
+end function
+
+public function MultiplicativeInverseGuessExp(integer den1, integer exp1, integer targetLength, integer radix, integer guess_id)
+	return NewFromEun(my:MultiplicativeInverseExp(numArray:get_data_from_object(den1), exp1, targetLength, radix, numArray:get_data_from_object(guess_id)))
+end function
+
+public function EunMultiplicativeInverseGuess(integer n1, integer array_guess_id)
+	return NewFromEun(my:EunMultiplicativeInverse(GetEun(n1), numArray:get_data_from_object(array_guess_id)))
 end function
 
 -- end of file.
