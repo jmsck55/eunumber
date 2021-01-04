@@ -21,7 +21,7 @@ include classfile.e as complex
 include myeunumber.e as my
 
 public function Version()
-	return 42 -- Need to debug with Wrapper "Stub" (myeun.h)
+	return 43 -- Need to debug with Wrapper "Stub" (myeun.h)
 end function
 
 public function UsingHowManyBits()
@@ -1405,5 +1405,20 @@ end function
 public function EunMultiplicativeInverseGuess(integer n1, integer array_guess_id)
 	return NewFromEun(my:EunMultiplicativeInverse(GetEun(n1), numArray:get_data_from_object(array_guess_id)))
 end function
+
+
+public procedure SetDivideByZeroFlag(integer i)
+	my:SetDivideByZeroFlag(i)
+end procedure
+
+-- public Bool zeroDividedByZeroFlag = TRUE -- if true, zero divided by zero returns one (0/0 = 1)
+
+public function GetZeroDividedByZeroFlag()
+	return my:GetZeroDividedByZeroFlag()
+end function
+public procedure SetZeroDividedByZeroFlag(integer i)
+	my:SetZeroDividedByZeroFlag(i)
+end procedure
+
 
 -- end of file.

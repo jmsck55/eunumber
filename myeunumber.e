@@ -28,7 +28,7 @@ include get.e
 -- with trace
 
 public function GetVersion() -- revision number
-	return 147 -- copyrighted version
+	return 148 -- copyrighted version
 end function
 
 -- MyEunumber
@@ -187,6 +187,18 @@ public Bool divideByZeroFlag = FALSE
 public function GetDivideByZeroFlag()
 	return divideByZeroFlag
 end function
+public procedure SetDivideByZeroFlag(integer i)
+	divideByZeroFlag = i
+end procedure
+
+public Bool zeroDividedByZeroFlag = TRUE -- if true, zero divided by zero returns one (0/0 = 1)
+
+public function GetZeroDividedByZeroFlag()
+	return zeroDividedByZeroFlag
+end function
+public procedure SetZeroDividedByZeroFlag(integer i)
+	zeroDividedByZeroFlag = i
+end procedure
 
 public PositiveScalar defaultTargetLength = 60 -- 40 -- 70 -- 70 * 3 = 210 (I tried to keep it under 212)
 public AtomRadix defaultRadix = 10 -- 10 is good for everything from 16-bit shorts, to 32-bit ints, to 64-bit long longs.
@@ -1014,15 +1026,12 @@ public function MultiplicativeInverseExp(sequence den1, integer exp1, PositiveSc
 	return ret
 end function
 
--- sequence p
--- adjustRound = 0
--- p = MultiplicativeInverseExp({7}, 0, defaultTargetLength, 10)
--- ? p
--- ? length(p[1])
--- abort(1)
 
 public function DivideExp(sequence num1, integer exp1, sequence den2, integer exp2, PositiveScalar targetLength, AtomRadix radix)
 	sequence tmp
+	if zeroDividedByZeroFlag and length(num1) = 0 and length(den2) = 0 then
+		return NewEun({1}, 0, targetLength, radix)
+	end if
 	tmp = MultiplicativeInverseExp(den2, exp2, targetLength, radix)
 	if length(tmp) then
 		tmp = MultiplyExp(num1, exp1, tmp[1], tmp[2], targetLength, radix)
