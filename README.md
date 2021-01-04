@@ -3,6 +3,20 @@ Original Eunumber for fast, accurate calculations of Big Numbers
 
 Copyrighted version.
 
+Experimental.
+
+Details:
+
+GMP and MPFR are better for digital production software.
+https://www.mpfr.org/
+
+For analog calculations, such as those that deal with physical matter and light waves, 
+use an analog calculating device. 
+
+EuNumber is for fast, accurate calculations of digital Big Numbers.
+
+It has some features that can't be done in other big number math libraries.
+
 Change your units so that they are close to one (1). If you have 1000 grams, use 1 kilogram for instance.
 This would be represented as the sequence: {{1} , 0 , maxlength , radix} of type "eun";
 
