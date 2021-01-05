@@ -8,15 +8,13 @@ without type_check
 include std/console.e
 include std/get.e
 
--- with trace
-
 include my.e
 
-puts(1, "EuNumber Calculator [v0.9.5]\n")
+-- with trace
+
+puts(1, "EuNumber Calculator [v0.9.6]\n")
 
 defaultRadix = MAX_RADIX10
-
--- trace(1)
 
 object tmp
 sequence st, vars
@@ -264,6 +262,7 @@ function GetVars(integer num)
 end function
 
 procedure StoreAnswers(integer num)
+	
 	if length(vars) < num then
 		vars = vars & repeat(0, num)
 	end if
@@ -432,6 +431,8 @@ procedure Operations()
 			puts(1, "Square root:\n") -- is both plus and minus (positive and negative)
 			if length(c1[1]) then
 				st = ComplexSqrt({n1, c1})
+				n1 = st[1][1]
+				c1 = st[1][2]
 			else
 				tmp = EunSqrt(n1)
 				if tmp[1] = 1 then
@@ -659,6 +660,7 @@ procedure Operations()
 		n2 = {}
 		c2 = {}
 		n = 0
+		
 	end while
 end procedure
 
