@@ -28,7 +28,7 @@ include get.e
 -- with trace
 
 public function GetVersion() -- revision number
-	return 148 -- copyrighted version
+	return 149 -- copyrighted version
 end function
 
 -- MyEunumber
@@ -990,7 +990,8 @@ public function MultiplicativeInverseExp(sequence den1, integer exp1, PositiveSc
 		protoMoreAccuracy = 0 -- changed to 0
 	end if
 	protoTargetLength = targetLength + protoMoreAccuracy
-	exp0 = -exp1 - 1
+	exp0 = exp1 + 1
+	exp0 = -exp0
 	if length(guess) = 0 then
 		tmp = GetGuessExp(den1, exp0, protoTargetLength, radix)
 		guess = tmp[1]
