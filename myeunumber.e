@@ -990,8 +990,7 @@ public function MultiplicativeInverseExp(sequence den1, integer exp1, PositiveSc
 		protoMoreAccuracy = 0 -- changed to 0
 	end if
 	protoTargetLength = targetLength + protoMoreAccuracy
-	exp0 = exp1 + 1
-	exp0 = -exp0
+	exp0 = -(exp1 + 1)
 	if length(guess) = 0 then
 		tmp = GetGuessExp(den1, exp0, protoTargetLength, radix)
 		guess = tmp[1]
