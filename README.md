@@ -22,7 +22,7 @@ Use number arays: {1,2,3}
 In NewEun(): aEun = NewEun({1,2,3}, 2)
 Instead of string literals like: "123"
 String literals will not work.
-Use instead: aEun = ToEun("123e2")
+Use instead: aEun = ToEun("1.23e2")
 </pre>
 
 Change your units so that they are close to one (1). If you have 1000 grams, use 1 kilogram for instance.
