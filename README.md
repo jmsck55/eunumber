@@ -17,6 +17,14 @@ EuNumber is for fast, accurate calculations of digital Big Numbers.
 
 It has some features that can't be done in other big number math libraries.
 
+<pre>
+Use number arays: {1,2,3}
+In NewEun(): aEun = NewEun({1,2,3}, 2)
+Instead of string literals like: "123"
+String literals will not work.
+Use instead: aEun = ToEun("123e2")
+</pre>
+
 Change your units so that they are close to one (1). If you have 1000 grams, use 1 kilogram for instance.
 This would be represented as the sequence: {{1} , 0 , maxlength , radix} of type "eun";
 
