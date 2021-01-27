@@ -27,8 +27,10 @@ include get.e
 
 -- with trace
 
+-- NOTE: Negated integer named variables should be in parenthesis.
+
 public function GetVersion() -- revision number
-	return 149 -- copyrighted version
+	return 150 -- copyrighted version
 end function
 
 -- MyEunumber
@@ -128,7 +130,7 @@ public function abs(atom a)
 	if a >= 0 then
 		return a
 	else
-		return - a
+		return -a
 	end if
 end function
 
@@ -438,7 +440,7 @@ public function Add(sequence n1, sequence n2)
 	sequence numArray
 	if length(n1) >= length(n2) then
 		len = length(n2)
-		c = length(n1) - len
+		c = length(n1) - (len)
 		-- copy n1 to numArray:
 		numArray = n1
 		for i = 1 to len do
@@ -447,7 +449,7 @@ public function Add(sequence n1, sequence n2)
 		end for
 	else
 		len = length(n1)
-		c = length(n2) - len
+		c = length(n2) - (len)
 		-- copy n2 to numArray:
 		numArray = n2
 		for i = 1 to len do
@@ -463,7 +465,7 @@ public function Subtr(sequence n1, sequence n2)
 	sequence numArray
 	if length(n1) >= length(n2) then
 		len = length(n2)
-		c = length(n1) - len
+		c = length(n1) - (len)
 		-- copy n1 to numArray:
 		numArray = n1
 		for i = 1 to len do
@@ -472,7 +474,7 @@ public function Subtr(sequence n1, sequence n2)
 		end for
 	else
 		len = length(n1)
-		c = length(n2) - len
+		c = length(n2) - (len)
 		-- copy n2 to numArray:
 		numArray = n2
 		for i = 1 to len do
@@ -568,7 +570,7 @@ end function
 
 public function Negate(sequence numArray)
 	for i = 1 to length(numArray) do
-		numArray[i] = -numArray[i]
+		numArray[i] = - numArray[i]
 	end for
 	return numArray
 end function
@@ -665,7 +667,7 @@ end function
 
 public function AdjustRound(sequence num, integer exponent, integer targetLength, AtomRadix radix, Bool isMixed = TRUE)
 	integer oldlen, roundTargetLength, rounded
-	atom halfRadix, f
+	atom halfRadix, negHalfRadix, f
 	sequence ret
 ifdef USE_TASK_YIELD then
 	if useTaskYield then
@@ -674,7 +676,7 @@ ifdef USE_TASK_YIELD then
 end ifdef
 	oldlen = length(num)
 	num = TrimLeadingZeros(num)
-	exponent += (length(num) - oldlen)
+	exponent += (length(num) - (oldlen))
 	--adjustExponent()
 	oldlen = length(num)
 	-- in Subtract, the first element of num cannot be a zero.
@@ -682,7 +684,7 @@ end ifdef
 	-- use Subtract() when there are both negative and positive numbers.
 	-- otherwise, you can use Carry().
 	num = TrimLeadingZeros(num)
-	exponent += (length(num) - oldlen)
+	exponent += (length(num) - (oldlen))
 	rounded = 0
 	if length(num) = 0 then
 		ret = {{}, exponent, targetLength, radix, rounded}
@@ -693,7 +695,6 @@ end ifdef
 		return ret
 	end if
 	-- Round2: num, exponent, targetLength, radix
-	halfRadix = floor(radix / 2)
 	if ROUND_TO_NEAREST_OPTION then
 		roundTargetLength = exponent + 1 + adjustRound
 		if targetLength < roundTargetLength then
@@ -711,7 +712,7 @@ end ifdef
 			roundTargetLength = 1
 		end if
 	else
-		roundTargetLength = targetLength - adjustRound
+		roundTargetLength = targetLength - (adjustRound)
 		if roundTargetLength <= 0 then
 			if roundTargetLength = 0 then
 				num = {0} & num
@@ -723,6 +724,8 @@ end ifdef
 			roundTargetLength = 1
 		end if
 	end if
+	halfRadix = floor(radix / 2)
+	negHalfRadix = - (halfRadix)
 	if length(num) > roundTargetLength then
 		if ROUND = ROUND_TRUNCATE then
 			num = num[1..roundTargetLength]
@@ -732,13 +735,13 @@ end ifdef
 			if integer(radix) and IsIntegerOdd(radix) then
 				-- feature: support for odd radixes
 				for i = roundTargetLength + 2 to length(num) do
-					if f != halfRadix and f != -halfRadix then
+					if f != halfRadix and f != negHalfRadix then
 						exit
 					end if
 					f = num[i]
 				end for
 			end if
-			if f = halfRadix or f = -halfRadix then
+			if f = halfRadix or f = negHalfRadix then
 				if ROUND = ROUND_EVEN then
 					halfRadix -= IsIntegerOdd(num[roundTargetLength])
 				elsif ROUND = ROUND_ODD then
@@ -754,11 +757,11 @@ end ifdef
 				f -= 1
 			end if
 			num = num[1..roundTargetLength]
-			rounded = (halfRadix < f) - (f < -halfRadix)
+			rounded = (halfRadix < f) - (f < negHalfRadix)
 			if rounded then
 				num[roundTargetLength] += rounded
 				num = CarryRadixOnlyEx(num, radix * rounded, rounded)
-				exponent += (length(num) - roundTargetLength)
+				exponent += (length(num) - (roundTargetLength))
 			else
 				rounded = (num[1] < 0) - (num[1] > 0) -- give the opposite of the sign
 			end if
@@ -767,7 +770,7 @@ end ifdef
 	num = TrimTrailingZeros(num)
 	oldlen = length(num)
 	num = TrimLeadingZeros(num)
-	exponent += (length(num) - oldlen)
+	exponent += (length(num) - (oldlen))
 	ret = {num, exponent, targetLength, radix, rounded}
 	return ret
 end function
@@ -791,9 +794,9 @@ end function
 public function AddExp(sequence n1, integer exp1, sequence n2, integer exp2, PositiveScalar targetLength, AtomRadix radix)
 	sequence numArray, ret
 	integer size
-	size = (length(n1) - exp1) - (length(n2) - exp2)
+	size = (length(n1) - (exp1)) - (length(n2) - (exp2))
 	if size < 0 then
-		size = -size
+		size = - (size)
 		n1 = n1 & repeat(0, size)
 	elsif 0 < size then
 		n2 = n2 & repeat(0, size)
@@ -809,9 +812,9 @@ end function
 public function SubtractExp(sequence n1, integer exp1, sequence n2, integer exp2, PositiveScalar targetLength, AtomRadix radix)
 	sequence numArray, ret
 	integer size
-	size = (length(n1) - exp1) - (length(n2) - exp2)
+	size = (length(n1) - (exp1)) - (length(n2) - (exp2))
 	if size < 0 then
-		size = -size
+		size = - (size)
 		n1 = n1 & repeat(0, size)
 	elsif 0 < size then
 		n2 = n2 & repeat(0, size)
@@ -860,7 +863,7 @@ public function ProtoMultiplicativeInverseExp(sequence guess, integer exp0, sequ
 -- ? tmp -- turns to one
 	numArray = tmp[1]
 	exp2 = tmp[2]
-	tmp = SubtractExp(two, 0, numArray, exp2, targetLength - forSmallRadix, radix) -- 2 - tmp
+	tmp = SubtractExp(two, 0, numArray, exp2, targetLength - (forSmallRadix), radix) -- 2 - tmp
 -- ? tmp -- turns to one
 	numArray = tmp[1]
 	exp2 = tmp[2]
@@ -948,7 +951,7 @@ end ifdef
 	tmp = ExpToAtom(den, len - 1, sigDigits, radix)
 	denom = tmp[1]
 	overflowBy = tmp[2]
-	one = power(radix, len - 1 - overflowBy)
+	one = power(radix, len - 1 - (overflowBy))
 	ans = RoundTowardsZero(one / denom)
 	guess = IntToDigits(ans, radix) -- works on negative numbers
 	-- tmp = AdjustRound(guess, exp1, sigDigits - 1, radix, FALSE)
@@ -979,7 +982,7 @@ public function MultiplicativeInverseExp(sequence den1, integer exp1, PositiveSc
 		if den1[1] = 1 or den1[1] = -1 then -- optimization
 			howComplete = {1, 1}
 			lastIterCount = 1
-			return {den1, -exp1, targetLength, radix, 0}
+			return {den1, - (exp1), targetLength, radix, 0}
 		end if
 	end if
 	if multInvMoreAccuracy >= 0 then
@@ -990,7 +993,7 @@ public function MultiplicativeInverseExp(sequence den1, integer exp1, PositiveSc
 		protoMoreAccuracy = 0 -- changed to 0
 	end if
 	protoTargetLength = targetLength + protoMoreAccuracy
-	exp0 = -(exp1 + 1)
+	exp0 = - (exp1 + 1)
 	if length(guess) = 0 then
 		tmp = GetGuessExp(den1, exp0, protoTargetLength, radix)
 		guess = tmp[1]
@@ -1055,7 +1058,7 @@ public function ConvertExp(sequence n1, integer exp1, PositiveScalar targetLengt
 	end if
 	n2 = ConvertRadix(n1, fromRadix, toRadix)
 	exp2 = length(n2) - 1
-	n3 = ConvertRadix({1} & repeat(0, length(n1) - exp1 - 1), fromRadix, toRadix)
+	n3 = ConvertRadix({1} & repeat(0, length(n1) - (exp1 + 1)), fromRadix, toRadix)
 	exp3 = length(n3) - 1
 	result = DivideExp(n2, exp2, n3, exp3, targetLength, toRadix)
 	return result
@@ -1083,8 +1086,7 @@ public type Eun(object x)
 end type
 
 public function NewEun(sequence num = {}, integer exp = 0, PositiveScalar targetLength = defaultTargetLength, AtomRadix radix = defaultRadix, integer flags = 0)
-	Eun x
-	x = {num, exp, targetLength, radix, flags}
+	Eun x = {num, exp, targetLength, radix, flags}
 	return x
 end function
 
@@ -1462,7 +1464,7 @@ end ifdef
 		integer f, len
 		if sequence( d[1] ) then
 			if d[4] != 10 then
-				d = EunConvert( d, 10, -floor(-(log(d[4]) / log(10)) * d[3]) )
+				d = EunConvert( d, 10, Ceil((log(d[4]) / log(10)) * d[3]) )
 			end if
 			st = d[1]
 			len = length( st )
@@ -1473,7 +1475,7 @@ end ifdef
 				f = 1
 				-- st = -st
 				for i = 1 to len do
-					st[i] = -st[i]
+					st[i] = - (st[i])
 				end for
 			else
 				f = 0
@@ -1499,19 +1501,6 @@ end ifdef
 		end if
 		st = st & "e" & ToString( d[2] )
 		return st
-		--if tmp[1] = '-' then
-		--      s = tmp[1..2]
-		--      if length( tmp ) > 2 then
-		--              s = s & "." & tmp[3..length(tmp)]
-		--      end if
-		--else
-		--      s = {tmp[1]}
-		--      if length( tmp ) > 1 then
-		--              s = s & "." & tmp[2..length(tmp)]
-		--      end if
-		--end if
-		--tmp = tmp & "e" & ToString( d[2] )
-		--return {STRING, tmp}
 	end if
 end function
 
@@ -1598,7 +1587,7 @@ public function ToEun(object s, AtomRadix radix = defaultRadix, PositiveScalar t
 		s = ToString(s)
 	end if
 	s = StringToNumberExp(s)
-	s = s & {Ceil(log(radix) / log(10) * targetLength), 10, 0}
+	s = s & {Ceil((log(radix) / log(10)) * targetLength), 10, 0}
 	if atom(s[1]) then
 		return s
 	end if
@@ -1753,12 +1742,12 @@ public function EunNthRoot(PositiveScalar n, Eun n1, object option = {})
 		f = 0
 		if a < 0 then
 			-- factor out sqrt(-1), an imaginary number, on even roots
-			a = -a
+			a = -a -- atom
 			f = IsIntegerOdd(n)
 		end if
 		a = power(a, 1 / n)
 		if f then
-			a = -a
+			a = -a -- atom
 		end if
 		tmp = ToEun(a, n1[4], n1[3])
 		guess = tmp
@@ -1830,7 +1819,7 @@ public function EunSqrt(Eun n1)
 	a = tmp
 	if a < 0 then
 		-- factor out sqrt(-1), an imaginary number
-		a = -a
+		a = -a -- atom
 	end if
 	a = sqrt(a)
 	tmp = ToEun(a, n1[4], n1[3])
@@ -1902,22 +1891,22 @@ public function ArcTanExp(sequence n1, integer exp1, PositiveScalar targetLength
 	ret = AdjustRound(sum[1], sum[2], targetLength, radix, FALSE)
 	arcTanCount = arcTanIter
 	for n = 1 to arcTanIter do
-		a = MultiplyExp(a[1],a[2],{4},0,protoTargetLength,radix)
-		tmp = AdjustRound({n},0,protoTargetLength,radix)
-		b = MultiplyExp(b[1],b[2],tmp[1],tmp[2],protoTargetLength,radix)
-		tmp = MultiplyExp(b[1],b[2],b[1],b[2],protoTargetLength,radix)
+		a = MultiplyExp(a[1], a[2], {4}, 0, protoTargetLength, radix)
+		tmp = AdjustRound({n}, 0, protoTargetLength, radix)
+		b = MultiplyExp(b[1], b[2], tmp[1], tmp[2], protoTargetLength, radix)
+		tmp = MultiplyExp(b[1], b[2], b[1], b[2], protoTargetLength, radix)
 		-- it needs these statements:
-		count = AddExp(count[1],count[2],{1},0,protoTargetLength,radix)
-		c = MultiplyExp(c[1],c[2],count[1],count[2],protoTargetLength,radix)
-		count = AddExp(count[1],count[2],{1},0,protoTargetLength,radix)
-		c = MultiplyExp(c[1],c[2],count[1],count[2],protoTargetLength,radix)
-		d = MultiplyExp(d[1],d[2],xSquared[1],xSquared[2],protoTargetLength,radix)
-		e = MultiplyExp(e[1],e[2],xSquaredPlusOne[1],xSquaredPlusOne[2],protoTargetLength,radix)
-		f = MultiplyExp(a[1],a[2],tmp[1],tmp[2],protoTargetLength,radix)
-		f = DivideExp(f[1],f[2],c[1],c[2],protoTargetLength,radix)
-		f = MultiplyExp(f[1],f[2],d[1],d[2],protoTargetLength,radix)
-		f = DivideExp(f[1],f[2],e[1],e[2],protoTargetLength,radix)
-		sum = AddExp(sum[1],sum[2],f[1],f[2],protoTargetLength,radix)
+		count = AddExp(count[1], count[2], {1}, 0, protoTargetLength, radix)
+		c = MultiplyExp(c[1], c[2], count[1], count[2], protoTargetLength, radix)
+		count = AddExp(count[1], count[2], {1}, 0, protoTargetLength, radix)
+		c = MultiplyExp(c[1], c[2], count[1], count[2], protoTargetLength, radix)
+		d = MultiplyExp(d[1], d[2], xSquared[1], xSquared[2], protoTargetLength, radix)
+		e = MultiplyExp(e[1], e[2], xSquaredPlusOne[1], xSquaredPlusOne[2], protoTargetLength, radix)
+		f = MultiplyExp(a[1], a[2], tmp[1], tmp[2], protoTargetLength, radix)
+		f = DivideExp(f[1], f[2], c[1], c[2], protoTargetLength, radix)
+		f = MultiplyExp(f[1], f[2], d[1], d[2], protoTargetLength, radix)
+		f = DivideExp(f[1], f[2], e[1], e[2], protoTargetLength, radix)
+		sum = AddExp(sum[1], sum[2], f[1], f[2], protoTargetLength, radix)
 		lookat = ret
 		ret = AdjustRound(sum[1], sum[2], targetLength, radix, FALSE)
 		if ret[2] = lookat[2] then
@@ -1937,7 +1926,7 @@ public function ArcTanExp(sequence n1, integer exp1, PositiveScalar targetLength
 end function
 
 public function EunArcTan(Eun a)
-	return ArcTanExp(a[1],a[2],a[3],a[4])
+	return ArcTanExp(a[1], a[2], a[3], a[4])
 end function
 
 -- End ArcTan().
@@ -1999,7 +1988,7 @@ public function ExpExp1(sequence n1, integer exp1, PositiveScalar targetLength, 
 end function
 
 public function EunExp1(Eun a)
-	return ExpExp1(a[1],a[2],a[3],a[4])
+	return ExpExp1(a[1], a[2], a[3], a[4])
 end function
 
 public function Exponentiation(atom u, integer m)
@@ -2249,14 +2238,14 @@ public sequence expFastHowComplete = {-1, 0}
 public function ExpExpFast(sequence x1, integer exp1, sequence y2, integer exp2, PositiveScalar targetLength, AtomRadix radix)
 -- e^(x/y) = 1 + 2x/(2y-x+x^2/(6y+x^2/(10y+x^2/(14y+x^2/(18y+x^2/(22y+...
 	-- precalculate:
-	-- 1,2x,x,x^2,4y,(2+4i)y
+	-- 1, 2x, x, x^2, 4y, (2 + 4i)y
 	-- i = targetLength to 0.
 	-- Subtract 4y
 	sequence xSquared, fourY, targetLengthY, tmp
 	expFastHowComplete = {-1, 0}
 	xSquared = MultiplyExp(x1, exp1, x1, exp1, targetLength, radix)
 	fourY = MultiplyExp({-4}, 0, y2, exp2, targetLength, radix)
-	targetLengthY = MultiplyExp({2+4*ExpExpFastIter},0,y2,exp2,targetLength,radix)
+	targetLengthY = MultiplyExp({2 + 4 * ExpExpFastIter}, 0, y2, exp2, targetLength, radix)
 	tmp = targetLengthY
 	for i = ExpExpFastIter to 2 by -1 do
 		tmp = DivideExp(xSquared[1], xSquared[2], tmp[1], tmp[2], targetLength, radix)
@@ -2317,7 +2306,7 @@ public integer logIterCount = -1
 public sequence logHowComplete = {-1, 0}
 
 public function LogExp(sequence n1, integer exp1, sequence guess, integer exp0, PositiveScalar targetLength, AtomRadix radix)
-	-- ln(x) = y[n] = y[n-1] + 2 * (x - exp(y[n-1]))/(x + exp(y[n-1]))
+	-- ln(x) = y[n] = y[n - 1] + 2 * (x - exp(y[n - 1]))/(x + exp(y[n - 1]))
 	sequence expY, xMinus, xPlus, tmp, lookat, ret, one
 	integer protoTargetLength, moreAccuracy
 	logHowComplete = {-1, 0}
@@ -2372,7 +2361,7 @@ public function EunLog(Eun n1)
 		-- ln(-1) = PI * i
 		-- ln(-a) = ln(a) + (PI * i)
 		isImag = 1
-		a = -a
+		a = -a -- atom
 		n1[1] = Negate(n1[1])
 	else
 		isImag = 0
@@ -2498,7 +2487,7 @@ public function SinExp(sequence n1, integer exp1, PositiveScalar targetLength, A
 	for i = 1 to sinIter do -- start at 1 for all computer languages.
 		-- first step is 3, for SinExp()
 		step += 2
-		tmp = MultiplyExp({step-1}, 0, {step}, 0, protoTargetLength, radix)
+		tmp = MultiplyExp({step - 1}, 0, {step}, 0, protoTargetLength, radix)
 		b = MultiplyExp(b[1], b[2], tmp[1], tmp[2], protoTargetLength, radix)
 		a = MultiplyExp(a[1], a[2], xSquared[1], xSquared[2], protoTargetLength, radix)
 		tmp = DivideExp(a[1], a[2], b[1], b[2], protoTargetLength, radix)
@@ -2564,7 +2553,7 @@ public function CosExp(sequence n1, integer exp1, PositiveScalar targetLength, A
 	for i = 1 to cosIter do -- start at 1 for all computer languages.
 		-- first step is 2, for CosExp()
 		step += 2
-		tmp = MultiplyExp({step-1}, 0, {step}, 0, protoTargetLength, radix)
+		tmp = MultiplyExp({step - 1}, 0, {step}, 0, protoTargetLength, radix)
 		b = MultiplyExp(b[1], b[2], tmp[1], tmp[2], protoTargetLength, radix)
 		a = MultiplyExp(a[1], a[2], xSquared[1], xSquared[2], protoTargetLength, radix)
 		tmp = DivideExp(a[1], a[2], b[1], b[2], protoTargetLength, radix)
@@ -2672,7 +2661,7 @@ end function
 -- Pattern: (1,2,3) ; (1,2,3,4,5) ; (1,2,3,4,5,6,7) ; (1,2,3,4,5,6,7,8,9)
 -- odds on top, evens on bottom, except for the latest odd value.
 
---Note: Too slow.
+--Note: Too slow?
 
 public integer arcSinMoreAccuracy = -1 -- if -1, then use calculationSpeed
 
@@ -2702,31 +2691,31 @@ public function ArcSinExp(sequence n1, integer exp1, PositiveScalar targetLength
 		moreAccuracy = 0 -- changed to 0
 	end if
 	protoTargetLength = targetLength + moreAccuracy
-	sum = {n1,exp1}
-	x = {n1,exp1}
-	xSquared = MultiplyExp(n1,exp1,n1,exp1,targetLength,radix)
+	sum = {n1, exp1}
+	x = {n1, exp1}
+	xSquared = MultiplyExp(n1, exp1, n1, exp1, targetLength, radix)
 	bottom = {{2}, 0}
 	odd = {{3}, 0}
 	-- First iteration:
-	tmp = MultiplyExp(bottom[1],bottom[2],odd[1],odd[2],targetLength,radix)
-	x = MultiplyExp(x[1],x[2],xSquared[1],xSquared[2],targetLength,radix)
-	tmp = DivideExp(x[1],x[2],tmp[1],tmp[2],targetLength,radix)
-	sum = AddExp(sum[1],sum[2],tmp[1],tmp[2],targetLength,radix)
+	tmp = MultiplyExp(bottom[1], bottom[2], odd[1], odd[2], targetLength, radix)
+	x = MultiplyExp(x[1], x[2], xSquared[1], xSquared[2], targetLength, radix)
+	tmp = DivideExp(x[1], x[2], tmp[1], tmp[2], targetLength, radix)
+	sum = AddExp(sum[1], sum[2], tmp[1], tmp[2], targetLength, radix)
 	-- Second iteration(s):
 	top = {{1}, 0}
 	even = {{2}, 0}
 	ret = sum
 	arcSinIterCount = arcSinIter
 	for n = 1 to arcSinIter do
-		even = AddExp(even[1],even[2],{2},0,protoTargetLength,radix)
-		bottom = MultiplyExp(bottom[1],bottom[2],even[1],even[2],protoTargetLength,radix)
-		top  = MultiplyExp(top[1],top[2],odd[1],odd[2],protoTargetLength,radix)
-		odd = AddExp(odd[1],odd[2],{2},0,protoTargetLength,radix)
-		tmp = MultiplyExp(bottom[1],bottom[2],odd[1],odd[2],protoTargetLength,radix)
-		x = MultiplyExp(x[1],x[2],xSquared[1],xSquared[2],protoTargetLength,radix)
-		tmp = DivideExp(x[1],x[2],tmp[1],tmp[2],protoTargetLength,radix)
-		tmp = MultiplyExp(tmp[1],tmp[2],top[1],top[2],protoTargetLength,radix)
-		sum = AddExp(sum[1],sum[2],tmp[1],tmp[2],protoTargetLength,radix)
+		even = AddExp(even[1], even[2], {2}, 0, protoTargetLength, radix)
+		bottom = MultiplyExp(bottom[1], bottom[2], even[1], even[2], protoTargetLength, radix)
+		top  = MultiplyExp(top[1], top[2], odd[1], odd[2], protoTargetLength, radix)
+		odd = AddExp(odd[1], odd[2], {2}, 0, protoTargetLength, radix)
+		tmp = MultiplyExp(bottom[1], bottom[2], odd[1], odd[2], protoTargetLength, radix)
+		x = MultiplyExp(x[1], x[2], xSquared[1], xSquared[2], protoTargetLength, radix)
+		tmp = DivideExp(x[1], x[2], tmp[1], tmp[2], protoTargetLength, radix)
+		tmp = MultiplyExp(tmp[1], tmp[2], top[1], top[2], protoTargetLength, radix)
+		sum = AddExp(sum[1], sum[2], tmp[1], tmp[2], protoTargetLength, radix)
 		lookat = ret
 		ret = AdjustRound(sum[1], sum[2], targetLength, radix, FALSE)
 		if ret[2] = lookat[2] then
@@ -2862,20 +2851,6 @@ end function
 -- end function
 
 
--- sequence a, b, c, d
--- integer targetLength
--- targetLength = 100
--- 
--- a = {{5}, -1}
--- b = ArctanExp(a[1], a[2], targetLength, 10)
--- 
--- ? a
--- ? b
--- ? lastIterCountArctan
--- 
--- ? arctan(0.5)
-
-
 -- More Trig functions:
 
 -- sine = opp/hyp
@@ -2943,7 +2918,7 @@ public function EunTanh(Eun a)
 end function
 
 public function EunCoth(Eun a)
--- coth(x) = x != 0; 1/tanh(x)
+-- coth(x) = x != 0; 1 / tanh(x)
 	if not CompareExp(a[1], a[2], {}, 0) then
 		puts(1, "Error(7):  In MyEuNumber, trig functions: Invalid number passed to\n \"EunCoth()\", cannot be zero (0).\n  See file: ex.err\n")
 		abort(1/0)
@@ -2952,12 +2927,12 @@ public function EunCoth(Eun a)
 end function
 
 public function EunSech(Eun a)
--- sech(x) = 1/cosh(x)
+-- sech(x) = 1 / cosh(x)
 	return EunMultiplicativeInverse(EunCosh(a))
 end function
 
 public function EunCsch(Eun a)
--- csch(x) = x != 0; 1/sinh(x)
+-- csch(x) = x != 0; 1 / sinh(x)
 	if not CompareExp(a[1], a[2], {}, 0) then
 		puts(1, "Error(7):  In MyEuNumber, trig functions: Invalid number passed to\n \"EunCsch()\", cannot be zero (0).\n  See file: ex.err\n")
 		abort(1/0)
@@ -3083,35 +3058,35 @@ end function
 --
 -- End of Proof
 
-public function EunTriangulation(Eun A, Eun B, Eun D)
-	Eun C, E, F, tmp
+public function EunTriangulation(Eun a, Eun b, Eun d)
+	Eun c, e, f, tmp
 	sequence s
 	integer mode
-	if IsNegative(A[1]) or IsNegative(B[1]) or IsNegative(D[1]) then
+	if IsNegative(a[1]) or IsNegative(b[1]) or IsNegative(d[1]) then
 		puts(1, "Error(3):  In MyEuNumber, negative argument(s) in \"EunTriangulation()\".\n  See file: ex.err\n")
 		abort(1/0)
 	end if
 	mode = realMode
 	realMode = TRUE
-	C = EunDivide(EunSin(A), EunSin(B))
-	tmp = EunSquare(D)
+	c = EunDivide(EunSin(a), EunSin(b))
+	tmp = EunSquare(d)
 	s = EunSqrt(
 		EunDivide(
 			tmp,
-			EunAdd({{1}, 0, A[3], A[4]}, EunSquare(C))
+			EunAdd({{1}, 0, a[3], a[4]}, EunSquare(c))
 		)
 	)
-	E = s[2]
-	C = EunMultiplicativeInverse(C)
+	e = s[2]
+	c = EunMultiplicativeInverse(c)
 	s = EunSqrt(
 		EunDivide(
 			tmp,
-			EunAdd({{1}, 0, A[3], A[4]}, EunSquare(C))
+			EunAdd({{1}, 0, a[3], a[4]}, EunSquare(c))
 		)
 	)
-	F = s[2]
+	f = s[2]
 	realMode = mode
-	return {E, F}
+	return {e, f}
 end function
 
 
@@ -3143,47 +3118,47 @@ integer comp1, comp2
 function Condition1Thru_5(integer len, integer radix)
 	sequence sb, bc, cd
 	
-	--tmp1 = (3*a + b)/4
-	tmp1 = MultiplyExp({3},0,a[1],a[2],len,radix)
-	tmp1 = AddExp(tmp1[1],tmp1[2],b[1],b[2],len,radix)
-	tmp1 = DivideExp(tmp1[1],tmp1[2],{4},0,len,radix)
+	--tmp1 = ((3 * a) + b) / 4
+	tmp1 = MultiplyExp({3}, 0, a[1], a[2], len, radix)
+	tmp1 = AddExp(tmp1[1], tmp1[2], b[1], b[2], len, radix)
+	tmp1 = DivideExp(tmp1[1], tmp1[2], {4}, 0, len, radix)
 	
-	comp1 = MyCompareExp(s[1],s[2],tmp1[1],tmp1[2])
-	comp2 = MyCompareExp(s[1],s[2],b[1],b[2])
+	comp1 = MyCompareExp(s[1], s[2], tmp1[1], tmp1[2])
+	comp2 = MyCompareExp(s[1], s[2], b[1], b[2])
 	
 	-- condition 1:
 	if (not (comp1 = -1 and comp2 = 1)) and (not (comp2 = -1 and comp1 = 1)) then
 		return 1
 	end if
 	
-	sb = AddExp(s[1],s[2],Negate(b[1]),b[2],len,radix)
+	sb = AddExp(s[1], s[2], Negate(b[1]), b[2], len, radix)
 	sb[1] = AbsoluteValue(sb[1])
 	
 	if mflag = 1 then
-		bc = AddExp(b[1],b[2],Negate(c[1]),c[2],len,radix)
+		bc = AddExp(b[1], b[2], Negate(c[1]), c[2], len, radix)
 		bc[1] = AbsoluteValue(bc[1])
 		-- condition 2:
-		tmp = DivideExp(bc[1],bc[2],{2},0,len,radix)
-		comp1 = MyCompareExp(sb[1],sb[2],tmp[1],tmp[2])
+		tmp = DivideExp(bc[1], bc[2], {2}, 0, len, radix)
+		comp1 = MyCompareExp(sb[1], sb[2], tmp[1], tmp[2])
 		if comp1 >= 0 then
 			return 1
 		end if
 		-- condition 4:
-		comp1 = MyCompareExp(bc[1],bc[2],delta[1],delta[2])
+		comp1 = MyCompareExp(bc[1], bc[2], delta[1], delta[2])
 		if comp1 = -1 then
 			return 1
 		end if
 	else
-		cd = AddExp(c[1],c[2],Negate(d[1]),d[2],len,radix)
+		cd = AddExp(c[1], c[2], Negate(d[1]), d[2], len, radix)
 		cd[1] = AbsoluteValue(cd[1])
 		-- condition 3:
-		tmp = DivideExp(cd[1],cd[2],{2},0,len,radix)
-		comp1 = MyCompareExp(sb[1],sb[2],tmp[1],tmp[2])
+		tmp = DivideExp(cd[1], cd[2], {2}, 0, len, radix)
+		comp1 = MyCompareExp(sb[1], sb[2], tmp[1], tmp[2])
 		if comp1 >= 0 then
 			return 1
 		end if
 		-- condition 5:
-		comp1 = MyCompareExp(cd[1],cd[2],delta[1],delta[2])
+		comp1 = MyCompareExp(cd[1], cd[2], delta[1], delta[2])
 		if comp1 = -1 then
 			return 1
 		end if
@@ -3195,10 +3170,10 @@ public function FindRootExp(integer rid, sequence n1, integer exp1,
 		sequence n2, integer exp2, integer len, integer radix, integer littleEndian = 0)
 	
 	len += 3
-	delta = {{1},floor((exp1+exp2)/2) - len + 2}
+	delta = {{1}, floor((exp1 + exp2) / 2) - (len) + 2}
 	
-	a = {n1,exp1}
-	b = {n2,exp2}
+	a = {n1, exp1}
+	b = {n2, exp2}
 	if littleEndian then
 		fa = call_func(rid, {reverse(n1), exp1, len, radix})
 		fa[1] = reverse(fa[1])
@@ -3213,7 +3188,7 @@ public function FindRootExp(integer rid, sequence n1, integer exp1,
 		return 1 -- error
 	end if
 	
-	comp1 = MyCompareExp(AbsoluteValue(fa[1]),fa[2],AbsoluteValue(fb[1]),fb[2])
+	comp1 = MyCompareExp(AbsoluteValue(fa[1]), fa[2], AbsoluteValue(fb[1]), fb[2])
 	if comp1 = -1 then
 		-- swap, and set c=a
 		c = b
@@ -3230,54 +3205,53 @@ public function FindRootExp(integer rid, sequence n1, integer exp1,
 	while 1 do
 		lookatIter += 1
 		
-		comp1 = MyCompareExp(fa[1],fa[2],fc[1],fc[2])
-		comp2 = MyCompareExp(fb[1],fb[2],fc[1],fc[2])
+		comp1 = MyCompareExp(fa[1], fa[2], fc[1], fc[2])
+		comp2 = MyCompareExp(fb[1], fb[2], fc[1], fc[2])
 		if comp1 != 0 and comp2 != 0 then
 			-- calculate "s" (inverse quadratic interpolation)
 			--s = (a*fb*fc) / ((fa-fb)*(fa-fc))
-			tmp1 = AddExp(fa[1],fa[2],Negate(fb[1]),fb[2],len,radix)
-			tmp2 = AddExp(fa[1],fa[2],Negate(fc[1]),fc[2],len,radix)
-			tmp1 = MultiplyExp(tmp1[1],tmp1[2],tmp2[1],tmp2[2],len,radix)
-			tmp2 = MultiplyExp(fb[1],fb[2],fc[1],fc[2],len,radix)
-			tmp2 = MultiplyExp(tmp2[1],tmp2[2],a[1],a[2],len,radix)
-			tmp1 = DivideExp(tmp2[1],tmp2[2],tmp1[1],tmp1[2],len,radix)
+			tmp1 = AddExp(fa[1], fa[2], Negate(fb[1]), fb[2], len, radix)
+			tmp2 = AddExp(fa[1], fa[2], Negate(fc[1]), fc[2], len, radix)
+			tmp1 = MultiplyExp(tmp1[1], tmp1[2], tmp2[1], tmp2[2], len, radix)
+			tmp2 = MultiplyExp(fb[1], fb[2], fc[1], fc[2], len, radix)
+			tmp2 = MultiplyExp(tmp2[1], tmp2[2], a[1], a[2], len, radix)
+			tmp1 = DivideExp(tmp2[1], tmp2[2], tmp1[1], tmp1[2], len, radix)
 			s = tmp1
 			
 			--s += (b*fa*fc) / ((fb-fa)*(fb-fc))
-			tmp1 = AddExp(fb[1],fb[2],Negate(fa[1]),fa[2],len,radix)
-			tmp2 = AddExp(fb[1],fb[2],Negate(fc[1]),fc[2],len,radix)
-			tmp1 = MultiplyExp(tmp1[1],tmp1[2],tmp2[1],tmp2[2],len,radix)
-			tmp2 = MultiplyExp(fa[1],fa[2],fc[1],fc[2],len,radix)
-			tmp2 = MultiplyExp(tmp2[1],tmp2[2],b[1],b[2],len,radix)
-			tmp1 = DivideExp(tmp2[1],tmp2[2],tmp1[1],tmp1[2],len,radix)
-			s = AddExp(s[1],s[2],tmp1[1],tmp1[2],len,radix)
+			tmp1 = AddExp(fb[1], fb[2], Negate(fa[1]), fa[2], len, radix)
+			tmp2 = AddExp(fb[1], fb[2], Negate(fc[1]), fc[2], len, radix)
+			tmp1 = MultiplyExp(tmp1[1], tmp1[2], tmp2[1], tmp2[2], len, radix)
+			tmp2 = MultiplyExp(fa[1], fa[2], fc[1], fc[2], len, radix)
+			tmp2 = MultiplyExp(tmp2[1], tmp2[2], b[1], b[2], len, radix)
+			tmp1 = DivideExp(tmp2[1], tmp2[2], tmp1[1], tmp1[2], len, radix)
+			s = AddExp(s[1], s[2], tmp1[1], tmp1[2], len, radix)
 			
 			--s += (c*fa*fb) / ((fc-fa)*(fc-fb))
-			tmp1 = AddExp(fc[1],fc[2],Negate(fa[1]),fa[2],len,radix)
-			tmp2 = AddExp(fc[1],fc[2],Negate(fb[1]),fb[2],len,radix)
-			tmp1 = MultiplyExp(tmp1[1],tmp1[2],tmp2[1],tmp2[2],len,radix)
-			tmp2 = MultiplyExp(fa[1],fa[2],fb[1],fb[2],len,radix)
-			tmp2 = MultiplyExp(tmp2[1],tmp2[2],c[1],c[2],len,radix)
-			tmp1 = DivideExp(tmp2[1],tmp2[2],tmp1[1],tmp1[2],len,radix)
-			s = AddExp(s[1],s[2],tmp1[1],tmp1[2],len,radix)
+			tmp1 = AddExp(fc[1], fc[2], Negate(fa[1]), fa[2], len, radix)
+			tmp2 = AddExp(fc[1], fc[2], Negate(fb[1]), fb[2], len, radix)
+			tmp1 = MultiplyExp(tmp1[1], tmp1[2], tmp2[1], tmp2[2], len, radix)
+			tmp2 = MultiplyExp(fa[1], fa[2], fb[1], fb[2], len, radix)
+			tmp2 = MultiplyExp(tmp2[1], tmp2[2], c[1], c[2], len, radix)
+			tmp1 = DivideExp(tmp2[1], tmp2[2], tmp1[1], tmp1[2], len, radix)
+			s = AddExp(s[1], s[2], tmp1[1], tmp1[2], len, radix)
 		else
 			-- calculate "s" (secant rule)
 			--s = b - (fb * (b-a)/(fb-fa))
-			tmp1 = AddExp(b[1],b[2],Negate(a[1]),a[2],len,radix)
-			tmp2 = AddExp(fb[1],fb[2],Negate(fa[1]),fa[2],len,radix)
-			tmp1 = MultiplyExp(tmp1[1],tmp1[2],fb[1],fb[2],len,radix)
-			tmp1 = DivideExp(tmp1[1],tmp1[2],tmp2[1],tmp2[2],len,radix)
-			s = AddExp(b[1],b[2],Negate(tmp1[1]),tmp1[2],len,radix)
+			tmp1 = AddExp(b[1], b[2], Negate(a[1]), a[2], len, radix)
+			tmp2 = AddExp(fb[1], fb[2], Negate(fa[1]), fa[2], len, radix)
+			tmp1 = MultiplyExp(tmp1[1], tmp1[2], fb[1], fb[2], len, radix)
+			tmp1 = DivideExp(tmp1[1], tmp1[2], tmp2[1], tmp2[2], len, radix)
+			s = AddExp(b[1], b[2], Negate(tmp1[1]), tmp1[2], len, radix)
 		end if
 		
-		if Condition1Thru_5(len,radix) then
-			s = AddExp(a[1],a[2],b[1],b[2],len,radix)
-			s = DivideExp(s[1],s[2],{2},0,len,radix)
+		if Condition1Thru_5(len, radix) then
+			s = AddExp(a[1], a[2], b[1], b[2], len, radix)
+			s = DivideExp(s[1], s[2], {2}, 0, len, radix)
 			mflag = 1
 		else
 			mflag = 0
 		end if
-		
 		
 		if littleEndian then
 			fs = call_func(rid, {reverse(s[1]), s[2], len, radix})
@@ -3294,27 +3268,27 @@ public function FindRootExp(integer rid, sequence n1, integer exp1,
 			a = s
 		end if
 		
-		comp1 = MyCompareExp(AbsoluteValue(fa[1]),fa[2],AbsoluteValue(fb[1]),fb[2])
+		comp1 = MyCompareExp(AbsoluteValue(fa[1]), fa[2], AbsoluteValue(fb[1]), fb[2])
 		if comp1 = -1 then
-			-- swap(a,b)
+			-- swap(a, b)
 			tmp = b
 			b = a
 			a = tmp
 		end if
 		
-		tmp1 = AddExp(b[1],b[2],Negate(a[1]),a[2],len,radix)
+		tmp1 = AddExp(b[1], b[2], Negate(a[1]), a[2], len, radix)
 		tmp1[1] = AbsoluteValue(tmp1[1])
-		comp1 = MyCompareExp(tmp1[1],tmp1[2],delta[1],delta[2])
+		comp1 = MyCompareExp(tmp1[1], tmp1[2], delta[1], delta[2])
 		if length(fb[1]) = 0 or length(fs[1]) = 0 or comp1 = -1 then
 			exit
 		end if
 	end while
 	
 	len -= 3
-	b = AdjustRound(b[1],b[2],len,radix)
-	s = AdjustRound(s[1],s[2],len,radix)
+	b = AdjustRound(b[1], b[2], len, radix)
+	s = AdjustRound(s[1], s[2], len, radix)
 	
-	return {b,s,lookatIter}
+	return {b, s, lookatIter}
 end function
 
 --mycomplex.e
