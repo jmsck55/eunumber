@@ -21,7 +21,7 @@ include classfile.e as complex
 include myeunumber.e as my
 
 public function Version()
-	return 43 -- Need to debug with Wrapper "Stub" (myeun.h)
+	return 44 -- Need to debug with Wrapper "Stub" (myeun.h)
 end function
 
 public function UsingHowManyBits()
@@ -1420,5 +1420,8 @@ public procedure SetZeroDividedByZeroFlag(integer i)
 	my:SetZeroDividedByZeroFlag(i)
 end procedure
 
+public function CheckLengthAndRadix(integer targetLength, integer radix)
+	return my:CheckLengthAndRadix(targetLength, radix)
+end function
 
 -- end of file.
