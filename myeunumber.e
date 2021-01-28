@@ -30,7 +30,7 @@ include get.e
 -- NOTE: Negated integer named variables should be in parenthesis.
 
 public function GetVersion() -- revision number
-	return 151 -- copyrighted version
+	return 152 -- copyrighted version
 end function
 
 -- MyEunumber
@@ -1079,7 +1079,7 @@ public type Eun(object x)
 	if integer(x[5]) then
 	if integer(x[3]) then
 	if atom(x[4]) then
-		return (x[3] * power(x[4] - 1, 2) <= DOUBLE_MAX)
+		return (x[3] * power(x[4] - 1, 2) < DOUBLE_MAX)
 			-- On 32-bit systems: DOUBLE_MAX = power(2, 53) -- value: 9007199254740992
 			-- On 64-bit systems: DOUBLE_MAX = power(2, 64) -- value: 18446744073709551616
 	end if
