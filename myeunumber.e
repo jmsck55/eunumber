@@ -30,7 +30,7 @@ include get.e
 -- NOTE: Negated integer named variables should be in parenthesis.
 
 public function GetVersion() -- revision number
-	return 153 -- copyrighted version
+	return 154 -- copyrighted version
 end function
 
 -- MyEunumber
@@ -1069,7 +1069,7 @@ public function ConvertExp(sequence n1, integer exp1, integer targetLength, Atom
 	return result
 end function
 
-public function CheckLengthAndRadix(PositiveScalar targetLength = defaultTargetLength, AtomRadix radix = defaultRadix)
+public function IsProperLengthAndRadix(PositiveScalar targetLength = defaultTargetLength, AtomRadix radix = defaultRadix)
 	return (targetLength * power(radix - 1, 2) < DOUBLE_MAX)
 		-- On 32-bit systems: DOUBLE_MAX = power(2, 53) -- value: 9007199254740992
 		-- On 64-bit systems: DOUBLE_MAX = power(2, 64) -- value: 18446744073709551616
@@ -1085,7 +1085,7 @@ public type Eun(object x)
 	if integer(x[5]) then
 	if integer(x[3]) then
 	if atom(x[4]) then
-		return CheckLengthAndRadix(x[3], x[4])
+		return IsProperLengthAndRadix(x[3], x[4])
 	end if
 	end if
 	end if
