@@ -30,7 +30,7 @@ include get.e
 -- NOTE: Negated integer named variables should be in parenthesis.
 
 public function GetVersion() -- revision number
-	return 155 -- copyrighted version
+	return 156 -- copyrighted version
 end function
 
 -- MyEunumber
@@ -117,6 +117,7 @@ end function
 ifdef BITS64 then
 public constant DOUBLE_MAX = 18446744073709551615 -- (power(2, 64) - 1)
 public constant DOUBLE_MIN = -DOUBLE_MAX
+public constant DOUBLE_RADIX = floor(sqrt(DOUBLE_MAX)) + 1 -- 4294967296
 public constant INT_MAX = power(2, 62) - 1 -- value: 4611686018427387903
 public constant MAX_RADIX = power(2, floor(62/2)-4) -- value: 134217728
 public constant INT_MAX10 = power(10, 18) -- value: 1000000000000000000
@@ -124,6 +125,7 @@ public constant MAX_RADIX10 = power(10, 8-1) -- value: 100000000
 elsedef
 public constant DOUBLE_MAX = 9007199254740991 -- (power(2, 53) - 1)
 public constant DOUBLE_MIN = -DOUBLE_MAX
+public constant DOUBLE_RADIX = floor(sqrt(DOUBLE_MAX)) + 1 -- 94906266
 public constant INT_MAX = power(2, 30) - 1 -- value: 1073741823
 public constant MAX_RADIX = power(2, floor(30/2)-4) -- value: 2048
 public constant INT_MAX10 = power(10, 9) -- value: 1000000000
@@ -167,9 +169,7 @@ public type NegativeAtom(atom a)
 end type
 
 public type AtomRadix(atom a)
-	return a >= 1.001 and a <= DOUBLE_MAX -- must be larger than 1.0
-		-- On 32-bit systems: DOUBLE_MAX = (power(2, 53) - 1) -- value: 9007199254740991
-		-- On 64-bit systems: DOUBLE_MAX = (power(2, 64) - 1) -- value: 18446744073709551615
+	return a >= 1.001 and a <= DOUBLE_RADIX -- must be larger than 1.0
 end type
 
 public function iff(integer condition, object iftrue, object iffalse)
