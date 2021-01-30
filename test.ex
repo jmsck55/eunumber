@@ -13,6 +13,8 @@ include my.e
 
 useTaskYield = TRUE
 
+defaultRadix = power(10, floor(log(DOUBLE_RADIX) / log(10)) - 1)
+
 type boolean(integer x)
 	return Bool(x)
 end type
@@ -29,23 +31,20 @@ end procedure
 
 
 procedure calc(integer len)
-
-
-object a
-
-task_yield()
-
-calculationSpeed = floor(len / 2)
-adjustRound = floor(len / 10)
-
-a = GetE(len)
-? a
-? length(a[1])
-
-task_yield()
-
-calc_running = FALSE
-
+	object a
+	
+	task_yield()
+	
+	calculationSpeed = floor(len / 2)
+	adjustRound = floor(len / 10)
+	
+	a = GetE(len)
+	? a
+	? length(a[1])
+	
+	task_yield()
+	
+	calc_running = FALSE
 end procedure
 
 
@@ -54,7 +53,7 @@ puts(1, "main task: start, press \"q\" to force stop\n")
 atom t1, t2
 
 t1 = task_create(routine_id("checkHowComplete"), {})
-t2 = task_create(routine_id("calc"), {500})
+t2 = task_create(routine_id("calc"), {300})
 
 task_schedule(t1, {1, 2})
 task_schedule(t2, 1)
