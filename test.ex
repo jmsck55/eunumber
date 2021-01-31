@@ -44,7 +44,7 @@ procedure calc(integer len)
 	puts(1, "\n\n")
 	? length(a[1])
 	a = ToString(a)
-	fn = open("test.txt", "a")
+	fn = open("test.txt", "w")
 	printf(fn, "%s\n", {a})
 	close(fn)
 	
