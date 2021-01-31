@@ -13,7 +13,7 @@ include my.e
 
 useTaskYield = TRUE
 
-defaultRadix = power(10, floor(log(DOUBLE_RADIX) / log(10)) - 1)
+defaultRadix = 1000000 -- NOTE: If you change this, also change "%06d", below, as well.
 
 type boolean(integer x)
 	return Bool(x)
@@ -32,6 +32,7 @@ end procedure
 
 procedure calc(integer len)
 	object a
+	integer fn
 	
 	task_yield()
 	
@@ -39,8 +40,13 @@ procedure calc(integer len)
 	adjustRound = floor(len / 10)
 	
 	a = GetE(len)
-	? a
+	pretty_print(1, a, {0, 2, 1, 78, "%06d"})
+	puts(1, "\n\n")
 	? length(a[1])
+	a = ToString(a)
+	fn = open("test.txt", "a")
+	printf(fn, "%s\n", {a})
+	close(fn)
 	
 	task_yield()
 	
@@ -53,7 +59,7 @@ puts(1, "main task: start, press \"q\" to force stop\n")
 atom t1, t2
 
 t1 = task_create(routine_id("checkHowComplete"), {})
-t2 = task_create(routine_id("calc"), {300})
+t2 = task_create(routine_id("calc"), {1000})
 
 task_schedule(t1, {1, 2})
 task_schedule(t2, 1)

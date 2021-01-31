@@ -30,7 +30,7 @@ include get.e
 -- NOTE: Negated integer named variables should be in parenthesis.
 
 public function GetVersion() -- revision number
-	return 157 -- completely type checked version
+	return 158 -- completely type checked version
 end function
 
 -- MyEunumber
@@ -118,6 +118,7 @@ ifdef BITS64 then
 public constant DOUBLE_MAX = 18446744073709551615 -- (power(2, 64) - 1)
 public constant DOUBLE_MIN = -DOUBLE_MAX
 public constant DOUBLE_RADIX = floor(sqrt(DOUBLE_MAX)) + 1 -- 4294967296
+public constant DOUBLE_RADIX10 = 1000000000
 public constant INT_MAX = power(2, 62) - 1 -- value: 4611686018427387903
 public constant MAX_RADIX = power(2, floor(62/2)-4) -- value: 134217728
 public constant INT_MAX10 = power(10, 18) -- value: 1000000000000000000
@@ -126,6 +127,7 @@ elsedef
 public constant DOUBLE_MAX = 9007199254740991 -- (power(2, 53) - 1)
 public constant DOUBLE_MIN = -DOUBLE_MAX
 public constant DOUBLE_RADIX = floor(sqrt(DOUBLE_MAX)) + 1 -- 94906266
+public constant DOUBLE_RADIX10 = 10000000
 public constant INT_MAX = power(2, 30) - 1 -- value: 1073741823
 public constant MAX_RADIX = power(2, floor(30/2)-4) -- value: 2048
 public constant INT_MAX10 = power(10, 9) -- value: 1000000000
@@ -158,6 +160,10 @@ end type
 
 public type NegativeScalar(integer i)
 	return i <= -2
+end type
+
+public type PositiveOption(integer i)
+	return i >= -1
 end type
 
 public type PositiveAtom(atom a)
@@ -213,7 +219,7 @@ public AtomRadix defaultRadix = 10 -- 10 is good for everything from 16-bit shor
 public Bool isRoundToZero = FALSE -- make TRUE to allow rounding small numbers to zero.
 public PositiveInteger adjustRound = 5 -- 3 -- can be 0 to a small integer, removes digits of inaccuracy, or adds digits of accuracy under ROUND_TO_NEAREST_OPTION
 public PositiveAtom calculationSpeed = floor(defaultTargetLength / 2) -- can be 0 or from 1 to targetLength
-public integer multInvMoreAccuracy = -1 -- 15, if -1, then use calculationSpeed
+public PositiveOption multInvMoreAccuracy = -1 -- 15, if -1, then use calculationSpeed
 
 public procedure SetIsRoundToZero(Bool i)
 	isRoundToZero = i
@@ -222,7 +228,7 @@ public function GetIsRoundToZero()
 	return isRoundToZero
 end function
 
-public procedure SetMultiplicativeInverseMoreAccuracy(integer i)
+public procedure SetMultiplicativeInverseMoreAccuracy(PositiveOption i)
 	multInvMoreAccuracy = i
 end procedure
 public function GetMultiplicativeInverseMoreAccuracy()
@@ -1657,9 +1663,9 @@ public function NthRootProtoExp(PositiveScalar n, sequence x1, integer x1Exp,
 	return average
 end function
 
-public integer nthRootMoreAccuracy = -1 -- if -1, then use calculationSpeed
+public PositiveOption nthRootMoreAccuracy = -1 -- if -1, then use calculationSpeed
 
-public procedure SetNthRootMoreAccuracy(integer i)
+public procedure SetNthRootMoreAccuracy(PositiveOption i)
 	nthRootMoreAccuracy = i
 end procedure
 public function GetNthRootMoreAccuracy()
@@ -1854,9 +1860,9 @@ end function
 
 -- Begin ArcTan():
 
-public integer arcTanMoreAccuracy = -1 -- if -1, then use calculationSpeed
+public PositiveOption arcTanMoreAccuracy = -1 -- if -1, then use calculationSpeed
 
-public procedure SetArcTanMoreAccuracy(integer i)
+public procedure SetArcTanMoreAccuracy(PositiveOption i)
 	arcTanMoreAccuracy = i
 end procedure
 public function GetArcTanMoreAccuracy()
@@ -2083,9 +2089,9 @@ public function EunExpWhole(Eun u, Eun m)
 	return prod
 end function
 
-public integer expMoreAccuracy = -1 -- if -1, then use calculationSpeed
+public PositiveOption expMoreAccuracy = -1 -- if -1, then use calculationSpeed
 
-public procedure SetExpMoreAccuracy(integer i)
+public procedure SetExpMoreAccuracy(PositiveOption i)
 	expMoreAccuracy = i
 end procedure
 public function GetExpMoreAccuracy()
@@ -2298,9 +2304,9 @@ public function EunExpFast(Eun numerator, Eun denominator)
 	return tmp1
 end function
 
-public integer logMoreAccuracy = -1 -- if -1, then use calculationSpeed
+public PositiveOption logMoreAccuracy = -1 -- if -1, then use calculationSpeed
 
-public procedure SetLogMoreAccuracy(integer i)
+public procedure SetLogMoreAccuracy(PositiveOption i)
 	logMoreAccuracy = i
 end procedure
 public function GetLogMoreAccuracy()
@@ -2443,9 +2449,9 @@ end function
 
 -- !!! Remember to use Radians (Rad) on these functions !!!
 
-public integer sinMoreAccuracy = -1 -- if -1, then use calculationSpeed
+public PositiveOption sinMoreAccuracy = -1 -- if -1, then use calculationSpeed
 
-public procedure SetSinMoreAccuracy(integer i)
+public procedure SetSinMoreAccuracy(PositiveOption i)
 	sinMoreAccuracy = i
 end procedure
 public function GetSinMoreAccuracy()
@@ -2523,9 +2529,9 @@ end function
 
 -- !!! Remember to use Radians (Rad) on these functions !!!
 
-public integer cosMoreAccuracy = -1 -- if -1, then use calculationSpeed
+public PositiveOption cosMoreAccuracy = -1 -- if -1, then use calculationSpeed
 
-public procedure SetCosMoreAccuracy(integer i)
+public procedure SetCosMoreAccuracy(PositiveOption i)
 	cosMoreAccuracy = i
 end procedure
 public function GetCosMoreAccuracy()
@@ -2670,9 +2676,9 @@ end function
 
 --Note: Too slow?
 
-public integer arcSinMoreAccuracy = -1 -- if -1, then use calculationSpeed
+public PositiveOption arcSinMoreAccuracy = -1 -- if -1, then use calculationSpeed
 
-public procedure SetArcSinMoreAccuracy(integer i)
+public procedure SetArcSinMoreAccuracy(PositiveOption i)
 	arcSinMoreAccuracy = i
 end procedure
 public function GetArcSinMoreAccuracy()
