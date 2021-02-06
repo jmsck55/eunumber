@@ -30,7 +30,7 @@ include get.e
 -- NOTE: Negated integer named variables should be in parenthesis.
 
 public function GetVersion() -- revision number
-	return 158 -- completely type checked version
+	return 159 -- completely type checked version
 end function
 
 -- MyEunumber
@@ -671,7 +671,11 @@ public function CarryRadixOnlyEx(sequence numArray, AtomRadix radix, integer way
 	return numArray
 end function
 
-public function AdjustRound(sequence num, integer exponent, PositiveScalar targetLength, AtomRadix radix, Bool isMixed = TRUE)
+type ThreeOptions(integer i)
+	return i >= 0 and i <= 2
+end type
+
+public function AdjustRound(sequence num, integer exponent, PositiveScalar targetLength, AtomRadix radix, ThreeOptions isMixed = TRUE)
 	integer oldlen, roundTargetLength, rounded
 	atom halfRadix, negHalfRadix, f
 	sequence ret
@@ -680,6 +684,7 @@ ifdef USE_TASK_YIELD then
 		task_yield()
 	end if
 end ifdef
+if isMixed != 2 then
 	oldlen = length(num)
 	num = TrimLeadingZeros(num)
 	exponent += (length(num) - (oldlen))
@@ -691,6 +696,7 @@ end ifdef
 	-- otherwise, you can use Carry().
 	num = TrimLeadingZeros(num)
 	exponent += (length(num) - (oldlen))
+end if
 	rounded = 0
 	if length(num) = 0 then
 		ret = {{}, exponent, targetLength, radix, rounded}
@@ -1012,7 +1018,7 @@ public function MultiplicativeInverseExp(sequence den1, integer exp1, PositiveSc
 		-- ? {length(guess), protoTargetLength}
 		exp0 = tmp[2]
 		lookat = ret
-		ret = AdjustRound(guess, exp0, targetLength, radix, FALSE)
+		ret = AdjustRound(guess, exp0, targetLength, radix, 2)
 		if length(tmp) = 2 then
 			-- solution found
 			howComplete = repeat(length(ret[1]), 2)
@@ -1709,7 +1715,7 @@ public function NthRootExp(PositiveScalar n, sequence x1, integer x1Exp, sequenc
 		guess = tmp[1]
 		guessExp = tmp[2]
 		lookat = ret
-		ret = AdjustRound(guess, guessExp, targetLength, radix, FALSE)
+		ret = AdjustRound(guess, guessExp, targetLength, radix, 2)
 		if ret[2] = lookat[2] then
 			nthRootHowComplete = Equaln(ret[1], lookat[1])
 			if nthRootHowComplete[1] = nthRootHowComplete[2] then
@@ -1905,7 +1911,7 @@ public function ArcTanExp(sequence n1, integer exp1, PositiveScalar targetLength
 	arcTanCount = arcTanIter
 	for n = 1 to arcTanIter do
 		a = MultiplyExp(a[1], a[2], {4}, 0, protoTargetLength, radix)
-		tmp = AdjustRound({n}, 0, protoTargetLength, radix)
+		tmp = AdjustRound({n}, 0, protoTargetLength, radix, FALSE)
 		b = MultiplyExp(b[1], b[2], tmp[1], tmp[2], protoTargetLength, radix)
 		tmp = MultiplyExp(b[1], b[2], b[1], b[2], protoTargetLength, radix)
 		-- it needs these statements:
@@ -1921,7 +1927,7 @@ public function ArcTanExp(sequence n1, integer exp1, PositiveScalar targetLength
 		f = DivideExp(f[1], f[2], e[1], e[2], protoTargetLength, radix)
 		sum = AddExp(sum[1], sum[2], f[1], f[2], protoTargetLength, radix)
 		lookat = ret
-		ret = AdjustRound(sum[1], sum[2], targetLength, radix, FALSE)
+		ret = AdjustRound(sum[1], sum[2], targetLength, radix, 2)
 		if ret[2] = lookat[2] then
 			arcTanHowComplete = Equaln(ret[1], lookat[1])
 			if arcTanHowComplete[1] = arcTanHowComplete[2] then
@@ -2151,7 +2157,7 @@ public function ExpExp(sequence n1, integer exp1, PositiveScalar targetLength, A
 		tmp = DivideExp(num[1], num[2], den[1], den[2], protoTargetLength, radix)
 		sum = AddExp(sum[1], sum[2], tmp[1], tmp[2], protoTargetLength, radix)
 		lookat = ret
-		ret = AdjustRound(sum[1], sum[2], targetLength, radix, FALSE)
+		ret = AdjustRound(sum[1], sum[2], targetLength, radix, 2)
 		if ret[2] = lookat[2] then
 			expHowComplete = Equaln(ret[1], lookat[1])
 			if expHowComplete[1] = expHowComplete[2] then -- how equal are they? Use tasks to report on how close we are to the answer.
@@ -2227,7 +2233,7 @@ public function EunExp(Eun n1)
 		ret = whole
 	end if
 	ret[3] -= more -- targetLength -= 1
-	ret = AdjustRound(ret[1], ret[2], ret[3], ret[4])
+	ret = AdjustRound(ret[1], ret[2], ret[3], ret[4], 2)
 	if isNeg then
 		ret = EunMultiplicativeInverse(ret)
 	end if
@@ -2345,7 +2351,7 @@ public function LogExp(sequence n1, integer exp1, sequence guess, integer exp0, 
 		tmp = MultiplyExp({2}, 0, tmp[1], tmp[2], protoTargetLength, radix)
 		guess = AddExp(guess[1], guess[2], tmp[1], tmp[2], protoTargetLength, radix)
 		lookat = ret
-		ret = AdjustRound(guess[1], guess[2], targetLength, radix, FALSE)
+		ret = AdjustRound(guess[1], guess[2], targetLength, radix, 2)
 		if ret[2] = lookat[2] then
 			logHowComplete = Equaln(ret[1], lookat[1])
 			if logHowComplete[1] = logHowComplete[2] then
@@ -2510,7 +2516,7 @@ public function SinExp(sequence n1, integer exp1, PositiveScalar targetLength, A
 		end if
 		ans = AddExp(ans[1], ans[2], tmp[1], tmp[2], protoTargetLength, radix)
 		lookat = ret
-		ret = AdjustRound(ans[1], ans[2], targetLength, radix, FALSE)
+		ret = AdjustRound(ans[1], ans[2], targetLength, radix, 2)
 		if ret[2] = lookat[2] then
 			trigHowComplete = Equaln(ret[1], lookat[1])
 			if trigHowComplete[1] = trigHowComplete[2] then
@@ -2576,7 +2582,7 @@ public function CosExp(sequence n1, integer exp1, PositiveScalar targetLength, A
 		end if
 		ans = AddExp(ans[1], ans[2], tmp[1], tmp[2], protoTargetLength, radix)
 		lookat = ret
-		ret = AdjustRound(ans[1], ans[2], targetLength, radix, FALSE)
+		ret = AdjustRound(ans[1], ans[2], targetLength, radix, 2)
 		if ret[2] = lookat[2] then
 			trigHowComplete = Equaln(ret[1], lookat[1])
 			if trigHowComplete[1] = trigHowComplete[2] then
@@ -2730,7 +2736,7 @@ public function ArcSinExp(sequence n1, integer exp1, PositiveScalar targetLength
 		tmp = MultiplyExp(tmp[1], tmp[2], top[1], top[2], protoTargetLength, radix)
 		sum = AddExp(sum[1], sum[2], tmp[1], tmp[2], protoTargetLength, radix)
 		lookat = ret
-		ret = AdjustRound(sum[1], sum[2], targetLength, radix, FALSE)
+		ret = AdjustRound(sum[1], sum[2], targetLength, radix, 2)
 		if ret[2] = lookat[2] then
 			arcSinHowComplete = Equaln(ret[1], lookat[1])
 			if arcSinHowComplete[1] = arcSinHowComplete[2] then
@@ -3308,7 +3314,7 @@ public function FindRootExp(integer rid, sequence n1, integer exp1,
 		end if
 	end while
 	
-	len -= 3
+	len -= 3 -- Do I need this here?
 	b = AdjustRound(b[1], b[2], len, radix)
 	s = AdjustRound(s[1], s[2], len, radix)
 	
@@ -3435,10 +3441,10 @@ public function ComplexSqrt(Complex a)
 	tmp = EunDivide(tmp, tmptwo)
 	n1 = EunMultiply(n1, tmp)
 	n2 = EunMultiply(n2, tmp)
-	n1[3] -= 2
-	n2[3] -= 2
-	n1 = AdjustRound(n1[1], n1[2], n1[3], n1[4])
-	n2 = AdjustRound(n2[1], n2[2], n2[3], n2[4])
+	n1[3] -= 2 -- Do I need this here?
+	n2[3] -= 2 -- Do I need this here?
+	n1 = AdjustRound(n1[1], n1[2], n1[3], n1[4], 2)
+	n2 = AdjustRound(n2[1], n2[2], n2[3], n2[4], 2)
 	cret = NewComplex(n1, n2)
 	return {cret, ComplexNegate(cret)}
 end function
