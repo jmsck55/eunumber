@@ -21,7 +21,7 @@ include classfile.e as complex
 include myeunumber.e as my
 
 public function Version()
-	return 45 -- Need to debug with Wrapper "Stub" (myeun.h)
+	return 46 -- Need to debug with Wrapper "Stub" (myeun.h)
 end function
 
 public function UsingHowManyBits()
@@ -1423,5 +1423,14 @@ end procedure
 public function IsProperLengthAndRadix(integer targetLength, integer radix)
 	return my:IsProperLengthAndRadix(targetLength, radix)
 end function
+
+public function NewEunWithPointer(integer arrayid, integer signedExponentPointerId, integer radix, integer targetLength)
+ifdef BITS64 then
+	return NewFromEun(my:NewEun(numArray:get_data_from_object(arrayid), peek8s(pointers:get_data_from_object(signedExponentPointerId)), radix, targetLength))
+elsedef
+	return NewFromEun(my:NewEun(numArray:get_data_from_object(arrayid), peek4s(pointers:get_data_from_object(signedExponentPointerId)), radix, targetLength))
+end ifdef
+end function
+
 
 -- end of file.
