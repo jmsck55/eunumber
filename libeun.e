@@ -21,7 +21,7 @@ include classfile.e as complex
 include myeunumber.e as my
 
 public function Version()
-	return 47 -- Need to debug with Wrapper "Stub" (myeun.h)
+	return 48 -- Need to debug with Wrapper "Stub" (myeun.h)
 end function
 
 public function UsingHowManyBits()
@@ -1438,6 +1438,14 @@ end procedure
 
 public function GetEurootsAdjustRound()
 	return my:GetEurootsAdjustRound()
+end function
+
+public procedure SetComplexSqrtAdjustRound(PositiveInteger i)
+	my:SetComplexSqrtAdjustRound(i)
+end procedure
+
+public function GetComplexSqrtAdjustRound()
+	return my:GetComplexSqrtAdjustRound()
 end function
 
 

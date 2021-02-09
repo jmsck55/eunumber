@@ -30,7 +30,7 @@ include get.e
 -- NOTE: Negated integer named variables should be in parenthesis.
 
 public function GetVersion() -- revision number
-	return 162 -- completely type checked version
+	return 163 -- completely type checked version
 end function
 
 -- MyEunumber
@@ -3142,7 +3142,7 @@ public function GetDelta()
 	return delta[2]
 end function
 
-public integer eurootsAdjustRound = 4
+public PositiveInteger eurootsAdjustRound = 4
 
 public procedure SetEurootsAdjustRound(PositiveInteger i)
 	eurootsAdjustRound = i
@@ -3409,6 +3409,16 @@ public function ComplexDivide(Complex n1, Complex n2)
 	return ComplexMultiply(n1, ComplexMultiplicativeInverse(n2))
 end function
 
+public PositiveInteger complexSqrtAdjustRound = 2
+
+public procedure SetComplexSqrtAdjustRound(PositiveInteger i)
+	complexSqrtAdjustRound = i
+end procedure
+
+public function GetComplexSqrtAdjustRound()
+	return complexSqrtAdjustRound
+end function
+
 public function ComplexSqrt(Complex a)
 	--
 	-- This equation takes REAL numbers as input to "x" and "y"
@@ -3454,8 +3464,8 @@ public function ComplexSqrt(Complex a)
 	tmp = EunDivide(tmp, tmptwo)
 	n1 = EunMultiply(n1, tmp)
 	n2 = EunMultiply(n2, tmp)
-	n1[3] -= 2 -- Do I need this here?
-	n2[3] -= 2 -- Do I need this here?
+	n1[3] -= complexSqrtAdjustRound
+	n2[3] -= complexSqrtAdjustRound
 	n1 = AdjustRound(n1[1], n1[2], n1[3], n1[4], noSubtractAdjust)
 	n2 = AdjustRound(n2[1], n2[2], n2[3], n2[4], noSubtractAdjust)
 	cret = NewComplex(n1, n2)
