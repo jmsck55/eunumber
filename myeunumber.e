@@ -30,7 +30,7 @@ include get.e
 -- NOTE: Negated integer named variables should be in parenthesis.
 
 public function GetVersion() -- revision number
-	return 160 -- completely type checked version
+	return 161 -- completely type checked version
 end function
 
 -- MyEunumber
@@ -3142,6 +3142,17 @@ public function GetDelta()
 	return delta[2]
 end function
 
+public integer eurootsAdjustRound = 3
+
+public procedure SetEurootsAdjustRound(PositiveInteger i)
+	eurootsAdjustRound = i
+end procedure
+
+public function GetEurootsAdjustRound()
+	return eurootsAdjustRound
+end function
+
+
 -- findRoot private variables:
 sequence a, b, c, d, fa, fb, fc, s, fs, tmp, tmp1, tmp2
 integer mflag, lookatIter
@@ -3316,7 +3327,7 @@ public function FindRootExp(integer rid, sequence n1, integer exp1,
 		end if
 	end while
 	
-	len -= 3 -- Do I need this here?
+	len -= eurootsAdjustRound
 	b = AdjustRound(b[1], b[2], len, radix)
 	s = AdjustRound(s[1], s[2], len, radix)
 	

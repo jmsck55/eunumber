@@ -21,7 +21,7 @@ include classfile.e as complex
 include myeunumber.e as my
 
 public function Version()
-	return 46 -- Need to debug with Wrapper "Stub" (myeun.h)
+	return 47 -- Need to debug with Wrapper "Stub" (myeun.h)
 end function
 
 public function UsingHowManyBits()
@@ -1430,6 +1430,14 @@ ifdef BITS64 then
 elsedef
 	return NewFromEun(my:NewEun(numArray:get_data_from_object(arrayid), peek4s(pointers:get_data_from_object(signedExponentPointerId)), radix, targetLength))
 end ifdef
+end function
+
+public procedure SetEurootsAdjustRound(PositiveInteger i)
+	my:SetEurootsAdjustRound(i)
+end procedure
+
+public function GetEurootsAdjustRound()
+	return my:GetEurootsAdjustRound()
 end function
 
 
