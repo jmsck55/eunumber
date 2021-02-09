@@ -30,7 +30,7 @@ include get.e
 -- NOTE: Negated integer named variables should be in parenthesis.
 
 public function GetVersion() -- revision number
-	return 161 -- completely type checked version
+	return 162 -- completely type checked version
 end function
 
 -- MyEunumber
@@ -3142,7 +3142,7 @@ public function GetDelta()
 	return delta[2]
 end function
 
-public integer eurootsAdjustRound = 3
+public integer eurootsAdjustRound = 4
 
 public procedure SetEurootsAdjustRound(PositiveInteger i)
 	eurootsAdjustRound = i
