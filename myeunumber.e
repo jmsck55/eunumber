@@ -30,7 +30,7 @@ include get.e
 -- NOTE: Negated integer named variables should be in parenthesis.
 
 public function GetVersion() -- revision number
-	return 164 -- completely type checked version
+	return 165 -- completely type checked version
 end function
 
 -- MyEunumber
@@ -214,7 +214,11 @@ public procedure SetZeroDividedByZeroFlag(Bool i)
 	zeroDividedByZeroFlag = i
 end procedure
 
-public PositiveScalar defaultTargetLength = 60 -- 40 -- 70 -- 70 * 3 = 210 (I tried to keep it under 212)
+public type TargetLength(integer i)
+	return i >= 4
+end type
+
+public TargetLength defaultTargetLength = 60 -- 40 -- 70 -- 70 * 3 = 210 (I tried to keep it under 212)
 public AtomRadix defaultRadix = 10 -- 10 is good for everything from 16-bit shorts, to 32-bit ints, to 64-bit long longs.
 public Bool isRoundToZero = FALSE -- make TRUE to allow rounding small numbers to zero.
 public PositiveInteger adjustRound = 5 -- 3 -- can be 0 to a small integer, removes digits of inaccuracy, or adds digits of accuracy under ROUND_TO_NEAREST_OPTION
@@ -679,7 +683,7 @@ end type
 
 public constant NO_SUBTRACT_ADJUST = 2
 
-public function AdjustRound(sequence num, integer exponent, PositiveScalar targetLength, AtomRadix radix, ThreeOptions isMixed = TRUE)
+public function AdjustRound(sequence num, integer exponent, TargetLength targetLength, AtomRadix radix, ThreeOptions isMixed = TRUE)
 	integer oldlen, roundTargetLength, rounded
 	atom halfRadix, negHalfRadix, f
 	sequence ret
@@ -792,14 +796,14 @@ end if
 end function
 
 
-public function MultiplyExp(sequence n1, integer exp1, sequence n2, integer exp2, PositiveScalar targetLength, AtomRadix radix)
+public function MultiplyExp(sequence n1, integer exp1, sequence n2, integer exp2, TargetLength targetLength, AtomRadix radix)
 	sequence numArray, ret
 	numArray = Multiply(n1, n2)
 	ret = AdjustRound(numArray, exp1 + exp2, targetLength, radix, TRUE) -- true for backwards compatability
 	return ret
 end function
 
-public function SquareExp(sequence n1, integer exp1, PositiveScalar targetLength, AtomRadix radix)
+public function SquareExp(sequence n1, integer exp1, TargetLength targetLength, AtomRadix radix)
 	sequence numArray, ret
 	numArray = Multiply(n1, n1)
 	ret = AdjustRound(numArray, exp1 + exp1, targetLength, radix, FALSE)
@@ -807,7 +811,7 @@ public function SquareExp(sequence n1, integer exp1, PositiveScalar targetLength
 end function
 
 
-public function AddExp(sequence n1, integer exp1, sequence n2, integer exp2, PositiveScalar targetLength, AtomRadix radix)
+public function AddExp(sequence n1, integer exp1, sequence n2, integer exp2, TargetLength targetLength, AtomRadix radix)
 	sequence numArray, ret
 	integer size
 	size = (length(n1) - (exp1)) - (length(n2) - (exp2))
@@ -825,7 +829,7 @@ public function AddExp(sequence n1, integer exp1, sequence n2, integer exp2, Pos
 	return ret
 end function
 
-public function SubtractExp(sequence n1, integer exp1, sequence n2, integer exp2, PositiveScalar targetLength, AtomRadix radix)
+public function SubtractExp(sequence n1, integer exp1, sequence n2, integer exp2, TargetLength targetLength, AtomRadix radix)
 	sequence numArray, ret
 	integer size
 	size = (length(n1) - (exp1)) - (length(n2) - (exp2))
@@ -858,7 +862,7 @@ public function GetForSmallRadix()
 	return forSmallRadix
 end function
 
-public function ProtoMultiplicativeInverseExp(sequence guess, integer exp0, sequence den1, integer exp1, PositiveScalar targetLength, AtomRadix radix)
+public function ProtoMultiplicativeInverseExp(sequence guess, integer exp0, sequence den1, integer exp1, TargetLength targetLength, AtomRadix radix)
 	-- a = guess
 	-- n1 = den1
 	-- f(a) = a * (2 - n1 * a)
@@ -909,7 +913,7 @@ public function IntToDigits(atom x, AtomRadix radix)
 	return numArray
 end function
 
-public function ExpToAtom(sequence n1, integer exp1, PositiveScalar targetLength, AtomRadix radix)
+public function ExpToAtom(sequence n1, integer exp1, PositiveInteger targetLen, AtomRadix radix)
 	atom p, ans, lookat, ele
 	integer overflowBy, len
 	if length(n1) = 0 then
@@ -931,7 +935,7 @@ public function ExpToAtom(sequence n1, integer exp1, PositiveScalar targetLength
 			overflowBy = 0
 		end if
 	end if
-	exp1 -= targetLength
+	exp1 -= targetLen
 	len = length(n1)
 	p = power(radix, exp1)
 	ans = n1[1] * p
@@ -984,7 +988,7 @@ public integer divideByZeroCallBackId = routine_id("DefaultDivideByZeroCallBack"
 
 public sequence howComplete = {-1, 0}
 
-public function MultiplicativeInverseExp(sequence den1, integer exp1, PositiveScalar targetLength, AtomRadix radix, sequence guess = {})
+public function MultiplicativeInverseExp(sequence den1, integer exp1, TargetLength targetLength, AtomRadix radix, sequence guess = {})
 	sequence tmp, lookat, ret
 	integer exp0, protoTargetLength, protoMoreAccuracy
 	howComplete = {-1, 0}
@@ -1046,7 +1050,7 @@ public function MultiplicativeInverseExp(sequence den1, integer exp1, PositiveSc
 end function
 
 
-public function DivideExp(sequence num1, integer exp1, sequence den2, integer exp2, PositiveScalar targetLength, AtomRadix radix)
+public function DivideExp(sequence num1, integer exp1, sequence den2, integer exp2, TargetLength targetLength, AtomRadix radix)
 	sequence tmp
 	if zeroDividedByZeroFlag and length(num1) = 0 and length(den2) = 0 then
 		return NewEun({1}, 0, targetLength, radix)
@@ -1061,7 +1065,7 @@ public function DivideExp(sequence num1, integer exp1, sequence den2, integer ex
 end function
 
 
-public function ConvertExp(sequence n1, integer exp1, PositiveScalar targetLength, AtomRadix fromRadix, AtomRadix toRadix)
+public function ConvertExp(sequence n1, integer exp1, TargetLength targetLength, AtomRadix fromRadix, AtomRadix toRadix)
 	sequence n2, n3, result
 	integer exp2, exp3
 	n1 = TrimTrailingZeros(n1)
@@ -1081,7 +1085,7 @@ public function ConvertExp(sequence n1, integer exp1, PositiveScalar targetLengt
 end function
 
 
-public function IsProperLengthAndRadix(PositiveScalar targetLength = defaultTargetLength, AtomRadix radix = defaultRadix)
+public function IsProperLengthAndRadix(TargetLength targetLength = defaultTargetLength, AtomRadix radix = defaultRadix)
 	return (targetLength * power(radix - 1, 2) <= DOUBLE_MAX)
 -- On 64-bit systems, long double has significand precision of 64 bits: DOUBLE_MAX = (power(2, 64) - 1) -- value: 18446744073709551615
 -- On 32-bit systems, double has significand precision of 53 bits: DOUBLE_MAX = (power(2, 53) - 1) -- value: 9007199254740991
@@ -1108,7 +1112,7 @@ public type Eun(object x)
 	return 0
 end type
 
-public function NewEun(sequence num = {}, integer exp = 0, PositiveScalar targetLength = defaultTargetLength, AtomRadix radix = defaultRadix, integer flags = 0)
+public function NewEun(sequence num = {}, integer exp = 0, TargetLength targetLength = defaultTargetLength, AtomRadix radix = defaultRadix, integer flags = 0)
 	Eun x = {num, exp, targetLength, radix, flags}
 	return x
 end function
@@ -1136,7 +1140,7 @@ end function
 
 -- EunMultiply
 public function EunMultiply(Eun n1, Eun n2)
-	PositiveScalar targetLength
+	TargetLength targetLength
 	if n1[4] != n2[4] then
 		puts(1, "Error(5):  In MyEuNumber, radixes do not equal.  See file: ex.err\n")
 		abort(1/0)
@@ -1155,7 +1159,7 @@ end function
 
 -- EunAdd
 public function EunAdd(Eun n1, Eun n2)
-	PositiveScalar targetLength
+	TargetLength targetLength
 	if n1[4] != n2[4] then
 		puts(1, "Error(5):  In MyEuNumber, radixes do not equal.  See file: ex.err\n")
 		abort(1/0)
@@ -1188,7 +1192,7 @@ public function EunAbsoluteValue(Eun n1)
 end function
 -- EunSubtract
 public function EunSubtract(Eun n1, Eun n2)
-	PositiveScalar targetLength
+	TargetLength targetLength
 	if n1[4] != n2[4] then
 		puts(1, "Error(5):  In MyEuNumber, radixes do not equal.  See file: ex.err\n")
 		abort(1/0)
@@ -1206,7 +1210,7 @@ public function EunMultiplicativeInverse(Eun n1, sequence guess = {})
 end function
 -- EunDivide
 public function EunDivide(Eun n1, Eun n2)
-	PositiveScalar targetLength
+	TargetLength targetLength
 	if n1[4] != n2[4] then
 		puts(1, "Error(5):  In MyEuNumber, radixes do not equal.  See file: ex.err\n")
 		abort(1/0)
@@ -1219,7 +1223,7 @@ public function EunDivide(Eun n1, Eun n2)
 	return DivideExp(n1[1], n1[2], n2[1], n2[2], targetLength, n1[4])
 end function
 -- EunConvert
-public function EunConvert(Eun n1, atom toRadix, PositiveScalar targetLength)
+public function EunConvert(Eun n1, atom toRadix, TargetLength targetLength)
 	return ConvertExp(n1[1], n1[2], targetLength, n1[4], toRadix)
 end function
 
@@ -1324,7 +1328,7 @@ public function EunIntPart(Eun n1)
 end function
 
 public function EunRoundSig(Eun n1, PositiveScalar sigDigits = defaultTargetLength)
-	PositiveScalar targetLength
+	TargetLength targetLength
 	targetLength = n1[3]
 	n1 = AdjustRound(n1[1], n1[2], sigDigits, n1[4])
 	n1[3] = targetLength
@@ -1605,7 +1609,7 @@ public function StringToNumberExp(sequence st)
 	return {st, exp}
 end function
 
-public function ToEun(object s, AtomRadix radix = defaultRadix, PositiveScalar targetLength = defaultTargetLength)
+public function ToEun(object s, AtomRadix radix = defaultRadix, TargetLength targetLength = defaultTargetLength)
 -- Dropping support for atoms, use strings instead (strings are more accurate)
 	if atom(s) then
 		s = ToString(s)
@@ -1641,7 +1645,7 @@ public function GetRealMode()
 end function
 
 public function IntPowerExp(PositiveInteger toPower, sequence n1, integer exp1, 
-			      PositiveScalar targetLength, AtomRadix radix)
+			      TargetLength targetLength, AtomRadix radix)
 -- b^x = e^(x * ln(b))
 	sequence p
 	if toPower = 0 then
@@ -1663,7 +1667,7 @@ end function
 
 public function NthRootProtoExp(PositiveScalar n, sequence x1, integer x1Exp,
 				   sequence guess, integer guessExp, 
-				   PositiveScalar targetLength, AtomRadix radix)
+				   TargetLength targetLength, AtomRadix radix)
 	sequence p, quot, average
 	p = IntPowerExp(n - 1, guess, guessExp, targetLength, radix)
 	quot = DivideExp(x1, x1Exp, p[1], p[2], targetLength, radix)
@@ -1688,7 +1692,7 @@ public integer lastNthRootIter = -1
 public sequence nthRootHowComplete = {-1, 0}
 
 public function NthRootExp(PositiveScalar n, sequence x1, integer x1Exp, sequence guess, 
-			integer guessExp, PositiveScalar targetLength, AtomRadix radix)
+			integer guessExp, TargetLength targetLength, AtomRadix radix)
 	sequence tmp, lookat, ret
 	integer protoTargetLength, moreAccuracy
 	nthRootHowComplete = {-1, 0}
@@ -1746,7 +1750,7 @@ public integer realModeErrorCallBackId = routine_id("DefaultRealModeErrorCallBac
 public function EunNthRoot(PositiveScalar n, Eun n1, object option = {})
 	Eun guess
 	object tmp
-	PositiveScalar targetLength, isImag, exp1, f
+	TargetLength targetLength, isImag, exp1, f
 	sequence ret
 	atom a
 	exp1 = 0
@@ -1884,7 +1888,7 @@ public integer arcTanCount = -1
 
 public sequence arcTanHowComplete = {-1, 0}
 
-public function ArcTanExp(sequence n1, integer exp1, PositiveScalar targetLength, AtomRadix radix)
+public function ArcTanExp(sequence n1, integer exp1, TargetLength targetLength, AtomRadix radix)
 	sequence sum, a, b, c, d, e, f, tmp, count, xSquared, xSquaredPlusOne, lookat, ret
 	integer protoTargetLength, moreAccuracy
 	arcTanHowComplete = {-1, 0}
@@ -1956,7 +1960,7 @@ end function
 
 sequence quarterPI
 quarterPI = repeat(0, 4)
-public function GetQuarterPI(PositiveScalar targetLength = defaultTargetLength, AtomRadix radix = defaultRadix, PositiveInteger multBy = 1)
+public function GetQuarterPI(TargetLength targetLength = defaultTargetLength, AtomRadix radix = defaultRadix, PositiveInteger multBy = 1)
 	if quarterPI[3] != targetLength or quarterPI[4] != radix then
 		quarterPI = ArcTanExp({1}, 0, targetLength, radix)
 	end if
@@ -1965,10 +1969,10 @@ public function GetQuarterPI(PositiveScalar targetLength = defaultTargetLength, 
 	end if
 	return quarterPI
 end function
-public function GetHalfPI(PositiveScalar targetLength = defaultTargetLength, integer radix = defaultRadix)
+public function GetHalfPI(TargetLength targetLength = defaultTargetLength, integer radix = defaultRadix)
 	return GetQuarterPI(targetLength, radix, 2)
 end function
-public function GetPI(PositiveScalar targetLength = defaultTargetLength, integer radix = defaultRadix)
+public function GetPI(TargetLength targetLength = defaultTargetLength, integer radix = defaultRadix)
 	return GetQuarterPI(targetLength, radix, 4)
 end function
 
@@ -1976,7 +1980,7 @@ end function
 public integer ExpExp1Iter = 1000
 public sequence exp1HowComplete = {-1, 0}
 
-public function ExpExp1(sequence n1, integer exp1, PositiveScalar targetLength, AtomRadix radix)
+public function ExpExp1(sequence n1, integer exp1, TargetLength targetLength, AtomRadix radix)
 -- not quite accurate enough for large numbers.
 
 -- it doesn't like large numbers.
@@ -2063,7 +2067,7 @@ public sequence expWholeHowComplete = {0, -1}
 public function EunExpWhole(Eun u, Eun m)
 -- exp function for whole numbers
 	Eun q, prod, current
-	PositiveScalar targetLength, radix
+	TargetLength targetLength, radix
 	expWholeHowComplete = {0, -1}
 	targetLength = m[3]
 	radix = m[4]
@@ -2113,7 +2117,7 @@ public integer expExpCount = -1
 
 public sequence expHowComplete = {-1, 0}
 
-public function ExpExp(sequence n1, integer exp1, PositiveScalar targetLength, AtomRadix radix)
+public function ExpExp(sequence n1, integer exp1, TargetLength targetLength, AtomRadix radix)
 -- it doesn't like large numbers.
 -- so, factor
 -- 
@@ -2180,7 +2184,7 @@ end function
 
 sequence eunE
 eunE = repeat(0, 4)
-public function GetE(PositiveScalar targetLength = defaultTargetLength, AtomRadix radix = defaultRadix)
+public function GetE(TargetLength targetLength = defaultTargetLength, AtomRadix radix = defaultRadix)
 	if eunE[3] != targetLength or eunE[4] != radix then
 		eunE = ExpExp({1}, 0, targetLength, radix)
 	end if
@@ -2258,7 +2262,7 @@ end procedure
 
 public sequence expFastHowComplete = {-1, 0}
 
-public function ExpExpFast(sequence x1, integer exp1, sequence y2, integer exp2, PositiveScalar targetLength, AtomRadix radix)
+public function ExpExpFast(sequence x1, integer exp1, sequence y2, integer exp2, TargetLength targetLength, AtomRadix radix)
 -- e^(x/y) = 1 + 2x/(2y-x+x^2/(6y+x^2/(10y+x^2/(14y+x^2/(18y+x^2/(22y+...
 	-- precalculate:
 	-- 1, 2x, x, x^2, 4y, (2 + 4i)y
@@ -2287,7 +2291,7 @@ end function
 
 public function EunExpFast(Eun numerator, Eun denominator)
 -- e^(x/y) = 1 + 2x/(2y-x+x^2/(6y+x^2/(10y+x^2/(14y+x^2/(18y+x^2/(22y+...
-	PositiveScalar targetLength
+	TargetLength targetLength
 	if numerator[4] != denominator[4] then
 		puts(1, "Error(5):  In MyEuNumber, radixes do not equal.  See file: ex.err\n")
 		abort(1/0)
@@ -2328,7 +2332,7 @@ public integer logIterCount = -1
 
 public sequence logHowComplete = {-1, 0}
 
-public function LogExp(sequence n1, integer exp1, sequence guess, integer exp0, PositiveScalar targetLength, AtomRadix radix)
+public function LogExp(sequence n1, integer exp1, sequence guess, integer exp0, TargetLength targetLength, AtomRadix radix)
 	-- ln(x) = y[n] = y[n - 1] + 2 * (x - exp(y[n - 1]))/(x + exp(y[n - 1]))
 	sequence expY, xMinus, xPlus, tmp, lookat, ret, one
 	integer protoTargetLength, moreAccuracy
@@ -2480,7 +2484,7 @@ end function
 
 public sequence trigHowComplete = {-1, 0} -- for sin() and cos()
 
-public function SinExp(sequence n1, integer exp1, PositiveScalar targetLength, AtomRadix radix)
+public function SinExp(sequence n1, integer exp1, TargetLength targetLength, AtomRadix radix)
 -- sine(x) = x - ((x^3)/(3!)) + ((x^5)/(5!)) - ((x^7)/(7!)) + ((x^9)/(9!)) - ...
 	-- Cases: 0 equals zero (0)
 	-- Range: -PI/2 to PI/2, inclusive
@@ -2551,7 +2555,7 @@ end function
 public integer cosIter = 1000000000 -- 500
 public integer cosIterCount = -1
 
-public function CosExp(sequence n1, integer exp1, PositiveScalar targetLength, AtomRadix radix)
+public function CosExp(sequence n1, integer exp1, TargetLength targetLength, AtomRadix radix)
 -- cos(x) = 1 - ((x^2)/(2!)) + ((x^4)/(4!)) - ((x^6)/(6!)) + ((x^8)/(8!)) - ...
 	-- Range: -PI/2 to PI/2, exclusive
 	sequence ans, a, b, tmp, xSquared, lookat, ret
@@ -2700,7 +2704,7 @@ public integer arcSinIterCount = -1
 
 public sequence arcSinHowComplete = {-1, 0}
 
-public function ArcSinExp(sequence n1, integer exp1, PositiveScalar targetLength, AtomRadix radix)
+public function ArcSinExp(sequence n1, integer exp1, TargetLength targetLength, AtomRadix radix)
 --something wrong with arcsin()?
 -- arcsin(z) = z + (1/2)(z^3/3) + (1*3/(2*4))(z^5/5) + (1*3*5/(2*4*6))(z^7/7) + ...
 	sequence sum, xSquared, top, bottom, odd, even, x, tmp, lookat, ret
@@ -2831,7 +2835,7 @@ end function
 -- public integer arctanIter = 1000000000 -- 500
 -- public integer lastIterCountArctan = -1
 -- 
--- public function ArctanExp(sequence n1, integer exp1, PositiveScalar targetLength, integer radix)
+-- public function ArctanExp(sequence n1, integer exp1, TargetLength targetLength, integer radix)
 -- -- works best with small numbers.
 -- -- arctan(x) = x - ((x^3)/3) + ((x^5)/5) - ((x^7)/7) + ..., where abs(x) < 1
 -- -- sine(x) = x - ((x^3)/(3!)) + ((x^5)/(5!)) - ((x^7)/(7!)) + ((x^9)/(9!)) - ...
