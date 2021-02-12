@@ -491,6 +491,10 @@ public function Subtr(sequence n1, sequence n2)
 	else
 		len = length(n1)
 		c = length(n2) - (len)
+		-- numArray = n2[1..c+1] & (n1 - n2[c+2..$])
+		-- numArray = repeat(0, length(n2))
+		-- numArray[1..c+1] = n2[1..c+1]
+		-- numArray[c+2..$] = n1 - n2[c+2..$]
 		-- copy n2 to numArray:
 		numArray = n2
 		for i = 1 to len do
@@ -777,7 +781,7 @@ end if
 				f -= 1
 			end if
 			num = num[1..roundTargetLength]
-			rounded = (halfRadix < f) - (f < negHalfRadix)
+			rounded = (f > halfRadix) - (f < negHalfRadix) -- 1 for round up, -1 for round down.
 			if rounded then
 				num[roundTargetLength] += rounded
 				num = CarryRadixOnlyEx(num, radix * rounded, rounded)
