@@ -15,6 +15,19 @@
 
 namespace myeunumber
 
+include misc.e
+include get.e
+
+ifdef USE_SMALL_RADIX then
+	puts(1, "\nWarning: Using small radix.\nThis program is experimental.\nPress enter to continue, or any other key to exit.\n")
+	sleep(1) -- sleep for one (1) second.
+	while get_key() != -1 do
+	end while
+	if wait_key() != 13 then
+		abort(1)
+	end if
+end ifdef
+
 ifdef BITS64 then
 	include std/machine.e
 	include std/convert.e
@@ -22,15 +35,12 @@ elsedef
 	include allocate.e
 end ifdef
 
-include misc.e
-include get.e
-
 -- with trace
 
 -- NOTE: Negated integer named variables should be in parenthesis.
 
 public function GetVersion() -- revision number
-	return 165 -- completely type checked version
+	return 166 -- completely type checked version
 end function
 
 -- MyEunumber
@@ -175,7 +185,11 @@ public type NegativeAtom(atom a)
 end type
 
 public type AtomRadix(atom a)
+ifdef USE_SMALL_RADIX then
 	return a >= 1.001 and a <= DOUBLE_RADIX -- must be larger than 1.0
+elsedef
+	return a >= 2 and a <= DOUBLE_RADIX -- must be 2.0 or larger
+end ifdef
 end type
 
 public function iff(integer condition, object iftrue, object iffalse)
