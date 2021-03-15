@@ -40,7 +40,7 @@ end ifdef
 -- NOTE: Negated integer named variables should be in parenthesis.
 
 public function GetVersion() -- revision number
-	return 166 -- completely type checked version
+	return 167 -- completely type checked version
 end function
 
 -- MyEunumber
@@ -526,7 +526,6 @@ public function Sum(sequence dst, sequence srcs)
 	return dst
 end function
 
-
 public function ConvertRadix(sequence number, AtomRadix fromRadix, AtomRadix toRadix)
 	sequence target, base, tmp
 	atom digit
@@ -645,7 +644,7 @@ end function
 -- 		end if
 -- 	end for
 -- 	return {}
--- vend function
+-- end function
 
 public function TrimLeadingZeros(sequence numArray)
 	while length(numArray) and numArray[1] = 0 do
@@ -674,7 +673,7 @@ public function TrimTrailingZeros(sequence numArray)
 	return numArray
 end function
 
-public function CarryRadixOnlyEx(sequence numArray, AtomRadix radix, integer way = 1)
+public function CarryRadixOnlyEx(sequence numArray, atom radix, integer way = 1)
 	atom b
 	integer i
 	i = length(numArray)
@@ -817,15 +816,12 @@ end function
 public function MultiplyExp(sequence n1, integer exp1, sequence n2, integer exp2, TargetLength targetLength, AtomRadix radix)
 	sequence numArray, ret
 	numArray = Multiply(n1, n2)
-	ret = AdjustRound(numArray, exp1 + exp2, targetLength, radix, TRUE) -- true for backwards compatability
+	ret = AdjustRound(numArray, exp1 + exp2, targetLength, radix, FALSE) -- TRUE for backwards compatability
 	return ret
 end function
 
 public function SquareExp(sequence n1, integer exp1, TargetLength targetLength, AtomRadix radix)
-	sequence numArray, ret
-	numArray = Multiply(n1, n1)
-	ret = AdjustRound(numArray, exp1 + exp1, targetLength, radix, FALSE)
-	return ret
+	return MultiplyExp(n1, exp1, n1, exp1, targetLength, radix)
 end function
 
 
@@ -3627,6 +3623,8 @@ public function EunTest(Eun val0, Eun ans)
 	return range
 end function
 
-
+public function EunPower(Eun base, Eun raisedTo)
+	return EunExp(EunMultiply(EunLog(base), raisedTo))
+end function
 
 --end of file.
