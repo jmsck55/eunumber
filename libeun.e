@@ -146,7 +146,7 @@ function GetEun(integer id)
 end function
 
 public procedure StoreEun(integer id_dst, integer id_src) -- move operator
-	eun:store_object(id_dst, id_src))
+	eun:store_object(id_dst, id_src)
 end procedure
 
 public function CloneEun(integer id)
@@ -1472,7 +1472,7 @@ public function NewComplexMatrix(integer rows, integer cols, integer pointer_to_
 	return matrix:new_object_from_data(ret)
 end function
 
-pubilc procedure DeleteComplexMatrix(integer i)
+public procedure DeleteComplexMatrix(integer i)
 	matrix:delete_object(i)
 end procedure
 
