@@ -40,7 +40,7 @@ end ifdef
 -- NOTE: Negated integer named variables should be in parenthesis.
 
 public function GetVersion() -- revision number
-	return 167 -- completely type checked version
+	return 168 -- completely type checked version
 end function
 
 -- MyEunumber
@@ -1550,10 +1550,9 @@ end function
 -- takes a string or a "Eun"
 public function ToAtom(sequence s)
 	if Eun(s) then
-	--if length(d) and sequence(d[1]) then
 		s = ToString(s)
 	end if
-	s = value( s )
+	s = value(s)
 	if s[1] = GET_SUCCESS and atom(s[2]) then
 		return s[2]
 	end if
@@ -2261,8 +2260,6 @@ public function EunExp(Eun n1)
 	end if
 	return ret
 end function
-
--- ? EunExp(NewEun({-2}, 0))
 
 public integer ExpExpFastIter = 1 -- try to keep this number small.
 
@@ -3626,5 +3623,81 @@ end function
 public function EunPower(Eun base, Eun raisedTo)
 	return EunExp(EunMultiply(EunLog(base), raisedTo))
 end function
+
+-- Matrix support:
+--
+-- public type matrix(sequence s)
+-- public function NewComplexMatrix(integer rows, integer cols)
+-- public function GetMatrixRows(sequence a)
+-- public function GetMatrixCols(sequence a)
+-- public function ComplexMatrixMultiply(matrix a, matrix b)
+--
+-- See also:
+-- https://www.purplemath.com/modules/mtrxmult3.htm
+
+public type matrix(sequence s)
+	integer lenRows = length(s)
+	if lenRows then
+		integer lenCols
+		lenCols = length(s[1])
+		for i = 2 to lenRows do
+			if length(s[i]) != lenCols then
+				return 0
+			end if
+		end for
+		return 1
+	end if
+	return 0
+end type
+
+public function NewComplexMatrix(integer rows, integer cols)
+	return repeat(repeat(NewComplex(), cols), rows)
+end function
+
+public function GetMatrixRows(sequence a)
+	return length(a)
+end function
+
+public function GetMatrixCols(sequence a)
+	return length(a[1])
+end function
+
+public function ComplexMatrixMultiply(matrix a, matrix b)
+-- ret[i] =
+-- {
+--  a[i][k1] * b[k1][j1] + a[i][k2] * b[k2][j1],
+--  a[i][k1] * b[k1][j2] + a[i][k2] * b[k2][j2],
+--  a[i][k1] * b[k1][j3] + a[i][k2] * b[k2][j3],
+--  a[i][k1] * b[k1][j4] + a[i][k2] * b[k2][j4]
+-- }
+-- row0 = ret[i]
+-- row1 = a[i]
+	integer rows, cols, len
+	sequence row0, row1, sum, ret
+	-- Complex sum
+	-- matrix ret
+	len = GetMatrixRows(b)
+	if GetMatrixCols(a) != len then
+		puts(1, "Error(8):  In MyEuNumber, in ComplexMatrixMult(), column-row mix-match.\n  See file: ex.err\n")
+		abort(1/0)
+	end if
+	rows = GetMatrixRows(a)
+	cols = GetMatrixCols(b)
+	ret = NewComplexMatrix(rows, cols)
+	for i = 1 to rows do -- rows of "a"
+		row0 = ret[i]
+		row1 = a[i]
+		for j = 1 to cols do -- cols of "b"
+			sum = NewComplex()
+			for k = 1 to len do -- k is cols of "a", rows of "b"
+				sum = ComplexAdd(sum, ComplexMultiply(row1[k], b[k][j]))
+			end for
+			row0[j] = sum
+		end for
+		ret[i] = row0
+	end for
+	return ret
+end function
+
 
 --end of file.

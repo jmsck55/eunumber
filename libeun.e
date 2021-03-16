@@ -18,10 +18,11 @@ include classfile.e as pointers
 include classfile.e as numArray
 include classfile.e as eun
 include classfile.e as complex
+include classfile.e as matrix
 include myeunumber.e as my
 
 public function Version()
-	return 49 -- Need to debug with Wrapper "Stub" (myeun.h)
+	return 50 -- Need to debug with Wrapper "Stub" (myeun.h)
 end function
 
 public function UsingHowManyBits()
@@ -145,7 +146,7 @@ function GetEun(integer id)
 end function
 
 public procedure StoreEun(integer id_dst, integer id_src) -- move operator
-	eun:replace_object(id_dst, GetEun(id_src))
+	eun:store_object(id_dst, id_src))
 end procedure
 
 public function CloneEun(integer id)
@@ -272,7 +273,7 @@ function GetComplex(integer id)
 end function
 
 public procedure StoreComplex(integer id_dst, integer id_src)
-	complex:replace_object(id_dst, GetComplex(id_src))
+	complex:store_object(id_dst, id_src)
 end procedure
 
 public function CloneComplex(integer id)
@@ -283,12 +284,12 @@ end function
 
 public function GetRealEun(integer complexId)
 	sequence s = GetComplex(complexId)
-	return s[my:REAL]
+	return NewFromEun(s[my:REAL])
 end function
 
 public function GetImaginaryEun(integer complexId)
 	sequence s = GetComplex(complexId)
-	return s[my:IMAG]
+	return NewFromEun(s[my:IMAG])
 end function
 
 -- MyEuNumber functions:
@@ -644,7 +645,7 @@ public function EunConvert(integer n1, integer toRadix, integer targetLength)
 end function
 
 public function CompareExp(sequence n1, integer exp1, sequence n2, integer exp2)
-	return my:CompareExp(numArray:get_data_from_object(n1), exp1, numArray:get_data_from_object(n2), exp2)
+	return my:CompareExp(numArray:get_data_from_object(n1), exp1, numArray:get_data_from_object(n2), exp2) + 1
 end function
 
 public function GetEqualLength()
@@ -652,7 +653,7 @@ public function GetEqualLength()
 end function
 
 public function EunCompare(integer n1, integer n2)
-	return my:EunCompare(GetEun(n1), GetEun(n2))
+	return my:EunCompare(GetEun(n1), GetEun(n2)) + 1
 end function
 
 public function EunReverse(integer n1) -- reverse endian
@@ -727,8 +728,7 @@ public function EunIntPower(integer toPower, integer id)
 	return NewFromEun(my:IntPowerExp(toPower, n1[1], n1[2], n1[3], n1[4]))
 end function
 
-public function NthRootExp(PositiveScalar n, integer x1, integer x1Exp, integer guess, 
-			integer guessExp, integer targetLength, integer radix)
+public function NthRootExp(PositiveScalar n, integer x1, integer x1Exp, integer guess, integer guessExp, integer targetLength, integer radix)
 	sequence n1, n2
 	n1 = numArray:get_data_from_object(x1)
 	n2 = numArray:get_data_from_object(guess)
@@ -783,10 +783,8 @@ public function GetE(integer targetLength, integer radix)
 end function
 
 public function EunExp(integer n1)
-	
 	-- ExpExp() doesn't like large numbers.
 	-- so, factor
-	
 	return NewFromEun(my:EunExp(GetEun(n1)))
 end function
 
@@ -897,11 +895,15 @@ end function
 
 -- Triangulation using two (2) points
 
-public procedure EunTriangulation(integer eun_dst1, integer eun_dst2, integer eun_a, integer eun_b, integer eun_c)
+public procedure EunTriangulation(integer eun_dst1, integer eun_dst2, integer eun_a, integer eun_b, integer eun_c, integer whichOnes)
 	object ret
-	ret = my:EunTriangulation(GetEun(eun_a), GetEun(eun_b), GetEun(eun_c))
-	eun:replace_object(eun_dst1, ret[1])
-	eun:replace_object(eun_dst2, ret[2])
+	ret = my:EunTriangulation(GetEun(eun_a), GetEun(eun_b), GetEun(eun_c), whichOnes)
+	if and_bits(whichOnes, 1) then
+		eun:replace_object(eun_dst1, ret[1])
+	end if
+	if and_bits(whichOnes, 2) then
+		eun:replace_object(eun_dst2, ret[2])
+	end if
 end procedure
 
 -- euroots.e:
@@ -950,7 +952,7 @@ end function
 
 public function ComplexCompare(integer c1, integer c2)
 	-- Compares real parts, then imaginary parts of two (2) complex numbers
-	return my:ComplexCompare(GetComplex(c1), GetComplex(c2))
+	return my:ComplexCompare(GetComplex(c1), GetComplex(c2)) + 1
 end function
 
 public function ComplexAdjustRound(integer c1, integer adjustBy)
@@ -1406,7 +1408,6 @@ public function EunMultiplicativeInverseGuess(integer n1, integer array_guess_id
 	return NewFromEun(my:EunMultiplicativeInverse(GetEun(n1), numArray:get_data_from_object(array_guess_id)))
 end function
 
-
 public procedure SetDivideByZeroFlag(integer i)
 	my:SetDivideByZeroFlag(i)
 end procedure
@@ -1448,9 +1449,70 @@ public function GetComplexSqrtAdjustRound()
 	return my:GetComplexSqrtAdjustRound()
 end function
 
+
 public function EunPower(integer base, integer raisedTo)
 	return NewFromEun(my:EunPower(GetEun(base), GetEun(raisedTo)))
 end function
 
+
+public function NewComplexMatrix(integer rows, integer cols, integer pointer_to_complex_ids_null_terminating_array)
+	integer pos
+	atom ma
+	sequence s, ret
+	ma = pointers:get_data_from_object(pointer_to_complex_ids_null_terminating_array)
+	s = get4s_from_null_terminating_array(ma)
+	ret = my:NewComplexMatrix(rows, cols)
+	pos = 1
+	for row = 1 to rows do
+		for col = 1 to cols do
+			ret[row][col] = GetComplex(s[pos])
+			pos += 1
+		end for
+	end for
+	return matrix:new_object_from_data(ret)
+end function
+
+pubilc procedure DeleteComplexMatrix(integer i)
+	matrix:delete_object(i)
+end procedure
+
+public procedure StoreComplexMatrix(integer id_dst, integer id_src)
+	matrix:store_object(id_dst, id_src)
+end procedure
+
+public function CloneComplexMatrix(integer id)
+	return matrix:clone_object(id)
+end function
+
+public function ComplexMatrixToArray(integer id)
+	matrix a = matrix:get_data_from_object(id)
+	integer rows, cols, len, row, size
+	atom ma
+	rows = my:GetMatrixRows(a)
+	cols = my:GetMatrixCols(a)
+	len = rows * cols
+	size = 4 * (len + 1)
+	ma = allocate_data(size)
+	mem_set(ma, 0, size)
+	row = 1
+	for offset = 0 to len - 1 by cols do
+		poke4(ma + offset * 4, a[row])
+		row += 1
+	end for
+	return pointers:new_object_from_data(ma)
+end function
+
+
+public function GetMatrixRows(integer i)
+	return my:GetMatrixRows(matrix:get_data_from_object(i))
+end function
+
+public function GetMatrixCols(integer i)
+	return my:GetMatrixCols(matrix:get_data_from_object(i))
+end function
+
+public function ComplexMatrixMultiply(integer a, integer b)
+	return matrix:new_object_from_data(my:ComplexMatrixMultiply(matrix:get_data_from_object(a), matrix:get_data_from_object(b)))
+end function
 
 -- end of file.
