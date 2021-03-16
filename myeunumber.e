@@ -15,24 +15,42 @@
 
 namespace myeunumber
 
-include misc.e
 include get.e
-
-ifdef USE_SMALL_RADIX then
-	puts(1, "\nWarning: Using small radix.\nThis program is experimental.\nPress enter to continue, or any other key to exit.\n")
-	sleep(1) -- sleep for one (1) second.
-	while get_key() != -1 do
-	end while
-	if wait_key() != 13 then
-		abort(1)
-	end if
-end ifdef
 
 ifdef BITS64 then
 	include std/machine.e
 	include std/convert.e
+	include std/sequence.e
+	include std/os.e
 elsedef
-	include allocate.e
+	include allocate.e as os
+end ifdef
+
+ifdef WINDOWS then
+public atom nanosleep = -1
+elsedef
+public atom nanosleep = 1/1000000000
+end ifdef
+
+-- sleep(nanosleep)
+
+public procedure SetNanoSleep(atom a)
+	nanosleep = a
+end procedure
+
+public function GetNanoSleep()
+	return nanosleep
+end function
+
+ifdef USE_SMALL_RADIX then
+	puts(1, "\nWarning: Using small radix.\nThis program is experimental.\nPress enter to continue, or any other key to exit.\n")
+	os:sleep(1) -- sleep for one (1) second.
+	while get_key() != -1 do
+		sleep(nanosleep)
+	end while
+	if wait_key() != 13 then
+		abort(1)
+	end if
 end ifdef
 
 -- with trace
@@ -40,7 +58,7 @@ end ifdef
 -- NOTE: Negated integer named variables should be in parenthesis.
 
 public function GetVersion() -- revision number
-	return 169 -- completely type checked version
+	return 170 -- completely type checked version
 end function
 
 -- MyEunumber
@@ -359,6 +377,7 @@ public function RangeEqual(sequence a, sequence b, PositiveInteger start, Positi
 			if a[i] != b[i] then
 				return 0
 			end if
+			sleep(nanosleep)
 		end for
 		return 1
 	end if
@@ -383,6 +402,7 @@ end ifdef
 		if a[i] != b[i] then
 			return {i - 1, maxlen}
 		end if
+		sleep(nanosleep)
 	end for
 	return {minlen, maxlen}
 end function
@@ -402,6 +422,7 @@ public function Borrow(sequence numArray, AtomRadix radix)
 			numArray[i] += radix
 			numArray[i - 1] -= 1
 		end if
+		sleep(nanosleep)
 	end for
 	return numArray
 end function
@@ -412,6 +433,7 @@ public function NegativeBorrow(sequence numArray, AtomRadix radix)
 			numArray[i] -= radix
 			numArray[i - 1] += 1
 		end if
+		sleep(nanosleep)
 	end for
 	return numArray
 end function
@@ -436,6 +458,7 @@ public function Carry(sequence numArray, AtomRadix radix)
 		else
 			i -= 1
 		end if
+		sleep(nanosleep)
 	end while
 	return numArray
 end function
@@ -461,6 +484,7 @@ public function NegativeCarry(sequence numArray, AtomRadix radix)
 		else
 			i -= 1
 		end if
+		sleep(nanosleep)
 	end while
 	return numArray
 end function
@@ -476,6 +500,7 @@ public function Add(sequence n1, sequence n2)
 		for i = 1 to len do
 			c += 1
 			numArray[c] += n2[i]
+			sleep(nanosleep)
 		end for
 	else
 		len = length(n1)
@@ -485,6 +510,7 @@ public function Add(sequence n1, sequence n2)
 		for i = 1 to len do
 			c += 1
 			numArray[c] += n1[i]
+			sleep(nanosleep)
 		end for
 	end if
 	return numArray
@@ -501,6 +527,7 @@ public function Subtr(sequence n1, sequence n2)
 		for i = 1 to len do
 			c += 1
 			numArray[c] -= n2[i]
+			sleep(nanosleep)
 		end for
 	else
 		len = length(n1)
@@ -514,6 +541,7 @@ public function Subtr(sequence n1, sequence n2)
 		for i = 1 to len do
 			c += 1
 			numArray[c] = n1[i] - numArray[c]
+			sleep(nanosleep)
 		end for
 	end if
 	return numArray
@@ -522,6 +550,7 @@ end function
 public function Sum(sequence dst, sequence srcs)
 	for i = 1 to length(srcs) do
 		dst = Add(dst, srcs[i])
+		sleep(nanosleep)
 	end for
 	return dst
 end function
@@ -538,13 +567,16 @@ public function ConvertRadix(sequence number, AtomRadix fromRadix, AtomRadix toR
 				digit = number[i]
 				for j = 1 to length(tmp) do
 					tmp[j] *= digit
+					sleep(nanosleep)
 				end for
 				target = Add(target, tmp)
 				target = NegativeCarry(target, toRadix)
 				for j = 1 to length(base) do
 					base[j] *= fromRadix
+					sleep(nanosleep)
 				end for
 				base = Carry(base, toRadix)
+				sleep(nanosleep)
 			end for
 		else
 			for i = length(number) to 1 by -1 do
@@ -552,13 +584,16 @@ public function ConvertRadix(sequence number, AtomRadix fromRadix, AtomRadix toR
 				digit = number[i]
 				for j = 1 to length(tmp) do
 					tmp[j] *= digit
+					sleep(nanosleep)
 				end for
 				target = Add(target, tmp)
 				target = Carry(target, toRadix)
 				for j = 1 to length(base) do
 					base[j] *= fromRadix
+					sleep(nanosleep)
 				end for
 				base = Carry(base, toRadix)
+				sleep(nanosleep)
 			end for
 		end if
 	end if
@@ -581,7 +616,9 @@ public function Multiply(sequence n1, sequence n2)
 		for j = 1 to length(n2) do
 			numArray[h] += g * n2[j]
 			h += 1
+			sleep(nanosleep)
 		end for
+		sleep(nanosleep)
 	end for
 	return numArray
 end function
@@ -600,6 +637,7 @@ end function
 public function Negate(sequence numArray)
 	for i = 1 to length(numArray) do
 		numArray[i] = - (numArray[i])
+		sleep(nanosleep)
 	end for
 	return numArray
 end function
@@ -633,45 +671,49 @@ end function
 
 -- Rounding functions:
 
--- public function TrimLeadingZeros1(sequence numArray)
--- 	for i = 1 to length(numArray) do
--- 		if numArray[i] != 0 then
--- 			if i = 1 then
--- 				return numArray
--- 			else
--- 				return numArray[i..$]
--- 			end if
--- 		end if
--- 	end for
--- 	return {}
--- end function
-
 public function TrimLeadingZeros(sequence numArray)
-	while length(numArray) and numArray[1] = 0 do
-		numArray = numArray[2..$]
-	end while
-	return numArray
+	for i = 1 to length(numArray) do
+		if numArray[i] != 0 then
+			if i = 1 then
+				return numArray
+			else
+				return numArray[i..$]
+			end if
+		end if
+		sleep(nanosleep)
+	end for
+	return {}
 end function
 
--- public function TrimTrailingZeros1(sequence numArray)
--- 	for i = length(numArray) to 1 by -1 do
--- 		if numArray[i] != 0 then
--- 			if i = length(numArray) then
--- 				return numArray
--- 			else
--- 				return numArray[1..i]
--- 			end if
--- 		end if
--- 	end for
--- 	return {}
+-- public function TrimLeadingZeros2(sequence numArray)
+-- 	while length(numArray) and numArray[1] = 0 do
+-- 		numArray = numArray[2..$]
+-- 		sleep(nanosleep)
+-- 	end while
+-- 	return numArray
 -- end function
 
 public function TrimTrailingZeros(sequence numArray)
-	while length(numArray) and numArray[$] = 0 do
-		numArray = numArray[1..$-1]
-	end while
-	return numArray
+	for i = length(numArray) to 1 by -1 do
+		if numArray[i] != 0 then
+			if i = length(numArray) then
+				return numArray
+			else
+				return numArray[1..i]
+			end if
+		end if
+		sleep(nanosleep)
+	end for
+	return {}
 end function
+
+-- public function TrimTrailingZeros2(sequence numArray)
+-- 	while length(numArray) and numArray[$] = 0 do
+-- 		numArray = numArray[1..$-1]
+-- 		sleep(nanosleep)
+-- 	end while
+-- 	return numArray
+-- end function
 
 public function CarryRadixOnlyEx(sequence numArray, atom radix, integer way = 1)
 	atom b
@@ -690,6 +732,7 @@ public function CarryRadixOnlyEx(sequence numArray, atom radix, integer way = 1)
 			i -= 1
 			numArray[i] += way
 		end if
+		sleep(nanosleep)
 	end while
 	return numArray
 end function
@@ -776,6 +819,7 @@ end if
 						exit
 					end if
 					f = num[i]
+					sleep(nanosleep)
 				end for
 			end if
 			if f = halfRadix or f = negHalfRadix then
@@ -923,6 +967,7 @@ public function IntToDigits(atom x, AtomRadix radix)
 		a = remainder(x, radix)
 		numArray = {a} & numArray
 		x = RoundTowardsZero(x / radix) -- must be Round() to work on negative numbers
+		sleep(nanosleep)
 	end while
 	return numArray
 end function
@@ -963,6 +1008,7 @@ public function ExpToAtom(sequence n1, integer exp1, PositiveInteger targetLen, 
 				exit
 			end if
 		end if
+		sleep(nanosleep)
 	end for
 	-- if overflowBy is positive, then there was an overflow
 	-- overflowBy is an offset of that overflow in the given radix
@@ -1055,6 +1101,7 @@ public function MultiplicativeInverseExp(sequence den1, integer exp1, TargetLeng
 				exit
 			end if
 		end if
+		sleep(nanosleep)
 	end for
 	if lastIterCount = iter then
 		printf(1, "Error:  In MyEuNumber, forSmallRadix is %d, try increasing\n SetForSmallRadix() to a larger integer.  See file: ex.err\n", {forSmallRadix})
@@ -1191,6 +1238,7 @@ public function EunSum(sequence data)
 	sum = NewEun()
 	for i = 1 to length(data) do
 		sum = EunAdd(sum, data[i])
+		sleep(nanosleep)
 	end for
 	return sum
 end function
@@ -1292,6 +1340,7 @@ public function CompareExp(sequence n1, integer exp1, sequence n2, integer exp2)
 			return f
 		end if
 		equalLength += 1
+		sleep(nanosleep)
 	end for
 	return 0 -- numbers are equal
 end function
@@ -1518,6 +1567,7 @@ end ifdef
 				-- st = -st
 				for i = 1 to len do
 					st[i] = - (st[i])
+					sleep(nanosleep)
 				end for
 			else
 				f = 0
@@ -1525,6 +1575,7 @@ end ifdef
 			-- st += '0'
 			for i = 1 to len do
 				st[i] += '0'
+				sleep(nanosleep)
 			end for
 			if f then
 				st = "-" & st
@@ -1594,6 +1645,7 @@ public function StringToNumberExp(sequence st)
 	end if
 	while length(st) and st[1] = '0' do
 		st = st[2..length(st)]
+		sleep(nanosleep)
 	end while
 	f = find('.', st)
 	if f then
@@ -1605,6 +1657,7 @@ public function StringToNumberExp(sequence st)
 	while length(st) and st[1] = '0' do
 		exp -= 1
 		st = st[2..length(st)]
+		sleep(nanosleep)
 	end while
 	if length(st) = 0 then
 		exp = 0
@@ -1615,6 +1668,7 @@ public function StringToNumberExp(sequence st)
 		if st[i] > 9 or st[i] < 0 then
 			return {0, 0}
 		end if
+		sleep(nanosleep)
 	end for
 	if isSigned then
 		st = Negate(st)
@@ -1667,6 +1721,7 @@ public function IntPowerExp(PositiveInteger toPower, sequence n1, integer exp1,
 	p = {n1, exp1}
 	for i = 2 to toPower do
 		p = MultiplyExp(p[1], p[2], n1, exp1, targetLength, radix)
+		sleep(nanosleep)
 	end for
 	return p
 end function
@@ -1745,6 +1800,7 @@ public function NthRootExp(PositiveScalar n, sequence x1, integer x1Exp, sequenc
 				exit
 			end if
 		end if
+		sleep(nanosleep)
 	end for
 	if lastNthRootIter = nthRootIter then
 		puts(1, "Error(4):  In MyEuNumber, too many iterations.  Unable to calculate number.\n  See file: ex.err\n")
@@ -1957,6 +2013,7 @@ public function ArcTanExp(sequence n1, integer exp1, TargetLength targetLength, 
 				exit
 			end if
 		end if
+		sleep(nanosleep)
 	end for
 	if arcTanCount = arcTanIter then
 		puts(1, "Error(4):  In MyEuNumber, too many iterations.  Unable to calculate number.\n  See file: ex.err\n")
@@ -2023,6 +2080,7 @@ public function ExpExp1(sequence n1, integer exp1, TargetLength targetLength, At
 		sum = MultiplyExp(sum[1], sum[2], tmp[1], tmp[2], targetLength, radix)
 		sum = AddExp(sum[1], sum[2], {1}, 0, targetLength, radix)
 		exp1HowComplete = {i, ExpExp1Iter}
+		sleep(nanosleep)
 	end for
 	return sum
 end function
@@ -2044,6 +2102,7 @@ public function Exponentiation(atom u, integer m)
 			end if
 			current *= current
 			q /= 2
+			sleep(nanosleep)
 		end while
 	else
 		while q < 0 do
@@ -2053,6 +2112,7 @@ public function Exponentiation(atom u, integer m)
 			end if
 			current *= current
 			q /= 2
+			sleep(nanosleep)
 		end while
 	end if
 	return prod
@@ -2101,6 +2161,7 @@ public function EunExpWhole(Eun u, Eun m)
 			end if
 			current = EunMultiply(current, current)
 			q = DivideExp(q[1], q[2], {2}, 0, targetLength, radix)
+			sleep(nanosleep)
 		end while
 	else
 		while CompareExp(q[1], q[2], {}, 0) = -1 do
@@ -2111,6 +2172,7 @@ public function EunExpWhole(Eun u, Eun m)
 			end if
 			current = EunMultiply(current, current)
 			q = DivideExp(q[1], q[2], {2}, 0, targetLength, radix)
+			sleep(nanosleep)
 		end while
 	end if
 	return prod
@@ -2187,6 +2249,7 @@ public function ExpExp(sequence n1, integer exp1, TargetLength targetLength, Ato
 				exit
 			end if
 		end if
+		sleep(nanosleep)
 	end for
 	if expExpCount = expExpIter then
 		puts(1, "Error(4):  In MyEuNumber, too many iterations.  Unable to calculate number.\n  See file: ex.err\n")
@@ -2290,6 +2353,7 @@ public function ExpExpFast(sequence x1, integer exp1, sequence y2, integer exp2,
 		targetLengthY = AddExp(targetLengthY[1], targetLengthY[2], fourY[1], fourY[2], targetLength, radix)
 		tmp = AddExp(tmp[1], tmp[2], targetLengthY[1], targetLengthY[2], targetLength, radix)
 		expFastHowComplete = {i, 0}
+		sleep(nanosleep)
 	end for
 	tmp = DivideExp(xSquared[1], xSquared[2], tmp[1], tmp[2], targetLength, radix)
 	tmp = AddExp(tmp[1], tmp[2], -x1, exp1, targetLength, radix)
@@ -2324,6 +2388,7 @@ public function EunExpFast(Eun numerator, Eun denominator)
 				exit
 			end if
 		end if
+		sleep(nanosleep)
 	end while
 	ExpExpFastIter /= 2
 	return tmp1
@@ -2379,6 +2444,7 @@ public function LogExp(sequence n1, integer exp1, sequence guess, integer exp0, 
 				exit
 			end if
 		end if
+		sleep(nanosleep)
 	end for
 	if logIterCount = logIter then
 		puts(1, "Error(4):  In MyEuNumber, too many iterations.  Unable to calculate number.\n  See file: ex.err\n")
@@ -2544,6 +2610,7 @@ public function SinExp(sequence n1, integer exp1, TargetLength targetLength, Ato
 				exit
 			end if
 		end if
+		sleep(nanosleep)
 	end for
 	if sinIterCount = sinIter then
 		puts(1, "Error(4):  In MyEuNumber, too many iterations.  Unable to calculate number.\n  See file: ex.err\n")
@@ -2610,6 +2677,7 @@ public function CosExp(sequence n1, integer exp1, TargetLength targetLength, Ato
 				exit
 			end if
 		end if
+		sleep(nanosleep)
 	end for
 	if cosIterCount = cosIter then
 		puts(1, "Error(4):  In MyEuNumber, too many iterations.  Unable to calculate number.\n  See file: ex.err\n")
@@ -2764,6 +2832,7 @@ public function ArcSinExp(sequence n1, integer exp1, TargetLength targetLength, 
 				exit
 			end if
 		end if
+		sleep(nanosleep)
 	end for
 	if arcSinIterCount = arcSinIter then
 		puts(1, "Error(4):  In MyEuNumber, too many iterations.  Unable to calculate number.\n  See file: ex.err\n")
@@ -3342,6 +3411,7 @@ public function FindRootExp(integer rid, sequence n1, integer exp1,
 		if length(fb[1]) = 0 or length(fs[1]) = 0 or comp1 = -1 then
 			exit
 		end if
+		sleep(nanosleep)
 	end while
 	
 	len -= eurootsAdjustRound
@@ -3644,6 +3714,7 @@ public type matrix(sequence s)
 			if length(s[i]) != lenCols then
 				return 0
 			end if
+			sleep(nanosleep)
 		end for
 		return 1
 	end if
@@ -3691,10 +3762,13 @@ public function MatrixMultiply(matrix a, matrix b)
 			sum = NewEun()
 			for k = 1 to len do -- k is cols of "a", rows of "b"
 				sum = EunAdd(sum, EunMultiply(row1[k], b[k][j]))
+				sleep(nanosleep)
 			end for
 			row0[j] = sum
+			sleep(nanosleep)
 		end for
 		ret[i] = row0
+		sleep(nanosleep)
 	end for
 	return ret
 end function
@@ -3709,7 +3783,9 @@ public function MatrixTransformation(matrix a)
 		tmp = a[row]
 		for col = 1 to cols do
 			ret[col][row] = tmp[col]
+			sleep(nanosleep)
 		end for
+		sleep(nanosleep)
 	end for
 	return ret
 end function

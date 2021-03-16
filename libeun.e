@@ -22,7 +22,7 @@ include classfile.e as matrix
 include myeunumber.e as my
 
 public function Version()
-	return 51 -- Need to debug with Wrapper "Stub" (myeun.h)
+	return 52 -- Need to debug with Wrapper "Stub" (myeun.h)
 end function
 
 public function UsingHowManyBits()
@@ -1519,6 +1519,19 @@ end function
 
 public function MatrixTransformation(integer id)
 	return matrix:new_object_from_data(my:MatrixTransformation(matrix:get_data_from_object(id)))
+end function
+
+public procedure SetNanoSleep(integer pointer_to_double) -- double should be a fraction of a second.
+	atom d
+	d = float64_to_atom(peek({pointers:get_data_from_object(pointer_to_double), 8}))
+	my:SetNanoSleep(d)
+end procedure
+
+public function GetNanoSleep()
+	sequence s = atom_to_float64(my:GetNanoSleep())
+	atom pointer = allocate_data(8)
+	poke(pointer, s)
+	return pointers:new_object_from_data(pointer)
 end function
 
 -- end of file.
