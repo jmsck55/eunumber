@@ -22,7 +22,7 @@ include classfile.e as matrix
 include myeunumber.e as my
 
 public function Version()
-	return 50 -- Need to debug with Wrapper "Stub" (myeun.h)
+	return 51 -- Need to debug with Wrapper "Stub" (myeun.h)
 end function
 
 public function UsingHowManyBits()
@@ -1455,38 +1455,38 @@ public function EunPower(integer base, integer raisedTo)
 end function
 
 
-public function NewComplexMatrix(integer rows, integer cols, integer pointer_to_complex_ids_null_terminating_array)
+public function NewMatrix(integer rows, integer cols, integer pointer_to_eun_ids_null_terminating_array)
 	integer pos
 	atom ma
 	sequence s, ret
-	ma = pointers:get_data_from_object(pointer_to_complex_ids_null_terminating_array)
+	ma = pointers:get_data_from_object(pointer_to_eun_ids_null_terminating_array)
 	s = get4s_from_null_terminating_array(ma)
-	ret = my:NewComplexMatrix(rows, cols)
+	ret = my:NewMatrix(rows, cols)
 	pos = 1
 	for row = 1 to rows do
 		for col = 1 to cols do
-			ret[row][col] = GetComplex(s[pos])
+			ret[row][col] = GetEun(s[pos])
 			pos += 1
 		end for
 	end for
 	return matrix:new_object_from_data(ret)
 end function
 
-public procedure DeleteComplexMatrix(integer i)
+public procedure DeleteMatrix(integer i)
 	matrix:delete_object(i)
 end procedure
 
-public procedure StoreComplexMatrix(integer id_dst, integer id_src)
+public procedure StoreMatrix(integer id_dst, integer id_src)
 	matrix:store_object(id_dst, id_src)
 end procedure
 
-public function CloneComplexMatrix(integer id)
+public function CloneMatrix(integer id)
 	return matrix:clone_object(id)
 end function
 
-public function ComplexMatrixToArray(integer id)
+public function MatrixToArray(integer id)
 	matrix a = matrix:get_data_from_object(id)
-	integer rows, cols, len, row, size
+	integer rows, cols, len, size, offset
 	atom ma
 	rows = my:GetMatrixRows(a)
 	cols = my:GetMatrixCols(a)
@@ -1494,10 +1494,12 @@ public function ComplexMatrixToArray(integer id)
 	size = 4 * (len + 1)
 	ma = allocate_data(size)
 	mem_set(ma, 0, size)
-	row = 1
-	for offset = 0 to len - 1 by cols do
-		poke4(ma + offset * 4, a[row])
-		row += 1
+	offset = 0
+	for row = 1 to rows do
+		for col = 1 to cols do
+			poke4(ma + offset, NewFromEun(a[row][col]))
+			offset += 4
+		end for
 	end for
 	return pointers:new_object_from_data(ma)
 end function
@@ -1511,8 +1513,12 @@ public function GetMatrixCols(integer i)
 	return my:GetMatrixCols(matrix:get_data_from_object(i))
 end function
 
-public function ComplexMatrixMultiply(integer a, integer b)
-	return matrix:new_object_from_data(my:ComplexMatrixMultiply(matrix:get_data_from_object(a), matrix:get_data_from_object(b)))
+public function MatrixMultiply(integer a, integer b)
+	return matrix:new_object_from_data(my:MatrixMultiply(matrix:get_data_from_object(a), matrix:get_data_from_object(b)))
+end function
+
+public function MatrixTransformation(integer id)
+	return matrix:new_object_from_data(my:MatrixTransformation(matrix:get_data_from_object(id)))
 end function
 
 -- end of file.

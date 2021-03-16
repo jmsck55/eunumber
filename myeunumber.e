@@ -40,7 +40,7 @@ end ifdef
 -- NOTE: Negated integer named variables should be in parenthesis.
 
 public function GetVersion() -- revision number
-	return 168 -- completely type checked version
+	return 169 -- completely type checked version
 end function
 
 -- MyEunumber
@@ -3627,10 +3627,10 @@ end function
 -- Matrix support:
 --
 -- public type matrix(sequence s)
--- public function NewComplexMatrix(integer rows, integer cols)
+-- public function NewMatrix(integer rows, integer cols)
 -- public function GetMatrixRows(sequence a)
 -- public function GetMatrixCols(sequence a)
--- public function ComplexMatrixMultiply(matrix a, matrix b)
+-- public function MatrixMultiply(matrix a, matrix b)
 --
 -- See also:
 -- https://www.purplemath.com/modules/mtrxmult3.htm
@@ -3650,8 +3650,8 @@ public type matrix(sequence s)
 	return 0
 end type
 
-public function NewComplexMatrix(integer rows, integer cols)
-	return repeat(repeat(NewComplex(), cols), rows)
+public function NewMatrix(integer rows, integer cols)
+	return repeat(repeat(NewEun(), cols), rows)
 end function
 
 public function GetMatrixRows(sequence a)
@@ -3662,7 +3662,7 @@ public function GetMatrixCols(sequence a)
 	return length(a[1])
 end function
 
-public function ComplexMatrixMultiply(matrix a, matrix b)
+public function MatrixMultiply(matrix a, matrix b)
 -- ret[i] =
 -- {
 --  a[i][k1] * b[k1][j1] + a[i][k2] * b[k2][j1],
@@ -3674,23 +3674,23 @@ public function ComplexMatrixMultiply(matrix a, matrix b)
 -- row1 = a[i]
 	integer rows, cols, len
 	sequence row0, row1, sum, ret
-	-- Complex sum
+	-- Eun sum
 	-- matrix ret
 	len = GetMatrixRows(b)
 	if GetMatrixCols(a) != len then
-		puts(1, "Error(8):  In MyEuNumber, in ComplexMatrixMult(), column-row mix-match.\n  See file: ex.err\n")
+		puts(1, "Error(8):  In MyEuNumber, in MatrixMultiply(), column-row mix-match.\n  See file: ex.err\n")
 		abort(1/0)
 	end if
 	rows = GetMatrixRows(a)
 	cols = GetMatrixCols(b)
-	ret = NewComplexMatrix(rows, cols)
+	ret = NewMatrix(rows, cols)
 	for i = 1 to rows do -- rows of "a"
 		row0 = ret[i]
 		row1 = a[i]
 		for j = 1 to cols do -- cols of "b"
-			sum = NewComplex()
+			sum = NewEun()
 			for k = 1 to len do -- k is cols of "a", rows of "b"
-				sum = ComplexAdd(sum, ComplexMultiply(row1[k], b[k][j]))
+				sum = EunAdd(sum, EunMultiply(row1[k], b[k][j]))
 			end for
 			row0[j] = sum
 		end for
@@ -3699,5 +3699,19 @@ public function ComplexMatrixMultiply(matrix a, matrix b)
 	return ret
 end function
 
+public function MatrixTransformation(matrix a)
+	integer rows, cols
+	sequence ret, tmp
+	rows = GetMatrixRows(a)
+	cols = GetMatrixCols(a)
+	ret = NewMatrix(cols, rows)
+	for row = 1 to rows do
+		tmp = a[row]
+		for col = 1 to cols do
+			ret[col][row] = tmp[col]
+		end for
+	end for
+	return ret
+end function
 
 --end of file.
