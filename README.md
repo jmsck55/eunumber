@@ -5,6 +5,8 @@ Copyrighted version.
 
 Experimental.
 
+I don't care about money.  I care about saving people's lives.
+
 Details:
 
 GMP and MPFR are better for digital production software.

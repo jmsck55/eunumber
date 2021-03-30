@@ -1,4 +1,4 @@
--- Copyright (c) 2020 James Cook
+-- Copyright (c) 2016-2021 James Cook
 
 -- make this work faster and easier to program
 

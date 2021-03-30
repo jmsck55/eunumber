@@ -1,4 +1,4 @@
-REM Copyright (c) 2020 James Cook
+REM Copyright (c) 2016-2021 James Cook
 set eudir=%ONEDRIVE%\euphoria40
 set path=%eudir%\bin;%path%
 echo Open Watcom Build Environment

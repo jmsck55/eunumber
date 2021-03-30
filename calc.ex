@@ -1,4 +1,4 @@
--- Copyright (c) 2020 James Cook
+-- Copyright (c) 2016-2021 James Cook
 
 -- See also videos and resources on the web about imaginary and complex numbers:
 -- https://www.youtube.com/watch?v=T647CGsuOVU
@@ -12,7 +12,7 @@ include my.e
 
 -- with trace
 
-puts(1, "EuNumber Calculator [v0.9.6]\n")
+puts(1, "EuNumber Calculator [v0.9.7]\n")
 
 defaultRadix = MAX_RADIX10
 

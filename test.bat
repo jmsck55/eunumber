@@ -1,4 +1,4 @@
-REM Copyright (c) 2020 James Cook
+REM Copyright (c) 2016-2021 James Cook
 @echo off
 IF NOT "%EUDIR%"=="" GOTO label
 set EUDIR=%ONEDRIVE%\euphoria40

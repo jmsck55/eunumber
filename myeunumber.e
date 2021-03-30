@@ -1,4 +1,4 @@
--- Copyright (c) 2020 James Cook
+-- Copyright (c) 2016-2021 James Cook
 -- Eunumber, advanced sequence based arithmetic with exponents
 
 --FILES: (All as one file.)
