@@ -58,7 +58,7 @@ end ifdef
 -- NOTE: Negated integer named variables should be in parenthesis.
 
 public function GetVersion() -- revision number
-	return 170 -- completely type checked version
+	return 171 -- completely type checked version
 end function
 
 -- MyEunumber
@@ -90,7 +90,6 @@ end function
 
 -- Borrow
 -- Carry
--- CarryRadixOnly
 -- Add
 -- Sum
 -- ConvertRadix
@@ -102,7 +101,6 @@ end function
 -- Subtract
 -- TrimLeadingZeros
 -- TrimTrailingZeros
--- CarryRadixOnlyEx
 -- AdjustRound
 -- MultiplyExp
 -- AddExp
@@ -110,7 +108,7 @@ end function
 -- ProtoMultiplicativeInverseExp
 -- IntToDigits
 -- ExpToAtom
--- GetGuessExp
+-- GetGuess
 -- MultiplicativeInverseExp
 -- DivideExp
 -- ConvertExp
@@ -162,12 +160,16 @@ public constant INT_MAX10 = power(10, 9) -- value: 1000000000
 public constant MAX_RADIX10 = power(10, 4-1) -- value: 1000
 end ifdef
 
-public function abs(atom a)
-	if a >= 0 then
-		return a
+public function iff(integer condition, object iftrue, object iffalse)
+	if condition then
+		return iftrue
 	else
-		return -a
+		return iffalse
 	end if
+end function
+
+public function abs(atom a)
+	return iff(a >= 0, a, -a)
 end function
 
 public function Ceil(atom a)
@@ -210,14 +212,6 @@ elsedef
 end ifdef
 end type
 
-public function iff(integer condition, object iftrue, object iffalse)
-	if condition then
-		return iftrue
-	else
-		return iffalse
-	end if
-end function
-
 public constant TRUE = 1, FALSE = 0
 
 public type Bool(integer i)
@@ -247,14 +241,14 @@ public procedure SetZeroDividedByZeroFlag(Bool i)
 end procedure
 
 public type TargetLength(integer i)
-	return i >= 4
+	return i >= 1 -- 4
 end type
 
 public TargetLength defaultTargetLength = 60 -- 40 -- 70 -- 70 * 3 = 210 (I tried to keep it under 212)
 public AtomRadix defaultRadix = 10 -- 10 is good for everything from 16-bit shorts, to 32-bit ints, to 64-bit long longs.
 public Bool isRoundToZero = FALSE -- make TRUE to allow rounding small numbers to zero.
 public PositiveInteger adjustRound = 5 -- 3 -- can be 0 to a small integer, removes digits of inaccuracy, or adds digits of accuracy under ROUND_TO_NEAREST_OPTION
-public PositiveAtom calculationSpeed = floor(defaultTargetLength / 2) -- can be 0 or from 1 to targetLength
+public PositiveAtom calculationSpeed = floor(defaultTargetLength / 3) -- can be 0 or from 1 to targetLength
 public PositiveOption multInvMoreAccuracy = -1 -- 15, if -1, then use calculationSpeed
 
 public procedure SetIsRoundToZero(Bool i)
@@ -306,11 +300,10 @@ end function
 public integer iter = 1000000000 -- max number of iterations before returning
 public integer lastIterCount = -1 -- MultiplicativeInverseExp has not been called yet, so the value is -1
 
-public constant ATOM_EPSILON = 2.22044604925031308085e-16 -- DBL_EPSILON 64-bit
-public constant ATOM_MAX = 1.0e+308 -- 1.79769313486231570815e+308 -- DBL_MAX 64-bit
-public constant ATOM_MIN = 1.0e-308 -- 2.22507385850720138309e-308 -- DBL_MIN 64-bit
-public constant LOG_ATOM_MAX = log(1.0e+308) -- LOG_DBL_MAX is: 7.09782712893383973096e+02, 64-bit
-public constant LOG_ATOM_MIN = log(1.0e-308) -- LOG_DBL_MIN is: -7.08396418532264078749e+02, 64-bit
+-- public constant ATOM_EPSILON = 2.22044604925031308085e-16 -- DBL_EPSILON 64-bit
+-- public constant ATOM_MAX = 1.0e+308 -- 1.79769313486231570815e+308 -- DBL_MAX 64-bit
+-- public constant ATOM_MIN = 1.0e-308 -- 2.22507385850720138309e-308 -- DBL_MIN 64-bit
+public constant LOG_INT_MAX = log(INT_MAX)
 
 public constant ROUND_INF = 1 -- Round towards +infinity or -infinity, (positive or negative infinity)
 public constant ROUND_ZERO = 2 -- Round towards zero
@@ -491,42 +484,40 @@ end function
 
 public function Add(sequence n1, sequence n2)
 	integer c, len
-	sequence numArray
+	sequence numArray, tmp
 	if length(n1) >= length(n2) then
 		len = length(n2)
 		c = length(n1) - (len)
 		-- copy n1 to numArray:
 		numArray = n1
-		for i = 1 to len do
-			c += 1
-			numArray[c] += n2[i]
-			sleep(nanosleep)
-		end for
+		tmp = n2
 	else
 		len = length(n1)
 		c = length(n2) - (len)
 		-- copy n2 to numArray:
 		numArray = n2
-		for i = 1 to len do
-			c += 1
-			numArray[c] += n1[i]
-			sleep(nanosleep)
-		end for
+		tmp = n1
 	end if
+	for i = 1 to len do
+		c += 1
+		numArray[c] += tmp[i]
+		sleep(nanosleep)
+	end for
 	return numArray
 end function
 
 public function Subtr(sequence n1, sequence n2)
 	integer c, len
-	sequence numArray
+	sequence numArray, tmp
 	if length(n1) >= length(n2) then
 		len = length(n2)
 		c = length(n1) - (len)
 		-- copy n1 to numArray:
 		numArray = n1
+		tmp = n2
 		for i = 1 to len do
 			c += 1
-			numArray[c] -= n2[i]
+			numArray[c] -= tmp[i]
 			sleep(nanosleep)
 		end for
 	else
@@ -538,9 +529,10 @@ public function Subtr(sequence n1, sequence n2)
 		-- numArray[c+2..$] = n1 - n2[c+2..$]
 		-- copy n2 to numArray:
 		numArray = n2
+		tmp = n1
 		for i = 1 to len do
 			c += 1
-			numArray[c] = n1[i] - numArray[c]
+			numArray[c] = tmp[i] - numArray[c]
 			sleep(nanosleep)
 		end for
 	end if
@@ -558,64 +550,54 @@ end function
 public function ConvertRadix(sequence number, AtomRadix fromRadix, AtomRadix toRadix)
 	sequence target, base, tmp
 	atom digit
+	integer isNeg
 	target = {} -- same as: {0}
 	if length(number) then
 		base = {1}
-		if number[1] < 0 then
-			for i = length(number) to 1 by -1 do
-				tmp = base
-				digit = number[i]
-				for j = 1 to length(tmp) do
-					tmp[j] *= digit
-					sleep(nanosleep)
-				end for
-				target = Add(target, tmp)
+		isNeg = number[1] < 0
+		for i = length(number) to 1 by -1 do
+			tmp = base
+			digit = number[i]
+			for j = 1 to length(tmp) do
+				tmp[j] *= digit
+				sleep(nanosleep)
+			end for
+			target = Add(target, tmp)
+			if isNeg then
 				target = NegativeCarry(target, toRadix)
-				for j = 1 to length(base) do
-					base[j] *= fromRadix
-					sleep(nanosleep)
-				end for
-				base = Carry(base, toRadix)
-				sleep(nanosleep)
-			end for
-		else
-			for i = length(number) to 1 by -1 do
-				tmp = base
-				digit = number[i]
-				for j = 1 to length(tmp) do
-					tmp[j] *= digit
-					sleep(nanosleep)
-				end for
-				target = Add(target, tmp)
+			else
 				target = Carry(target, toRadix)
-				for j = 1 to length(base) do
-					base[j] *= fromRadix
-					sleep(nanosleep)
-				end for
-				base = Carry(base, toRadix)
+			end if
+			for j = 1 to length(base) do
+				base[j] *= fromRadix
 				sleep(nanosleep)
 			end for
-		end if
+			base = Carry(base, toRadix)
+			sleep(nanosleep)
+		end for
 	end if
 	return target
 end function
 
-public function Multiply(sequence n1, sequence n2)
-	integer h, len
+public function Multiply(sequence n1, sequence n2, integer len = length(n1) + length(n2) - 1)
+	integer f, j
 	atom g
 	sequence numArray
 	if length(n1) = 0 or length(n2) = 0 then
 		return {}
 	end if
-	len = length(n1) + length(n2) - 1
+	-- len = length(n1) + length(n2) - 1
 -- This method may be faster:
 	numArray = repeat(0, len)
 	for i = 1 to length(n1) do
-		h = i
+		-- h = i
 		g = n1[i]
-		for j = 1 to length(n2) do
+		-- for j = 1 to length(n2) do
+		j = 1
+		f = i + length(n2) - 1 -- (-1 for Euphoria)
+		for h = i to iff(len < f, len, f) do
 			numArray[h] += g * n2[j]
-			h += 1
+			j += 1
 			sleep(nanosleep)
 		end for
 		sleep(nanosleep)
@@ -715,27 +697,27 @@ end function
 -- 	return numArray
 -- end function
 
-public function CarryRadixOnlyEx(sequence numArray, atom radix, integer way = 1)
-	atom b
-	integer i
-	i = length(numArray)
-	while i > 0 do
-		b = numArray[i]
-		if b != radix then
-			return numArray
-		end if
-		numArray[i] = 0 -- modulus, or remainder
-		if i = 1 then
-			numArray = prepend(numArray, way)
-			return numArray
-		else
-			i -= 1
-			numArray[i] += way
-		end if
-		sleep(nanosleep)
-	end while
-	return numArray
-end function
+--public function CarryRadixOnlyEx(sequence numArray, atom radix, integer way = 1)
+--	atom b
+--	integer i
+--	i = length(numArray)
+--	while i > 0 do
+--		b = numArray[i]
+--		if b != radix then
+--			return numArray
+--		end if
+--		numArray[i] = 0 -- modulus, or remainder
+--		if i = 1 then
+--			numArray = prepend(numArray, way)
+--			return numArray
+--		else
+--			i -= 1
+--			numArray[i] += way
+--		end if
+--		sleep(nanosleep)
+--	end while
+--	return numArray
+--end function
 
 type ThreeOptions(integer i)
 	return i >= 0 and i <= 2
@@ -743,7 +725,7 @@ end type
 
 public constant NO_SUBTRACT_ADJUST = 2
 
-public function AdjustRound(sequence num, integer exponent, TargetLength targetLength, AtomRadix radix, ThreeOptions isMixed = TRUE)
+public function AdjustRound(sequence num, integer exponent, TargetLength targetLength, AtomRadix radix, ThreeOptions isMixed = 1)
 	integer oldlen, roundTargetLength, rounded
 	atom halfRadix, negHalfRadix, f
 	sequence ret
@@ -804,13 +786,13 @@ end if
 			roundTargetLength = 1
 		end if
 	end if
-	halfRadix = floor(radix / 2)
-	negHalfRadix = - (halfRadix)
 	if length(num) > roundTargetLength then
 		if ROUND = ROUND_TRUNCATE then
 			num = num[1..roundTargetLength]
 			rounded = (num[1] < 0) - (num[1] > 0) -- give the opposite of the sign
 		else
+			halfRadix = floor(radix / 2)
+			negHalfRadix = - (halfRadix)
 			f = num[roundTargetLength + 1]
 			if integer(radix) and IsIntegerOdd(radix) then
 				-- feature: support for odd radixes
@@ -841,7 +823,11 @@ end if
 			rounded = (f > halfRadix) - (f < negHalfRadix) -- 1 for round up, -1 for round down.
 			if rounded then
 				num[roundTargetLength] += rounded
-				num = CarryRadixOnlyEx(num, radix * rounded, rounded)
+				if rounded > 0 then
+					num = Carry(num, radix)
+				else
+					num = NegativeCarry(num, radix)
+				end if
 				exponent += (length(num) - (roundTargetLength))
 			else
 				rounded = (num[1] < 0) - (num[1] > 0) -- give the opposite of the sign
@@ -857,9 +843,19 @@ end if
 end function
 
 
+-- public function MultiplyExp(sequence n1, integer exp1, sequence n2, integer exp2, TargetLength targetLength, AtomRadix radix)
+--	sequence numArray, ret
+--	numArray = Multiply(n1, n2)
+--	ret = AdjustRound(numArray, exp1 + exp2, targetLength, radix, FALSE) -- TRUE for backwards compatability
+--	return ret
+-- end function
+
 public function MultiplyExp(sequence n1, integer exp1, sequence n2, integer exp2, TargetLength targetLength, AtomRadix radix)
 	sequence numArray, ret
-	numArray = Multiply(n1, n2)
+	integer len
+	len = targetLength -- iff(length(n1) > length(n2), length(n1), length(n2))
+	len += Ceil(log(len) / log(radix)) + 1
+	numArray = Multiply(n1, n2, len)
 	ret = AdjustRound(numArray, exp1 + exp2, targetLength, radix, FALSE) -- TRUE for backwards compatability
 	return ret
 end function
@@ -965,40 +961,53 @@ public function IntToDigits(atom x, AtomRadix radix)
 	numArray = {}
 	while x != 0 do
 		a = remainder(x, radix)
-		numArray = {a} & numArray
+		numArray = prepend(numArray, a)
 		x = RoundTowardsZero(x / radix) -- must be Round() to work on negative numbers
 		sleep(nanosleep)
 	end while
 	return numArray
 end function
 
+integer sigDigits = 0
+atom static_multInvRadix = 0
+atom static_logRadix = 0
+
 public function ExpToAtom(sequence n1, integer exp1, PositiveInteger targetLen, AtomRadix radix)
 	atom p, ans, lookat, ele
-	integer overflowBy, len
 	if length(n1) = 0 then
 		return 0 -- tried to divide by zero
 	end if
 	-- what if exp1 is too large?
-	p = log(radix)
-	overflowBy = exp1 - floor(LOG_ATOM_MAX / p) + 2 -- +2 may need to be bigger
-	if overflowBy > 0 then
-		-- overflow warning in "power()" function
-		-- reduce size
-		exp1 -= overflowBy
-	else
-		-- what if exp1 is too small?
-		overflowBy = exp1 - floor(LOG_ATOM_MIN / p) - 2 -- -2 may need to be bigger
-		if overflowBy < 0 then
-			exp1 -= overflowBy
-		else
-			overflowBy = 0
-		end if
+	if static_multInvRadix != radix then
+		static_multInvRadix = radix
+		static_logRadix = log(radix)
+		sigDigits = floor(LOG_INT_MAX / static_logRadix) -- not used in this function, kept to make everything work properly.
 	end if
-	exp1 -= targetLen
-	len = length(n1)
-	p = power(radix, exp1)
+	if exp1 > sigDigits then
+		exp1 = sigDigits
+	elsif exp1 < sigDigits then
+		exp1 = sigDigits
+	end if
+	--overflowBy = exp1 - sigDigits + 2 -- +2 may need to be bigger
+	--		-- overflowBy = exp1 - floor(LOG_ATOM_MAX / p) + 2 -- +2 may need to be bigger
+	--if overflowBy > 0 then
+	--	-- overflow warning in "power()" function
+	--	-- reduce size
+	--	exp1 -= overflowBy
+	--else
+	--	-- what if exp1 is too small?
+	--	overflowBy = exp1 - sigDigits - 2 -- -2 may need to be bigger
+	--			-- overflowBy = exp1 - floor(LOG_ATOM_MIN / p) - 2 -- -2 may need to be bigger
+	--	if overflowBy < 0 then
+	--		exp1 -= overflowBy
+	--	--else
+	--	--	overflowBy = 0
+	--	end if
+	--end if
+	-- exp1 -= targetLen
+	p = power(radix, exp1 - targetLen)
 	ans = n1[1] * p
-	for i = 2 to len do
+	for i = 2 to length(n1) do
 		p = p / radix
 		ele = n1[i]
 		if ele != 0 then
@@ -1012,31 +1021,36 @@ public function ExpToAtom(sequence n1, integer exp1, PositiveInteger targetLen, 
 	end for
 	-- if overflowBy is positive, then there was an overflow
 	-- overflowBy is an offset of that overflow in the given radix
-	return {ans, overflowBy}
+	return {ans, exp1}
 end function
 
-public function GetGuessExp(sequence den, integer exp1, integer protoTargetLength, AtomRadix radix)
+public function GetGuess(sequence den, integer protoTargetLength, AtomRadix radix)
 	sequence guess, tmp
-	atom denom, one, ans
-	integer overflowBy, len, sigDigits
-ifdef BITS64 then
-	sigDigits = Ceil(18 / (log(radix) / log(10)))
-elsedef
-	sigDigits = Ceil(15 / (log(radix) / log(10)))
-end ifdef
-	if protoTargetLength < sigDigits then
-		sigDigits = protoTargetLength
+	atom denom, one, ans, raised
+	if static_multInvRadix != radix then
+		static_multInvRadix = radix
+		static_logRadix = log(radix)
+		sigDigits = floor(LOG_INT_MAX / static_logRadix)
 	end if
-	len = length(den)
-	tmp = ExpToAtom(den, len - 1, sigDigits, radix)
+		--ifdef BITS64 then
+		--	sigDigits = Ceil(18 / (log(radix) / log(10)))
+		--elsedef
+		--	sigDigits = Ceil(15 / (log(radix) / log(10)))
+		--end ifdef
+		--if protoTargetLength < sigDigits then
+		--	mySigDigits = protoTargetLength
+		--else
+		--	mySigDigits = sigDigits
+		--end if
+	tmp = ExpToAtom(den, length(den) - 1, iff(protoTargetLength < sigDigits, protoTargetLength, sigDigits), radix)
 	denom = tmp[1]
-	overflowBy = tmp[2]
-	one = power(radix, len - 1 - (overflowBy))
+	raised = tmp[2]
+	one = power(radix, raised)
 	ans = RoundTowardsZero(one / denom)
 	guess = IntToDigits(ans, radix) -- works on negative numbers
-	-- tmp = AdjustRound(guess, exp1, sigDigits - 1, radix, FALSE)
+	-- tmp = AdjustRound(guess, exp1, mySigDigits - 1, radix, FALSE)
 	-- tmp[3] = protoTargetLength
-	return NewEun(guess, exp1, protoTargetLength, radix)
+	return guess
 end function
 
 public procedure DefaultDivideByZeroCallBack()
@@ -1049,7 +1063,7 @@ public integer divideByZeroCallBackId = routine_id("DefaultDivideByZeroCallBack"
 public sequence howComplete = {-1, 0}
 
 public function MultiplicativeInverseExp(sequence den1, integer exp1, TargetLength targetLength, AtomRadix radix, sequence guess = {})
-	sequence tmp, lookat, ret
+	sequence lookat, ret
 	integer exp0, protoTargetLength, protoMoreAccuracy
 	howComplete = {-1, 0}
 	if length(den1) = 0 then
@@ -1062,7 +1076,7 @@ public function MultiplicativeInverseExp(sequence den1, integer exp1, TargetLeng
 		if den1[1] = 1 or den1[1] = -1 then -- optimization
 			howComplete = {1, 1}
 			lastIterCount = 1
-			return {den1, - (exp1), targetLength, radix, 0}
+			return NewEun(den1, -(exp1), targetLength, radix)
 		end if
 	end if
 	if multInvMoreAccuracy >= 0 then
@@ -1075,19 +1089,18 @@ public function MultiplicativeInverseExp(sequence den1, integer exp1, TargetLeng
 	protoTargetLength = targetLength + protoMoreAccuracy
 	exp0 = - (exp1 + 1)
 	if length(guess) = 0 then
-		tmp = GetGuessExp(den1, exp0, protoTargetLength, radix)
-		guess = tmp[1]
+		guess = GetGuess(den1, protoTargetLength, radix)
 	end if
 	ret = AdjustRound(guess, exp0, targetLength, radix, FALSE)
 	lastIterCount = iter
 	for i = 1 to iter do
-		tmp = ProtoMultiplicativeInverseExp(guess, exp0, den1, exp1, protoTargetLength, radix)
-		guess = tmp[1]
-		-- ? {length(guess), protoTargetLength}
-		exp0 = tmp[2]
 		lookat = ret
+		ret = ProtoMultiplicativeInverseExp(guess, exp0, den1, exp1, protoTargetLength, radix)
+		guess = ret[1]
+		-- ? {length(guess), protoTargetLength}
+		exp0 = ret[2]
 		ret = AdjustRound(guess, exp0, targetLength, radix, NO_SUBTRACT_ADJUST)
-		if length(tmp) = 2 then
+		if length(ret) = 2 then
 			-- solution found
 			howComplete = repeat(length(ret[1]), 2)
 			lastIterCount = i
@@ -1816,14 +1829,12 @@ end procedure
 
 public integer realModeErrorCallBackId = routine_id("DefaultRealModeErrorCallBack")
 
-public function EunNthRoot(PositiveScalar n, Eun n1, object option = {})
-	Eun guess
-	object tmp
-	TargetLength targetLength, isImag, exp1, f
+public function EunNthRoot(PositiveScalar n, Eun n1, object guess = 0)
+	integer targetLength, isImag, exp1, f
 	sequence ret
 	atom a
 	exp1 = 0
-	if atom(option) or length(option) = 0 then
+	if atom(guess) then
 		-- Latest code:
 		exp1 = n1[2]
 		f = remainder(exp1, n)
@@ -1834,8 +1845,8 @@ public function EunNthRoot(PositiveScalar n, Eun n1, object option = {})
 			end if
 		end if
 		n1[2] -= exp1
-		tmp = ToAtom(n1)
-		a = tmp
+		guess = ToAtom(n1)
+		a = guess
 		f = 0
 		if a < 0 then
 			-- factor out sqrt(-1), an imaginary number, on even roots
@@ -1846,10 +1857,7 @@ public function EunNthRoot(PositiveScalar n, Eun n1, object option = {})
 		if f then
 			a = -a -- atom
 		end if
-		tmp = ToEun(a, n1[4], n1[3])
-		guess = tmp
-	else
-		guess = option
+		guess = ToEun(a, n1[4], n1[3])
 	end if
 	if n1[4] != guess[4] then
 		puts(1, "Error(5):  In MyEuNumber, radixes do not equal.  See file: ex.err\n")
@@ -1971,17 +1979,17 @@ public function ArcTanExp(sequence n1, integer exp1, TargetLength targetLength, 
 	protoTargetLength = targetLength + moreAccuracy
 	-- First iteration:
 	-- x*x + 1
-	e = MultiplyExp(n1,exp1,n1,exp1,protoTargetLength,radix)
-	e = AddExp(e[1],e[2],{1},0,protoTargetLength,radix)
+	e = MultiplyExp(n1, exp1, n1, exp1, protoTargetLength, radix)
+	e = AddExp(e[1], e[2], {1}, 0, protoTargetLength, radix)
 	-- x/e
-	sum = DivideExp(n1,exp1,e[1],e[2],protoTargetLength,radix)
+	sum = DivideExp(n1, exp1, e[1], e[2], protoTargetLength, radix)
 	a = {{1}, 0}
 	b = {{1}, 0}
 	c = {{1}, 0}
 	count = {{1}, 0}
 	d = {n1,exp1}
-	xSquared = MultiplyExp(n1,exp1,n1,exp1,protoTargetLength,radix)
-	xSquaredPlusOne = AddExp(xSquared[1],xSquared[2],{1},0,protoTargetLength,radix)
+	xSquared = MultiplyExp(n1, exp1, n1, exp1, protoTargetLength, radix)
+	xSquaredPlusOne = AddExp(xSquared[1], xSquared[2], {1}, 0, protoTargetLength, radix)
 	e = xSquaredPlusOne
 	-- Second iteration(s):
 	ret = AdjustRound(sum[1], sum[2], targetLength, radix, FALSE)
@@ -3210,7 +3218,7 @@ end function
 
 --myeuroots.e
 
--- Find roots (or zeros) of an equation.
+-- "FindRoot" means: Find the roots (or zeros) of an equation.
 
 public function MyCompareExp(sequence n1, integer exp1, sequence n2, integer exp2)
 	return CompareExp(n1, exp1, n2, exp2)
@@ -3244,7 +3252,7 @@ sequence a, b, c, d, fa, fb, fc, s, fs, tmp, tmp1, tmp2
 integer mflag, lookatIter
 integer comp1, comp2
 
-function Condition1Thru_5(PositiveScalar len, AtomRadix radix)
+function Condition1Through_5(PositiveScalar len, AtomRadix radix)
 	sequence sb, bc, cd
 	
 	--tmp1 = ((3 * a) + b) / 4
@@ -3296,7 +3304,8 @@ function Condition1Thru_5(PositiveScalar len, AtomRadix radix)
 end function
 
 public function FindRootExp(integer rid, sequence n1, integer exp1, 
-		sequence n2, integer exp2, PositiveScalar len, AtomRadix radix, integer littleEndian = 0)
+		sequence n2, integer exp2, PositiveScalar len, AtomRadix radix, integer littleEndian = 0,
+		object passToFunc1 = {})
 	
 	len += 3
 	delta = {{1}, floor((exp1 + exp2) / 2) - (len) + 2}
@@ -3304,13 +3313,13 @@ public function FindRootExp(integer rid, sequence n1, integer exp1,
 	a = {n1, exp1}
 	b = {n2, exp2}
 	if littleEndian then
-		fa = call_func(rid, {reverse(n1), exp1, len, radix})
+		fa = call_func(rid, {reverse(n1), exp1, len, radix, passToFunc1})
 		fa[1] = reverse(fa[1])
-		fb = call_func(rid, {reverse(n2), exp2, len, radix})
+		fb = call_func(rid, {reverse(n2), exp2, len, radix, passToFunc1})
 		fb[1] = reverse(fb[1])
 	else
-		fa = call_func(rid, {n1, exp1, len, radix})
-		fb = call_func(rid, {n2, exp2, len, radix})
+		fa = call_func(rid, {n1, exp1, len, radix, passToFunc1})
+		fb = call_func(rid, {n2, exp2, len, radix, passToFunc1})
 	end if
 	
 	if fa[1][1] * fb[1][1] >= 0 then
@@ -3374,7 +3383,7 @@ public function FindRootExp(integer rid, sequence n1, integer exp1,
 			s = AddExp(b[1], b[2], Negate(tmp1[1]), tmp1[2], len, radix)
 		end if
 		
-		if Condition1Thru_5(len, radix) then
+		if Condition1Through_5(len, radix) then
 			s = AddExp(a[1], a[2], b[1], b[2], len, radix)
 			s = DivideExp(s[1], s[2], {2}, 0, len, radix)
 			mflag = 1
@@ -3383,10 +3392,10 @@ public function FindRootExp(integer rid, sequence n1, integer exp1,
 		end if
 		
 		if littleEndian then
-			fs = call_func(rid, {reverse(s[1]), s[2], len, radix})
+			fs = call_func(rid, {reverse(s[1]), s[2], len, radix, passToFunc1})
 			fs[1] = reverse(fs[1])
 		else
-			fs = call_func(rid, {s[1], s[2], len, radix})
+			fs = call_func(rid, {s[1], s[2], len, radix, passToFunc1})
 		end if
 		
 		d = c -- (d is assigned for the first time here, it won't be used above on the first iteration because mflag is set)

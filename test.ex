@@ -59,7 +59,7 @@ puts(1, "main task: start, press \"q\" to force stop\n")
 atom t1, t2
 
 t1 = task_create(routine_id("checkHowComplete"), {})
-t2 = task_create(routine_id("calc"), {1000})
+t2 = task_create(routine_id("calc"), {100})
 
 task_schedule(t1, {1, 2})
 task_schedule(t2, 1)

@@ -22,7 +22,7 @@ include classfile.e as matrix
 include myeunumber.e as my
 
 public function Version()
-	return 52 -- Need to debug with Wrapper "Stub" (myeun.h)
+	return 53 -- Need to debug with Wrapper "Stub" (myeun.h)
 end function
 
 public function UsingHowManyBits()
@@ -32,6 +32,7 @@ elsedef
 	return 32
 end ifdef
 end function
+
 -- Pointers:
 
 public function RegisterPointer(integer low, integer high)
@@ -239,6 +240,7 @@ function match_replace(object needle, sequence haystack, object replacement,
 		scan_from = posn + replacement_len
 	entry
 		posn = match(needle, haystack, scan_from)
+		sleep(nanosleep)
 	end while
 
 	return haystack
@@ -538,8 +540,12 @@ public function ConvertRadix(integer num, integer fromRadix, integer toRadix)
 	return numArray:new_object_from_data(my:ConvertRadix(numArray:get_data_from_object(num), fromRadix, toRadix))
 end function
 
-public function Multiply(integer n1, integer n2)
-	return numArray:new_object_from_data(my:Multiply(numArray:get_data_from_object(n1), numArray:get_data_from_object(n2)))
+public function Multiply(integer n1, integer n2, integer len, integer sign)
+	if sign then
+		return numArray:new_object_from_data(my:Multiply(numArray:get_data_from_object(n1), numArray:get_data_from_object(n2)))
+	else
+		return numArray:new_object_from_data(my:Multiply(numArray:get_data_from_object(n1), numArray:get_data_from_object(n2), len))
+	end if
 end function
 
 public function Square(integer n1)
@@ -558,8 +564,8 @@ public function AbsoluteValue(integer num)
 	return numArray:new_object_from_data(my:AbsoluteValue(numArray:get_data_from_object(num)))
 end function
 
-public function Subtract(integer num, integer radix)
-	return numArray:new_object_from_data(my:Subtract(numArray:get_data_from_object(num), radix))
+public function Subtract(integer num, integer radix, integer isMixed)
+	return numArray:new_object_from_data(my:Subtract(numArray:get_data_from_object(num), radix, isMixed))
 end function
 
 public function TrimLeadingZeros(integer num)
@@ -570,8 +576,9 @@ public function TrimTrailingZeros(integer num)
 	return numArray:new_object_from_data(my:TrimTrailingZeros(numArray:get_data_from_object(num)))
 end function
 
-public function AdjustRound(integer num, integer exponent, integer targetLength, integer radix)
-	return NewFromEun(my:AdjustRound(numArray:get_data_from_object(num), exponent, targetLength, radix))
+public function AdjustRound(integer num, integer exponent, integer targetLength, integer radix, integer options)
+	-- default options is 1
+	return NewFromEun(my:AdjustRound(numArray:get_data_from_object(num), exponent, targetLength, radix, options))
 end function
 
 public function MultiplyExp(integer n1, integer exp1, integer n2, integer exp2, integer targetLength, integer radix)
@@ -590,8 +597,13 @@ public function SubtractExp(integer n1, integer exp1, integer n2, integer exp2, 
 	return NewFromEun(my:SubtractExp(numArray:get_data_from_object(n1), exp1, numArray:get_data_from_object(n2), exp2, targetLength, radix))
 end function
 
-public function MultiplicativeInverseExp(integer den1, integer exp1, integer targetLength, integer radix)
-	return NewFromEun(my:MultiplicativeInverseExp(numArray:get_data_from_object(den1), exp1, targetLength, radix))
+public function MultiplicativeInverseExp(integer den1, integer exp1, integer targetLength, integer radix, integer guess)
+	-- guess is 0
+	if guess = 0 then
+		return NewFromEun(my:MultiplicativeInverseExp(numArray:get_data_from_object(den1), exp1, targetLength, radix))
+	else
+		return NewFromEun(my:MultiplicativeInverseExp(numArray:get_data_from_object(den1), exp1, targetLength, radix, numArray:get_data_from_object(guess)))
+	end if
 end function
 
 public function DivideExp(integer num1, integer exp1, integer den2, integer exp2, integer targetLength, integer radix)
@@ -895,9 +907,9 @@ end function
 
 -- Triangulation using two (2) points
 
-public procedure EunTriangulation(integer eun_dst1, integer eun_dst2, integer eun_a, integer eun_b, integer eun_c, integer whichOnes)
+public procedure EunTriangulation(integer eun_dst1, integer eun_dst2, integer eun_a, integer eun_b, integer eun_distance, integer whichOnes)
 	object ret
-	ret = my:EunTriangulation(GetEun(eun_a), GetEun(eun_b), GetEun(eun_c), whichOnes)
+	ret = my:EunTriangulation(GetEun(eun_a), GetEun(eun_b), GetEun(eun_distance), whichOnes)
 	if and_bits(whichOnes, 1) then
 		eun:replace_object(eun_dst1, ret[1])
 	end if
@@ -919,8 +931,7 @@ public procedure SetDelta(integer i) -- positive number to negate
 	my:delta[2] = -i
 end procedure
 
-integer cfunc1
-function Func1Exp(sequence n1, integer exp1, integer targetLength, integer radix)
+function Func1Exp(sequence n1, integer exp1, integer targetLength, integer radix, integer cfunc1)
 	integer arrayId, ret
 	sequence n2
 	arrayId = numArray:new_object_from_data(n1)
@@ -932,19 +943,26 @@ function Func1Exp(sequence n1, integer exp1, integer targetLength, integer radix
 end function
 integer rid = routine_id("Func1Exp")
 
-public function FindRootExp(integer pointer_callback_func1, integer array_n1, integer exp1, 
-		integer array_n2, integer exp2, integer len, integer radix)
-	-- callback routine must accept four (4) arguments: func1(integer array_n1, integer exp1, integer targetLength, integer radix)
-	-- and return an integer, the returned EunId.
+-- Define Euroots C Function before use, then use it as "callback_func1" in FindRootExp().
+
+public function DefineEurootsCFunction(integer pointer_callback_func1)
 	atom maFunc1
-	sequence s
+	integer cfunc1
 	maFunc1 = pointers:get_data_from_object(pointer_callback_func1)
 ifdef BITS64 then
 	cfunc1 = define_c_func("", maFunc1, {C_LONGLONG, C_LONGLONG, C_LONGLONG, C_LONGLONG}, C_LONGLONG)
 elsedef
 	cfunc1 = define_c_func("", maFunc1, {C_INT, C_INT, C_INT, C_INT}, C_INT)
 end ifdef
-	s = my:FindRootExp(rid, numArray:get_data_from_object(array_n1), exp1, numArray:get_data_from_object(array_n2), exp2, len, radix)
+	return cfunc1
+end function
+
+public function FindRootExp(integer callback_func1, integer array_n1, integer exp1, 
+		integer array_n2, integer exp2, integer len, integer radix)
+	-- callback routine must accept four (4) arguments: func1(integer array_n1, integer exp1, integer targetLength, integer radix)
+	-- and return an integer, the returned EunId.
+	sequence s
+	s = my:FindRootExp(rid, numArray:get_data_from_object(array_n1), exp1, numArray:get_data_from_object(array_n2), exp2, len, radix, 0, callback_func1)
 	return NewFromEun(s)
 end function
 
@@ -1084,14 +1102,17 @@ function custom_sort(integer custom_compare, sequence x, object data = {}, integ
 					exit
 				end if
 				j -= gap
+				sleep(nanosleep)
 			end while
 			x[j] = tempi
+			sleep(nanosleep)
 		end for
 		if gap = 1 then
 			return x
 		else
 			gap = floor(gap / 7) + 1
 		end if
+		sleep(nanosleep)
 	end while
 end function
 
@@ -1101,6 +1122,7 @@ function get4s_from_null_terminating_array(atom ma)
 	findnull = ma
 	while peek4s(findnull) != 0 do
 		findnull += 4
+		sleep(nanosleep)
 	end while
 	len = floor((findnull - ma) / 4)
 	return peek4s({ma, len})
@@ -1137,6 +1159,7 @@ public function EunSum(integer dstId, integer pointer_to_ids_null_terminating_ar
 	sum = my:NewEun()
 	for i = 1 to length(data) do
 		sum = my:EunAdd(sum, GetEun(data[i]))
+		sleep(nanosleep)
 	end for
 	eun:replace_object(dstId, sum)
 	return length(data)
@@ -1149,6 +1172,7 @@ public function ComplexSum(integer dstId, integer pointer_to_ids_null_terminatin
 	sum = my:NewComplex()
 	for i = 1 to length(data) do
 		sum = my:ComplexAdd(sum, GetComplex(data[i]))
+		sleep(nanosleep)
 	end for
 	complex:replace_object(dstId, sum)
 	return length(data)
@@ -1249,14 +1273,17 @@ function sort(sequence x, integer order = 1)
 					exit
 				end if
 				j -= gap
+				sleep(nanosleep)
 			end while
 			x[j] = tempi
+			sleep(nanosleep)
 		end for
 		if gap = 1 then
 			return x
 		else
 			gap = floor(gap / 7) + 1
 		end if
+		sleep(nanosleep)
 	end while
 end function
 
@@ -1292,6 +1319,7 @@ function raw_frequency(object data_set) --, object subseq_opt = ST_ALLNUM)
 			end if
 		end if
 		lCounts[lPos][1] += 1
+		sleep(nanosleep)
 	end for
 	return sort(lCounts[1..lMax], -1)
 	
@@ -1316,6 +1344,7 @@ function mode(sequence data_set) --, object subseq_opt = ST_ALLNUM)
 			exit
 		end if
 		lRes = append(lRes, lCounts[i][2])
+		sleep(nanosleep)
 	end for
 	
 	return lRes
@@ -1330,10 +1359,12 @@ public function EunMode(integer pointer_to_ids_null_terminating_array)
 	s = get4s_from_null_terminating_array(ma)
 	for i = 1 to length(s) do
 		s[i] = GetEun(s[i])
+		sleep(nanosleep)
 	end for
 	s = mode(s)
 	for i = 1 to length(s) do
 		s[i] = NewFromEun(s[i])
+		sleep(nanosleep)
 	end for
 	s = s & {0}
 ifdef BITS64 then
@@ -1351,10 +1382,12 @@ public function ComplexMode(integer pointer_to_ids_null_terminating_array)
 	s = get4s_from_null_terminating_array(ma)
 	for i = 1 to length(s) do
 		s[i] = GetComplex(s[i])
+		sleep(nanosleep)
 	end for
 	s = mode(s)
 	for i = 1 to length(s) do
 		s[i] = NewFromComplex(s[i])
+		sleep(nanosleep)
 	end for
 	s = s & {0}
 ifdef BITS64 then
@@ -1467,7 +1500,9 @@ public function NewMatrix(integer rows, integer cols, integer pointer_to_eun_ids
 		for col = 1 to cols do
 			ret[row][col] = GetEun(s[pos])
 			pos += 1
+			sleep(nanosleep)
 		end for
+		sleep(nanosleep)
 	end for
 	return matrix:new_object_from_data(ret)
 end function
@@ -1499,7 +1534,9 @@ public function MatrixToArray(integer id)
 		for col = 1 to cols do
 			poke4(ma + offset, NewFromEun(a[row][col]))
 			offset += 4
+			sleep(nanosleep)
 		end for
+		sleep(nanosleep)
 	end for
 	return pointers:new_object_from_data(ma)
 end function
@@ -1521,17 +1558,34 @@ public function MatrixTransformation(integer id)
 	return matrix:new_object_from_data(my:MatrixTransformation(matrix:get_data_from_object(id)))
 end function
 
-public procedure SetNanoSleep(integer pointer_to_double) -- double should be a fraction of a second.
+public function GetNanoSleep()
+-- returns a float64, or a C/C++ "double"
+-- nanosleep is a fraction of a second (useful on Linux to make it run cooler); or -1 to disable sleep (this will make it run hot on Linux)
+	atom pointer, nanosleep
+	sequence s
+	nanosleep = my:GetNanoSleep()
+	s = atom_to_float64(nanosleep)
+	pointer = allocate_data(8)
+	poke(pointer, s)
+	return pointers:new_object_from_data(pointer)
+end function
+
+function get_doubleAtom(integer pointer_to_double)
+	return float64_to_atom(peek({pointers:get_data_from_object(pointer_to_double), 8}))
+end function
+
+public procedure SetNanoSleep(integer pointer_to_double) -- takes the registered pointer to a double, it should be a fraction of a second.
 	atom d
-	d = float64_to_atom(peek({pointers:get_data_from_object(pointer_to_double), 8}))
+	d = get_doubleAtom(pointer_to_double)
 	my:SetNanoSleep(d)
 end procedure
 
-public function GetNanoSleep()
-	sequence s = atom_to_float64(my:GetNanoSleep())
-	atom pointer = allocate_data(8)
-	poke(pointer, s)
-	return pointers:new_object_from_data(pointer)
+public function Subtr(integer n1, integer n2)
+	return numArray:new_object_from_data(my:Subtr(numArray:get_data_from_object(n1), numArray:get_data_from_object(n2)))
+end function
+
+public function RemoveLastDigits(integer n1, integer digits)
+	return NewFromEun(my:RemoveLastDigits(GetEun(n1), digits))
 end function
 
 -- end of file.
