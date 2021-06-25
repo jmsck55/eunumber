@@ -58,7 +58,7 @@ end ifdef
 -- NOTE: Negated integer named variables should be in parenthesis.
 
 public function GetVersion() -- revision number
-	return 171 -- completely type checked version
+	return 172 -- completely type checked version
 end function
 
 -- MyEunumber
@@ -589,17 +589,16 @@ public function Multiply(sequence n1, sequence n2, integer len = length(n1) + le
 	-- len = length(n1) + length(n2) - 1
 -- This method may be faster:
 	numArray = repeat(0, len)
+	f = length(n2)
 	for i = 1 to length(n1) do
-		-- h = i
 		g = n1[i]
-		-- for j = 1 to length(n2) do
 		j = 1
-		f = i + length(n2) - 1 -- (-1 for Euphoria)
 		for h = i to iff(len < f, len, f) do
 			numArray[h] += g * n2[j]
 			j += 1
 			sleep(nanosleep)
 		end for
+		f += 1
 		sleep(nanosleep)
 	end for
 	return numArray

@@ -22,7 +22,7 @@ include classfile.e as matrix
 include myeunumber.e as my
 
 public function Version()
-	return 53 -- Need to debug with Wrapper "Stub" (myeun.h)
+	return 55 -- Need to debug with Wrapper "Stub" (myeun.h)
 end function
 
 public function UsingHowManyBits()
@@ -540,8 +540,8 @@ public function ConvertRadix(integer num, integer fromRadix, integer toRadix)
 	return numArray:new_object_from_data(my:ConvertRadix(numArray:get_data_from_object(num), fromRadix, toRadix))
 end function
 
-public function Multiply(integer n1, integer n2, integer len, integer sign)
-	if sign then
+public function Multiply(integer n1, integer n2, integer len, integer flag)
+	if flag then
 		return numArray:new_object_from_data(my:Multiply(numArray:get_data_from_object(n1), numArray:get_data_from_object(n2)))
 	else
 		return numArray:new_object_from_data(my:Multiply(numArray:get_data_from_object(n1), numArray:get_data_from_object(n2), len))

@@ -20,11 +20,11 @@ export function getNewId()
 	return baseId
 end function
 
-export function find_object(object data, integer start = 1)
-	integer f
-	f = find(data, privateData, start)
-	return f
-end function
+--export function find_object(object data, integer start = 1)
+--	integer f
+--	f = find(data, privateData, start)
+--	return f
+--end function
 
 export procedure replace_object(object id, object data)
 	privateData[id] = data
