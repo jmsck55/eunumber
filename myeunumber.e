@@ -58,7 +58,7 @@ end ifdef
 -- NOTE: Negated integer named variables should be in parenthesis.
 
 public function GetVersion() -- revision number
-	return 172 -- completely type checked version
+	return 173 -- completely type checked version
 end function
 
 -- MyEunumber
@@ -841,20 +841,20 @@ end if
 	return ret
 end function
 
-
--- public function MultiplyExp(sequence n1, integer exp1, sequence n2, integer exp2, TargetLength targetLength, AtomRadix radix)
---	sequence numArray, ret
---	numArray = Multiply(n1, n2)
---	ret = AdjustRound(numArray, exp1 + exp2, targetLength, radix, FALSE) -- TRUE for backwards compatability
---	return ret
--- end function
+integer multLastLen = 0
+atom multLastRadix = 0
+integer multLen
 
 public function MultiplyExp(sequence n1, integer exp1, sequence n2, integer exp2, TargetLength targetLength, AtomRadix radix)
 	sequence numArray, ret
-	integer len
-	len = targetLength -- iff(length(n1) > length(n2), length(n1), length(n2))
-	len += Ceil(log(len) / log(radix)) + 1
-	numArray = Multiply(n1, n2, len)
+	if multLastLen != targetLength or multLastRadix != radix then
+		multLastRadix = radix
+		multLastLen = targetLength
+		multLen = targetLength -- iff(length(n1) > length(n2), length(n1), length(n2))
+		multLen += Ceil(log(targetLength) / log(radix))
+		multLen += 1
+	end if
+	numArray = Multiply(n1, n2, multLen)
 	ret = AdjustRound(numArray, exp1 + exp2, targetLength, radix, FALSE) -- TRUE for backwards compatability
 	return ret
 end function
