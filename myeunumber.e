@@ -58,7 +58,7 @@ end ifdef
 -- NOTE: Negated integer named variables should be in parenthesis.
 
 public function GetVersion() -- revision number
-	return 173 -- completely type checked version
+	return 174 -- completely type checked version
 end function
 
 -- MyEunumber
