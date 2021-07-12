@@ -3,7 +3,7 @@
 -- See also videos and resources on the web about imaginary and complex numbers:
 -- https://www.youtube.com/watch?v=T647CGsuOVU
 
-without type_check
+-- without type_check
 
 include std/console.e
 include std/get.e

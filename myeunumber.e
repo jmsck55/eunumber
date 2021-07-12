@@ -32,6 +32,16 @@ elsedef
 public atom nanosleep = 1/1000000000
 end ifdef
 
+public constant TRUE = 1, FALSE = 0
+
+public type Bool(integer i)
+	return i = FALSE or i = TRUE
+end type
+
+ifdef USE_TASK_YIELD then
+public Bool useTaskYield = FALSE -- or TRUE
+end ifdef
+
 -- sleep(nanosleep)
 
 public procedure SetNanoSleep(atom a)
@@ -58,7 +68,7 @@ end ifdef
 -- NOTE: Negated integer named variables should be in parenthesis.
 
 public function GetVersion() -- revision number
-	return 178 -- completely type checked version
+	return 179 -- completely type checked version
 end function
 
 -- MyEunumber
@@ -217,16 +227,6 @@ elsedef
 	return a >= 2 and a <= DOUBLE_RADIX -- must be 2.0 or larger
 end ifdef
 end type
-
-public constant TRUE = 1, FALSE = 0
-
-public type Bool(integer i)
-	return i = FALSE or i = TRUE
-end type
-
-ifdef USE_TASK_YIELD then
-public Bool useTaskYield = FALSE -- or TRUE
-end ifdef
 
 public Bool divideByZeroFlag = FALSE
 
@@ -974,11 +974,11 @@ public function ProtoMultiplicativeInverseExp(sequence guess, integer exp0, sequ
 	sequence tmp, numArray, ret
 	integer exp2
 	tmp = MultiplyExp(guess, exp0, den1, exp1, targetLength, radix) -- den1 * a
--- ? tmp -- turns to one
+-- tmp -- turns to one
 	numArray = tmp[1]
 	exp2 = tmp[2]
 	tmp = SubtractExp(two, 0, numArray, exp2, targetLength - (forSmallRadix), radix) -- 2 - tmp
--- ? tmp -- turns to one
+-- tmp -- turns to one
 	numArray = tmp[1]
 	exp2 = tmp[2]
 	if length(numArray) = 1 then
@@ -990,31 +990,21 @@ public function ProtoMultiplicativeInverseExp(sequence guess, integer exp0, sequ
 		end if
 	end if
 	ret = MultiplyExp(guess, exp0, numArray, exp2, targetLength, radix) -- a * tmp
--- ? ret -- turns to ans
+-- ret -- turns to ans
 	return ret
 end function
 
 
-public function IntToDigits(atom x, AtomRadix radix, integer raised = 0, integer optionNegOne = 1)
+public function IntToDigits(atom x, AtomRadix radix)
 	sequence numArray
 	atom a
-if raised then
-	numArray = repeat(0, raised)
-	for i = raised to 1 by -1 do
-		a = remainder(x, radix)
-		numArray[i] = a * optionNegOne
-		x = RoundTowardsZero(x / radix) -- must be Round() to work on negative numbers
-		sleep(nanosleep)
-	end for
-else
 	numArray = {}
 	while x != 0 do
 		a = remainder(x, radix)
-		numArray = prepend(numArray, a * optionNegOne)
+		numArray = prepend(numArray, a)
 		x = RoundTowardsZero(x / radix) -- must be Round() to work on negative numbers
 		sleep(nanosleep)
 	end while
-end if
 	return numArray
 end function
 
@@ -1024,7 +1014,73 @@ integer minSigDigits = 0
 integer maxSigDigits = 0
 atom static_multInvRadix = 0
 atom static_logRadix = 0
---here
+
+procedure set_div_static_vars(atom radix)
+	static_multInvRadix = radix
+	static_logRadix = log(radix)
+	sigDigits = Ceil(15 / (log(radix) / logTen))
+	--ifdef BITS64 then
+	--	sigDigits = Ceil(18 / (log(radix) / log(10)))
+	--elsedef
+	--	sigDigits = Ceil(15 / (log(radix) / log(10)))
+	--end ifdef
+	minSigDigits = floor(LOG_ATOM_SMALLEST / static_logRadix)
+	maxSigDigits = floor(LOG_ATOM_LARGEST / static_logRadix)
+end procedure
+
+public function LongDivision(atom num, integer exp1, atom denom, integer exp2, TargetLength protoTargetLength, AtomRadix radix)
+	integer exp0, optionNegOne
+	atom quot
+	sequence guess
+	if static_multInvRadix != radix then
+		set_div_static_vars(radix)
+	end if
+	optionNegOne = 1
+	if num < 0 then
+		num = - (num)
+		optionNegOne *= -1
+	end if
+	if denom < 0 then
+		denom = - (denom)
+		optionNegOne *= -1
+	end if
+	if num <= denom then
+		exp0 = 0
+		while 1 do
+			quot = floor(num / denom) * optionNegOne
+			num = remainder(num, denom)
+			num *= radix
+			exp0 -= 1
+			if quot != 0 then
+				exit
+			end if
+		end while
+		guess = {quot}
+	else
+		quot = floor(num / denom) * optionNegOne
+		num = remainder(num, denom)
+		num *= radix
+		exp0 = floor(log(quot) / static_logRadix)
+		guess = IntToDigits(quot, radix)
+	end if
+	while num != 0 and length(guess) < protoTargetLength do
+		quot = floor(num / denom) * optionNegOne
+		num = remainder(num, denom)
+		num *= radix
+-- 		if length(guess) = 0 and quot = 0 then
+-- 			exp0 -= 1
+-- 		else
+			guess = guess & {quot}
+-- 		end if
+		sleep(nanosleep)
+	end while
+-- 	oldlen = length(guess)
+-- 	guess = TrimLeadingZeros(guess)
+-- 	exp0 += length(guess) - oldlen
+	exp0 += exp1 - exp2
+	return {guess, exp0, protoTargetLength, radix}
+end function
+
 public function ExpToAtom(sequence n1, integer exp1, PositiveInteger targetLen, AtomRadix radix)
 	atom p, ans, lookat, ele
 	integer overflowBy
@@ -1032,11 +1088,7 @@ public function ExpToAtom(sequence n1, integer exp1, PositiveInteger targetLen, 
 		return 0 -- tried to divide by zero
 	end if
 	if static_multInvRadix != radix then
-		static_multInvRadix = radix
-		static_logRadix = log(radix)
-		sigDigits = Ceil(15 / (log(radix) / logTen))
-		minSigDigits = floor(LOG_ATOM_SMALLEST / static_logRadix)
-		maxSigDigits = floor(LOG_ATOM_LARGEST / static_logRadix)
+		set_div_static_vars(radix)
 	end if
 	-- what if exp1 is too large?
 	overflowBy = exp1 - maxSigDigits + 2 -- +2 may need to be bigger
@@ -1075,27 +1127,29 @@ public function ExpToAtom(sequence n1, integer exp1, PositiveInteger targetLen, 
 	return {ans, overflowBy}
 end function
 
-public function GetGuess(sequence den, integer protoTargetLength, AtomRadix radix)
+public function GetGuessExp(sequence den, integer exp1, integer protoTargetLength, AtomRadix radix)
 	sequence guess, tmp
-	atom denom, one, rem, quot, ans
-	integer raised, optionNegOne, mySigDigits
-	den = TrimTrailingZeros(den)
+	atom denom, one, ans
+	integer raised, mySigDigits, exp2
+	object val
 	if static_multInvRadix != radix then
-		static_multInvRadix = radix
-		static_logRadix = log(radix)
-		sigDigits = Ceil(15 / (log(radix) / logTen))
-		minSigDigits = floor(LOG_ATOM_SMALLEST / static_logRadix)
-		maxSigDigits = floor(LOG_ATOM_LARGEST / static_logRadix)
+		set_div_static_vars(radix)
 	end if
-		--ifdef BITS64 then
-		--	sigDigits = Ceil(18 / (log(radix) / log(10)))
-		--elsedef
-		--	sigDigits = Ceil(15 / (log(radix) / log(10)))
-		--end ifdef
 	if protoTargetLength < sigDigits then
 		mySigDigits = protoTargetLength
 	else
 		mySigDigits = sigDigits
+	end if
+	val = ToAtom(NewEun(den, exp1, protoTargetLength, radix))
+	if atom(val) and val != 0 then
+		denom = val
+		val = floor(log(denom) / static_logRadix)
+		if val <= INT_MAX then
+			exp2 = val
+			denom = denom / power(radix, exp2)
+			tmp = LongDivision(1, 0, denom, exp2, protoTargetLength, radix)
+			return tmp
+		end if
 	end if
 	raised = length(den) - 1
 	tmp = ExpToAtom(den, raised, mySigDigits, radix)
@@ -1106,33 +1160,9 @@ public function GetGuess(sequence den, integer protoTargetLength, AtomRadix radi
 	guess = IntToDigits(ans, radix) -- works on negative numbers
 	-- tmp = AdjustRound(guess, exp1, mySigDigits - 1, radix, FALSE)
 	-- tmp[3] = protoTargetLength
-	return guess
+	return NewEun(guess, - (exp1 + 1), protoTargetLength, radix)
 end function
 
---public function LongDivision()
---	if raised < 0 then
---		raised = - (raised)
---	end if
---	optionNegOne = (denom >= 0)
---	if not optionNegOne then
---		denom = - (denom)
---	end if
---	--rem = guess[$]
---	--guess = guess[1..$-1]
---	rem = 1 -- note: could be anything.
---	guess = {}
---	optionNegOne *= 2
---	optionNegOne -= 1
---	while length(guess) < protoTargetLength do
---		quot = floor(rem / denom)
---		rem = remainder(rem, denom)
---		if rem = 0 then
---			exit
---		end if
---		rem *= radix
---		guess = guess & IntToDigits(quot, radix, raised, optionNegOne)
---	end while
---end function
 
 public procedure DefaultDivideCallBack(integer i)
 	if i = 1 then
@@ -1159,6 +1189,7 @@ public function MultiplicativeInverseExp(sequence den1, integer exp1, TargetLeng
 	sequence lookat, ret
 	integer exp0, protoTargetLength, protoMoreAccuracy
 	howComplete = {-1, 0}
+	den1 = TrimTrailingZeros(den1)
 	if length(den1) = 0 then
 		lastIterCount = 1
 		divideByZeroFlag = 1
@@ -1180,10 +1211,16 @@ public function MultiplicativeInverseExp(sequence den1, integer exp1, TargetLeng
 		protoMoreAccuracy = 0 -- changed to 0
 	end if
 	protoTargetLength = targetLength + protoMoreAccuracy
-	exp0 = - (exp1 + 1)
 	if length(guess) = 0 then
-		guess = GetGuess(den1, protoTargetLength, radix)
+		-- factor out a power of radix, from both the numerator and the denominator,
+		-- then multiply them later.
+		ret = GetGuessExp(den1, exp1, protoTargetLength, radix)
+		guess = ret[1]
+		exp0 = ret[2]
+-- 	else
+-- 		exp0 = - (exp1 + 1)
 	end if
+	exp0 = - (exp1 + 1)
 	ret = AdjustRound(guess, exp0, targetLength, radix, FALSE)
 	lastIterCount = iter
 	for i = 1 to iter do

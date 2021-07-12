@@ -36,7 +36,7 @@ procedure calc(integer len)
 	
 	task_yield()
 	
-	calculationSpeed = floor(len / 3)
+	calculationSpeed = len
 	adjustRound = floor(len / 10)
 	
 	a = GetE(len)
