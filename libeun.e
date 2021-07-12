@@ -22,7 +22,7 @@ include classfile.e as matrix
 include myeunumber.e as my
 
 public function Version()
-	return 56 -- Need to debug with Wrapper "Stub" (myeun.h)
+	return 57 -- Need to debug with Wrapper "Stub" (myeun.h)
 end function
 
 public function UsingHowManyBits()
@@ -485,17 +485,17 @@ public function GetAdjustRound()
 	return my:GetAdjustRound()
 end function
 
-public procedure GetCalcSpeed()
-	atom dbl
-	dbl = my:GetCalcSpeed()
-	return new_doubleAtom(dbl)
-end procedure
-
 public procedure SetCalcSpeed(integer ptrToDblId)
 	atom speed
 	speed = get_doubleAtom(ptrToDblId)
 	my:SetCalcSpeed(speed)
 end procedure
+
+public function GetCalcSpeed()
+	atom dbl
+	dbl = my:GetCalcSpeed()
+	return new_doubleAtom(dbl)
+end function
 
 public procedure SetRoundToNearestOption(integer boolean_value_num)
 	my:SetRoundToNearestOption(boolean_value_num)

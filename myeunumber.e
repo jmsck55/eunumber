@@ -58,7 +58,7 @@ end ifdef
 -- NOTE: Negated integer named variables should be in parenthesis.
 
 public function GetVersion() -- revision number
-	return 175 -- completely type checked version
+	return 176 -- completely type checked version
 end function
 
 -- MyEunumber
@@ -1037,8 +1037,8 @@ end function
 
 public function GetGuess(sequence den, integer protoTargetLength, AtomRadix radix)
 	sequence guess, tmp
-	atom denom, one, rem, ans
-	integer overflowBy, raised, quot, optionNegOne
+	atom denom, one, rem
+	integer raised, quot, optionNegOne
 	if static_multInvRadix != radix then
 		static_multInvRadix = radix
 		static_logRadix = log(radix)
@@ -1062,7 +1062,7 @@ public function GetGuess(sequence den, integer protoTargetLength, AtomRadix radi
 	if raised < 0 then
 		raised = - (raised)
 	end if
-	ans = RoundTowardsZero(one / denom)
+	-- ans = RoundTowardsZero(one / denom)
 	-- guess = IntToDigits(ans, radix) -- works on negative numbers
 	rem = one
 	guess = {}
@@ -1891,7 +1891,7 @@ public function NthRootExp(PositiveScalar n, sequence x1, integer x1Exp, sequenc
 end function
 
 public function EunNthRoot(PositiveScalar n, Eun n1, object guess = 0)
-	integer targetLength, isImag, exp1, f
+	integer isImag, exp1, f
 	sequence ret
 	atom a
 	exp1 = 0
