@@ -22,7 +22,7 @@ include classfile.e as matrix
 include myeunumber.e as my
 
 public function Version()
-	return 55 -- Need to debug with Wrapper "Stub" (myeun.h)
+	return 56 -- Need to debug with Wrapper "Stub" (myeun.h)
 end function
 
 public function UsingHowManyBits()
@@ -54,9 +54,15 @@ public function NewPointer()
 -- In case you don't want to register one of your pointers, it will allocate one of its own for you (server-side).
 ifdef BITS64 then
 	atom pointer = allocate_data(8)
+	if pointer = 0 then
+		return 0
+	end if
 	poke8(pointer, 0)
 elsedef
 	atom pointer = allocate_data(4)
+	if pointer = 0 then
+		return 0
+	end if
 	poke4(pointer, 0)
 end ifdef
 	return pointers:new_object_from_data(pointer)
@@ -93,17 +99,23 @@ public function NewCIntArrayFromNumArray(integer pointer_dstId, integer idOfNumA
 	sequence num = numArray:get_data_from_object(idOfNumArray)
 ifdef BITS64 then
 	atom ma = allocate_data(length(num) * 8) -- 64bit integers are 8 bytes in size
+	if ma = 0 then
+		return 0
+	end if
 	poke8(ma, num)
 	poke8(pointers:get_data_from_object(pointer_dstId), ma)
 elsedef
 	atom ma = allocate_data(length(num) * 4) -- 32bit integers are 4 bytes in size
+	if ma = 0 then
+		return 0
+	end if
 	poke4(ma, num)
 	poke4(pointers:get_data_from_object(pointer_dstId), ma)
 end ifdef
 	return length(num)
 end function
 
-public procedure FreeNewCIntArrayPointer(integer pointer_dstId)
+public procedure FreeNewCIntArrayFromNumArray(integer pointer_dstId)
 ifdef BITS64 then
 	atom ma = peek8u(pointers:get_data_from_object(pointer_dstId))
 elsedef
@@ -130,21 +142,37 @@ end function
 
 -- Eun's:
 
-function NewFromEun(Eun n1)
-	return eun:new_object_from_data(n1)
+function GetEun(integer id)
+	return eun:get_data_from_object(id)
 end function
 
-public function NewEun(integer arrayid, integer exp, integer radix, integer targetLength, Bool sign_of_exp)
-	return NewFromEun(my:NewEun(numArray:get_data_from_object(arrayid), iff(sign_of_exp, -exp, exp), radix, targetLength))
+public function isEun(integer n1)
+	return my:Eun(GetEun(n1))
+end function
+
+function NewFromEun(object n1)
+	if my:Eun(n1) then
+		return eun:new_object_from_data(n1)
+	else
+		return 0
+	end if
+end function
+
+public function NewEun(integer arrayid, integer exp, integer targetLength, integer radix, Bool sign_of_exp)
+	return NewFromEun(my:NewEun(numArray:get_data_from_object(arrayid), iff(sign_of_exp, -(exp), exp), targetLength, radix))
+end function
+
+public function NewEunWithPointer(integer arrayid, integer signedExponentPointerId, integer targetLength, integer radix)
+	ifdef BITS64 then
+		return NewFromEun(my:NewEun(numArray:get_data_from_object(arrayid), peek8s(pointers:get_data_from_object(signedExponentPointerId)), targetLength, radix))
+	elsedef
+		return NewFromEun(my:NewEun(numArray:get_data_from_object(arrayid), peek4s(pointers:get_data_from_object(signedExponentPointerId)), targetLength, radix))
+	end ifdef
 end function
 
 public procedure DeleteEun(integer id)
 	eun:delete_object(id)
 end procedure
-
-function GetEun(integer id)
-	return eun:get_data_from_object(id)
-end function
 
 public procedure StoreEun(integer id_dst, integer id_src) -- move operator
 	eun:store_object(id_dst, id_src)
@@ -192,6 +220,9 @@ end procedure
 public function EunToCString(integer id)
 	sequence st = my:ToString(GetEun(id))
 	atom ma = allocate_string(st)
+	if ma = 0 then
+		return 0
+	end if
 	return pointers:new_object_from_data(ma)
 	-- be sure to call "FreePointer()" after you are done with it
 end function
@@ -252,6 +283,9 @@ public function EunPrintToCString(integer x)
 	atom ma
 	st = match_replace("\n", st, "\r\n")
 	ma = allocate_string(st)
+	if ma = 0 then
+		return 0
+	end if
 	return pointers:new_object_from_data(ma)
 	-- be sure to call "FreePointer()" after you are done with it
 end function
@@ -298,6 +332,37 @@ end function
 
 -- list functions to export.
 
+function new_doubleAtom(atom dbl)
+	atom pointer
+	sequence s
+	pointer = allocate_data(8)
+	if pointer = 0 then
+		return 0
+	end if
+	s = atom_to_float64(dbl)
+	poke(pointer, s)
+	return pointers:new_object_from_data(pointer)
+	-- use FreePointer() to free this data.
+end function
+
+function get_doubleAtom(integer pointer_to_double)
+	return float64_to_atom(peek({pointers:get_data_from_object(pointer_to_double), 8}))
+end function
+
+public function GetNanoSleep()
+-- returns a float64, or a C/C++ "double"
+-- nanosleep is a fraction of a second (useful on Linux to make it run cooler); or -1 to disable sleep (this will make it run hot on Linux)
+	atom dbl
+	dbl = my:GetNanoSleep()
+	return new_doubleAtom(dbl)
+end function
+
+public procedure SetNanoSleep(integer pointer_to_double) -- takes the registered pointer to a double, it should be a fraction of a second.
+	atom d
+	d = get_doubleAtom(pointer_to_double)
+	my:SetNanoSleep(d)
+end procedure
+
 public function GetVersion()
 	return my:GetVersion()
 end function
@@ -305,6 +370,96 @@ end function
 public function GetDivideByZeroFlag()
 	return my:GetDivideByZeroFlag()
 end function
+
+public procedure SetDivideByZeroFlag(integer i)
+	my:SetDivideByZeroFlag(i)
+end procedure
+
+-- public Bool zeroDividedByZeroFlag = TRUE -- if true, zero divided by zero returns one (0/0 = 1)
+
+public function GetZeroDividedByZeroFlag()
+	return my:GetZeroDividedByZeroFlag()
+end function
+
+public procedure SetZeroDividedByZeroFlag(integer i)
+	my:SetZeroDividedByZeroFlag(i)
+end procedure
+
+public procedure SetIsRoundToZero(integer i)
+	my:SetIsRoundToZero(i)
+end procedure
+
+public function GetIsRoundToZero()
+	return my:GetIsRoundToZero()
+end function
+
+-- More Accuracy variables:
+
+public procedure SetMultiplicativeInverseMoreAccuracy(integer i)
+	my:SetMultiplicativeInverseMoreAccuracy(i - 1)
+end procedure
+
+public function GetMultiplicativeInverseMoreAccuracy()
+	return my:GetMultiplicativeInverseMoreAccuracy() + 1
+end function
+
+public procedure SetNthRootMoreAccuracy(integer i)
+	my:SetNthRootMoreAccuracy(i - 1)
+end procedure
+
+public function GetNthRootMoreAccuracy()
+	return my:GetNthRootMoreAccuracy() + 1
+end function
+
+public procedure SetExpMoreAccuracy(integer i)
+	my:SetExpMoreAccuracy(i - 1)
+end procedure
+
+public function GetExpMoreAccuracy()
+	return my:GetExpMoreAccuracy() + 1
+end function
+
+public procedure SetLogMoreAccuracy(integer i)
+	my:SetLogMoreAccuracy(i - 1)
+end procedure
+
+public function GetLogMoreAccuracy()
+	return my:GetLogMoreAccuracy() + 1
+end function
+
+public procedure SetSinMoreAccuracy(integer i)
+	my:SetSinMoreAccuracy(i - 1)
+end procedure
+
+public function GetSinMoreAccuracy()
+	return my:GetSinMoreAccuracy() + 1
+end function
+
+public procedure SetCosMoreAccuracy(integer i)
+	my:SetCosMoreAccuracy(i - 1)
+end procedure
+
+public function GetCosMoreAccuracy()
+	return my:GetCosMoreAccuracy() + 1
+end function
+
+public procedure SetArcSinMoreAccuracy(integer i)
+	my:SetArcSinMoreAccuracy(i - 1)
+end procedure
+
+public function GetArcSinMoreAccuracy()
+	return my:GetArcSinMoreAccuracy() + 1
+end function
+
+public procedure SetArcTanMoreAccuracy(integer i)
+	my:SetArcTanMoreAccuracy(i - 1)
+end procedure
+
+public function GetArcTanMoreAccuracy()
+	return my:GetArcTanMoreAccuracy() + 1
+end function
+
+-- End of More Accuracy Variables.
 
 public procedure SetDefaultTargetLength(integer i)
 	my:SetDefaultTargetLength(i)
@@ -330,23 +485,17 @@ public function GetAdjustRound()
 	return my:GetAdjustRound()
 end function
 
+public procedure GetCalcSpeed()
+	atom dbl
+	dbl = my:GetCalcSpeed()
+	return new_doubleAtom(dbl)
+end procedure
+
 public procedure SetCalcSpeed(integer ptrToDblId)
-	atom speed = float64_to_atom(peek({pointers:get_data_from_object(ptrToDblId), 8}))
+	atom speed
+	speed = get_doubleAtom(ptrToDblId)
 	my:SetCalcSpeed(speed)
 end procedure
-
-public procedure GetCalcSpeed(integer dstptrToDblId)
-	sequence s = atom_to_float64(my:GetCalcSpeed())
-	poke(pointers:get_data_from_object(dstptrToDblId), s)
-end procedure
-
-public procedure SetRound(integer i)
-	my:SetRound(i)
-end procedure
-
-public function GetRound()
-	return my:GetRound()
-end function
 
 public procedure SetRoundToNearestOption(integer boolean_value_num)
 	my:SetRoundToNearestOption(boolean_value_num)
@@ -356,149 +505,207 @@ public function GetRoundToNearestOption()
 	return my:GetRoundToNearestOption()
 end function
 
-Bool local_sign = 0
-
-public function GetSignOfMoreAccuracy()
-	return local_sign
-end function
-
-public procedure SetMultiplicativeInverseMoreAccuracy(integer i, integer sign)
-	if sign then
-		i = -1
-	end if
-	my:SetMultiplicativeInverseMoreAccuracy(i)
+public procedure IntegerModeOn()
+	my:IntegerModeOn()
 end procedure
 
-public function GetMultiplicativeInverseMoreAccuracy()
-	integer a = my:GetMultiplicativeInverseMoreAccuracy()
-	local_sign = a < 0
-	if local_sign then
-		return 0
-	else
-		return a
-	end if
-end function
-
-public procedure SetNthRootMoreAccuracy(integer i, integer sign)
-	if sign then
-		i = -1
-	end if
-	my:SetNthRootMoreAccuracy(i)
+public procedure IntegerModeOff()
+	my:IntegerModeOff()
 end procedure
 
-public function GetNthRootMoreAccuracy()
-	integer a = my:GetNthRootMoreAccuracy()
-	local_sign = a < 0
-	if local_sign then
-		return 0
-	else
-		return a
-	end if
+public function GetRoundInf() -- = 1 -- Round towards +infinity or -infinity, (positive or negative infinity)
+	return my:ROUND_INF
 end function
 
-public procedure SetExpMoreAccuracy(integer i, integer sign)
-	if sign then
-		i = -1
-	end if
-	my:SetExpMoreAccuracy(i)
+public function GetRoundZero() -- = 2 -- Round towards zero
+	return my:ROUND_ZERO
+end function
+
+public function GetRoundTruncate() -- = 3 -- Don't round, truncate
+	return my:ROUND_TRUNCATE
+end function
+
+public function GetRoundPosInf() -- = 4 -- Round towards positive +infinity
+	return my:ROUND_POS_INF
+end function
+
+public function GetRoundNegInf() -- = 5 -- Round towards negative -infinity
+	return my:ROUND_NEG_INF
+end function
+
+public function GetRoundEven() -- = 6 -- Round making number even on halfRadix
+	return my:ROUND_EVEN
+end function
+
+public function GetRoundOdd() -- = 7 -- Round making number odd on halfRadix
+	return my:ROUND_ODD
+end function
+
+public procedure SetRound(integer i)
+	my:SetRound(i)
 end procedure
 
-public function GetExpMoreAccuracy()
-	integer a = my:GetExpMoreAccuracy()
-	local_sign = a < 0
-	if local_sign then
-		return 0
-	else
-		return a
-	end if
+public function GetRound()
+	return my:GetRound()
 end function
 
-public procedure SetLogMoreAccuracy(integer i, integer sign)
-	if sign then
-		i = -1
-	end if
-	my:SetLogMoreAccuracy(i)
+public function GetExpFastIter()
+	return my:GetExpFastIter()
+end function
+public procedure SetExpFastIter(integer i)
+	my:SetExpFastIter(i)
 end procedure
 
-public function GetLogMoreAccuracy()
-	integer a = my:GetLogMoreAccuracy()
-	local_sign = a < 0
-	if local_sign then
-		return 0
-	else
-		return a
-	end if
+public function GetMultInvIter()
+	return my:iter
 end function
-
-public procedure SetSinMoreAccuracy(integer i, integer sign)
-	if sign then
-		i = -1
-	end if
-	my:SetSinMoreAccuracy(i)
+public procedure SetMultInvIter(integer i)
+	my:iter = i
+end procedure
+public function GetMultInvLastIterCount()
+	return my:lastIterCount
+end function
+public procedure SetMultInvLastIterCount(integer i)
+	my:lastIterCount = i
 end procedure
 
-public function GetSinMoreAccuracy()
-	integer a = my:GetSinMoreAccuracy()
-	local_sign = a < 0
-	if local_sign then
-		return 0
-	else
-		return a
-	end if
+public function GetNthRootIter()
+	return my:nthRootIter
 end function
-
-public procedure SetCosMoreAccuracy(integer i, integer sign)
-	if sign then
-		i = -1
-	end if
-	my:SetCosMoreAccuracy(i)
+public procedure SetNthRootIter(integer i)
+	my:nthRootIter = i
+end procedure
+public function GetLastNthRootIter()
+	return my:lastNthRootIter
+end function
+public procedure SetLastNthRootIter(integer i)
+	my:lastNthRootIter = i
 end procedure
 
-public function GetCosMoreAccuracy()
-	integer a = my:GetCosMoreAccuracy()
-	local_sign = a < 0
-	if local_sign then
-		return 0
-	else
-		return a
-	end if
+public function GetArcTanIter()
+	return my:arcTanIter
 end function
-
-public procedure SetArcSinMoreAccuracy(integer i, integer sign)
-	if sign then
-		i = -1
-	end if
-	my:SetArcSinMoreAccuracy(i)
+public procedure SetArcTanIter(integer i)
+	my:arcTanIter = i
+end procedure
+public function GetLastArcTanCount()
+	return my:arcTanCount
+end function
+public procedure SetLastArcTanCount(integer i)
+	my:arcTanCount = i
 end procedure
 
-public function GetArcSinMoreAccuracy()
-	integer a = my:GetArcSinMoreAccuracy()
-	local_sign = a < 0
-	if local_sign then
-		return 0
-	else
-		return a
-	end if
+public function GetExp1Iter()
+	return my:expExp1Iter
 end function
-
-public procedure SetArcTanMoreAccuracy(integer i, integer sign)
-	if sign then
-		i = -1
-	end if
-	my:SetArcTanMoreAccuracy(i)
+public procedure SetExp1Iter(integer i)
+	my:expExp1Iter = i
 end procedure
 
-public function GetArcTanMoreAccuracy()
-	integer a = my:GetArcTanMoreAccuracy()
-	local_sign = a < 0
-	if local_sign then
-		return 0
-	else
-		return a
-	end if
+public function GetExpIter()
+	return my:expExpIter
 end function
+public procedure SetExpIter(integer i)
+	my:expExpIter = i
+end procedure
+public function GetLastExpIterCount()
+	return my:expExpCount
+end function
+public procedure SetLastExpIterCount(integer i)
+	my:expExpCount = i
+end procedure
+
+public function GetExpFastIter()
+	return my:GetExpFastIter()
+end function
+public procedure SetExpFastIter(integer i)
+	my:SetExpFastIter(i)
+end procedure
+
+public function GetLogIter()
+	return my:logIter
+end function
+public procedure SetLogIter(integer i)
+	my:logIter = i
+end procedure
+public function GetLastLogIterCount()
+	return my:logIterCount
+end function
+public procedure SetLastLogIterCount(integer i)
+	my:logIterCount = i
+end procedure
+
+public function GetSinIter()
+	return my:sinIter
+end function
+public procedure SetSinIter(integer i)
+	my:sinIter = i
+end procedure
+public function GetLastSinIterCount()
+	return my:sinIterCount
+end function
+public procedure SetLastSinIterCount(integer i)
+	my:sinIterCount = i
+end procedure
+
+public function GetCosIter()
+	return my:cosIter
+end function
+public procedure SetCosIter(integer i)
+	my:cosIter = i
+end procedure
+public function GetLastCosIterCount()
+	return my:cosIterCount
+end function
+public procedure SetLastCosIterCount(integer i)
+	my:cosIterCount = i
+end procedure
+
+public function GetArcSinIter()
+	return my:arcSinIter
+end function
+public procedure SetArcSinIter(integer i)
+	my:ArcSinIter = i
+end procedure
+public function GetLastArcSinIterCount()
+	return my:arcSinIterCount
+end function
+public procedure SetLastArcSinIterCount(integer i)
+	my:arcSinIterCount = i
+end procedure
 
 -- MyEuNumber Functions:
+
+public function Min(integer a, integer b)
+	return my:iff(a < b, a, b)
+end function
+
+public function Max(integer a, integer b)
+	return my:iff(a > b, a, b)
+end function
+
+public function RoundTowardsZero(integer dblId)
+	atom dbl
+	dbl = get_doubleAtom(dblId)
+	dbl = my:RoundTowardsZero(dbl)
+	return new_doubleAtom(dbl)
+end function
+
+public function Round(integer dblId1, integer dblId2)
+	atom result
+	result = my:Round(get_doubleAtom(dblId1), get_doubleAtom(dblId2))
+	return new_doubleAtom(result)
+end function
+
+public function RangeEqual(integer a, integer b, integer start, integer stop)
+	return my:RangeEqual(numArray:get_data_from_object(a), numArray:get_data_from_object(b), start, stop)
+end function
+
+public function Equaln(integer a, integer b)
+	sequence s
+	s = Equaln(numArray:get_data_from_object(a), numArray:get_data_from_object(b))
+	return s[1]
+end function
 
 public function IsIntegerOdd(integer i)
 	return my:IsIntegerOdd(i)
@@ -506,14 +713,6 @@ end function
 
 public function IsIntegerEven(integer i)
 	return my:IsIntegerEven(i)
-end function
-
-public function IsArrayNegative(integer numArrayId)
-	return my:IsNegative(numArray:get_data_from_object(numArrayId))
-end function
-
-public function RangeEqual(integer a, integer b, integer start, integer stop)
-	return my:RangeEqual(numArray:get_data_from_object(a), numArray:get_data_from_object(b), start, stop)
 end function
 
 public function Borrow(integer num, integer radix)
@@ -536,16 +735,24 @@ public function Add(integer n1, integer n2)
 	return numArray:new_object_from_data(my:Add(numArray:get_data_from_object(n1), numArray:get_data_from_object(n2)))
 end function
 
+public function Subtr(integer n1, integer n2)
+	return numArray:new_object_from_data(my:Subtr(numArray:get_data_from_object(n1), numArray:get_data_from_object(n2)))
+end function
+
 public function ConvertRadix(integer num, integer fromRadix, integer toRadix)
 	return numArray:new_object_from_data(my:ConvertRadix(numArray:get_data_from_object(num), fromRadix, toRadix))
 end function
 
-public function Multiply(integer n1, integer n2, integer len, integer flag)
+public function Multiply(integer n1, integer n2, integer sumOfLengths, integer flag)
+	object ob1, ob2, val -- val for "value"
+	ob1 = numArray:get_data_from_object(n1)
+	ob2 = numArray:get_data_from_object(n2)
 	if flag then
-		return numArray:new_object_from_data(my:Multiply(numArray:get_data_from_object(n1), numArray:get_data_from_object(n2)))
+		val = my:Multiply(ob1, ob2)
 	else
-		return numArray:new_object_from_data(my:Multiply(numArray:get_data_from_object(n1), numArray:get_data_from_object(n2), len))
+		val = my:Multiply(ob1, ob2, sumOfLengths - 1)
 	end if
+	return numArray:new_object_from_data(val)
 end function
 
 public function Square(integer n1)
@@ -576,49 +783,72 @@ public function TrimTrailingZeros(integer num)
 	return numArray:new_object_from_data(my:TrimTrailingZeros(numArray:get_data_from_object(num)))
 end function
 
-public function AdjustRound(integer num, integer exponent, integer targetLength, integer radix, integer options)
-	-- default options is 1
-	return NewFromEun(my:AdjustRound(numArray:get_data_from_object(num), exponent, targetLength, radix, options))
+public function AdjustRound(integer num, integer exponent, integer targetLength, integer radix, integer optionsIsMixed, Bool isNegExp)
+	-- default optionsIsMixed is 1, can be: (0, 1, 2)
+	return NewFromEun(my:AdjustRound(numArray:get_data_from_object(num), iff(isNegExp, -(exponent), exponent), targetLength, radix, optionsIsMixed))
 end function
 
-public function MultiplyExp(integer n1, integer exp1, integer n2, integer exp2, integer targetLength, integer radix)
-	return NewFromEun(my:MultiplyExp(numArray:get_data_from_object(n1), exp1, numArray:get_data_from_object(n2), exp2, targetLength, radix))
+--here, make Exp functions have flags for "exp1 and exp2"'s sign.
+
+
+public function MultiplyExp(integer n1, integer exp1, integer n2, integer exp2, integer targetLength, integer radix, Bool isNegExp1, Bool isNegExp2)
+	return NewFromEun(my:MultiplyExp(numArray:get_data_from_object(n1), iff(isNegExp1, -(exp1), exp1), numArray:get_data_from_object(n2), iff(isNegExp2, -(exp2), exp2), targetLength, radix))
 end function
 
-public function SquareExp(integer n1, integer exp1, integer targetLength, integer radix)
-	return NewFromEun(my:SquareExp(numArray:get_data_from_object(n1), exp1, targetLength, radix))
+public function SquareExp(integer n1, integer exp1, integer targetLength, integer radix, Bool isNegExp1)
+	return NewFromEun(my:SquareExp(numArray:get_data_from_object(n1), iff(isNegExp1, -(exp1), exp1), targetLength, radix))
 end function
 
-public function AddExp(integer n1, integer exp1, integer n2, integer exp2, integer targetLength, integer radix)
-	return NewFromEun(my:AddExp(numArray:get_data_from_object(n1), exp1, numArray:get_data_from_object(n2), exp2, targetLength, radix))
+public function AddExp(integer n1, integer exp1, integer n2, integer exp2, integer targetLength, integer radix, Bool isNegExp1, Bool isNegExp2)
+	return NewFromEun(my:AddExp(numArray:get_data_from_object(n1), iff(isNegExp1, -(exp1), exp1), numArray:get_data_from_object(n2), iff(isNegExp2, -(exp2), exp2), targetLength, radix))
 end function
 
-public function SubtractExp(integer n1, integer exp1, integer n2, integer exp2, integer targetLength, integer radix)
-	return NewFromEun(my:SubtractExp(numArray:get_data_from_object(n1), exp1, numArray:get_data_from_object(n2), exp2, targetLength, radix))
+public function SubtractExp(integer n1, integer exp1, integer n2, integer exp2, integer targetLength, integer radix, Bool isNegExp1, Bool isNegExp2)
+	return NewFromEun(my:SubtractExp(numArray:get_data_from_object(n1), iff(isNegExp1, -(exp1), exp1), numArray:get_data_from_object(n2), iff(isNegExp2, -(exp2), exp2), targetLength, radix))
 end function
 
-public function MultiplicativeInverseExp(integer den1, integer exp1, integer targetLength, integer radix, integer guess)
-	-- guess is 0
-	if guess = 0 then
-		return NewFromEun(my:MultiplicativeInverseExp(numArray:get_data_from_object(den1), exp1, targetLength, radix))
-	else
-		return NewFromEun(my:MultiplicativeInverseExp(numArray:get_data_from_object(den1), exp1, targetLength, radix, numArray:get_data_from_object(guess)))
+procedure dummy(integer i)
+	-- procedure with no code in its body.
+end procedure
+
+my:divideCallBackId = routine_id("dummy")
+
+public function MultiplicativeInverseExp(integer den1, integer exp1, integer targetLength, integer radix, integer guess, Bool isNegExp1)
+	sequence s = {}
+	-- guess is 0, when you want it to guess the result instead of you supplying the guess.
+	if guess > 0 then
+		s = numArray:get_data_from_object(guess)
 	end if
+	s = my:MultiplicativeInverseExp(numArray:get_data_from_object(den1), iff(isNegExp1, -(exp1), exp1), targetLength, radix, s)
+	return NewFromEun(s)
+end function
+--here
+public function DivideExp(integer num1, integer exp1, integer den2, integer exp2, integer targetLength, integer radix, Bool isNegExp1, Bool isNegExp2)
+	sequence s
+	s = my:DivideExp(numArray:get_data_from_object(num1), iff(isNegExp1, -(exp1), exp1), numArray:get_data_from_object(den2), iff(isNegExp2, -(exp2), exp2), targetLength, radix)
+	return NewFromEun(s)
 end function
 
-public function DivideExp(integer num1, integer exp1, integer den2, integer exp2, integer targetLength, integer radix)
-	return NewFromEun(my:DivideExp(numArray:get_data_from_object(num1), exp1, numArray:get_data_from_object(den2), exp2, targetLength, radix))
+public function ConvertExp(integer n1, integer exp1, integer targetLength, integer fromRadix, integer toRadix, Bool isNegExp1)
+	sequence s
+	s = my:ConvertExp(numArray:get_data_from_object(n1), iff(isNegExp1, -(exp1), exp1), targetLength, fromRadix, toRadix)
+	return NewFromEun(s)
 end function
 
-public function ConvertExp(integer n1, integer exp1, integer targetLength, integer fromRadix, integer toRadix)
-	return NewFromEun(my:ConvertExp(numArray:get_data_from_object(n1), exp1, targetLength, fromRadix, toRadix))
+public function IsProperLengthAndRadix(integer targetLength, integer radix)
+	return my:IsProperLengthAndRadix(targetLength, radix)
 end function
+
 
 -- Begin Eun:
 
-public function EunAdjustRound(integer n1, integer adjustBy)
+public function EunAdjustRound(integer n1, integer adjustBy) -- if adjustBy = 0 then use default adjustRound
 	return NewFromEun(my:EunAdjustRound(GetEun(n1), adjustBy))
 end function
+
+public procedure RemoveLastDigits(integer n1, integer digits)
+	eun:privateData[n1][1] = eun:privateData[n1][1][1..$-digits]
+end procedure
 
 public function EunMultiply(integer n1, integer n2)
 	return NewFromEun(my:EunMultiply(GetEun(n1), GetEun(n2)))
@@ -648,6 +878,10 @@ public function EunMultiplicativeInverse(integer n1)
 	return NewFromEun(my:EunMultiplicativeInverse(GetEun(n1)))
 end function
 
+public function EunMultiplicativeInverseGuess(integer n1, integer array_guess_id)
+	return NewFromEun(my:EunMultiplicativeInverse(GetEun(n1), numArray:get_data_from_object(array_guess_id)))
+end function
+
 public function EunDivide(integer n1, integer n2)
 	return NewFromEun(my:EunDivide(GetEun(n1), GetEun(n2)))
 end function
@@ -656,8 +890,8 @@ public function EunConvert(integer n1, integer toRadix, integer targetLength)
 	return NewFromEun(my:EunConvert(GetEun(n1), toRadix, targetLength))
 end function
 
-public function CompareExp(sequence n1, integer exp1, sequence n2, integer exp2)
-	return my:CompareExp(numArray:get_data_from_object(n1), exp1, numArray:get_data_from_object(n2), exp2) + 1
+public function CompareExp(sequence n1, integer exp1, sequence n2, integer exp2, Bool isNegExp1, Bool isNegExp2)
+	return my:CompareExp(numArray:get_data_from_object(n1), iff(isNegExp1, -(exp1), exp1), numArray:get_data_from_object(n2), iff(isNegExp2, -(exp2), exp2)) + 1
 end function
 
 public function GetEqualLength()
@@ -688,8 +922,8 @@ public function EunRoundToInt(integer n1) -- Round to nearest integer
 	return NewFromEun(my:EunRoundToInt(GetEun(n1)))
 end function
 
-public function EunCombInt(integer n1, integer adjustBy, integer up) -- default value for up is zero "0"
-	return NewFromEun(my:EunCombInt(GetEun(n1), adjustBy, up))
+public function EunCombInt(integer n1, integer adjustBy, integer up) -- values for "up" can be: 0, 1, 2
+	return NewFromEun(my:EunCombInt(GetEun(n1), adjustBy, up - 1))
 end function
 
 public procedure EunModf(integer dstEunIdIntPart, integer dstEunIdFracPart, integer numId)
@@ -716,7 +950,11 @@ end function
 public function EunToMemory(integer n1)
 	-- returns id to a pointer
 	-- remember to use "FreePointer()" to deallocate it.
+ifdef WINDOWS then
+	atom ma = my:ToMemory(GetEun(n1), 1)
+elsedef
 	atom ma = my:ToMemory(GetEun(n1))
+end ifdef
 	return pointers:new_object_from_data(ma)
 end function
 
@@ -740,16 +978,22 @@ public function EunIntPower(integer toPower, integer id)
 	return NewFromEun(my:IntPowerExp(toPower, n1[1], n1[2], n1[3], n1[4]))
 end function
 
-public function NthRootExp(PositiveScalar n, integer x1, integer x1Exp, integer guess, integer guessExp, integer targetLength, integer radix)
+public function NthRootExp(PositiveScalar n, integer x1, integer exp1, integer guess, integer exp2, integer targetLength, integer radix, Bool isNegExp1, Bool isNegExp2)
 	sequence n1, n2
 	n1 = numArray:get_data_from_object(x1)
 	n2 = numArray:get_data_from_object(guess)
-	return NewFromEun(my:NthRootExp(n, n1, x1Exp, n2, guessExp, targetLength, radix))
+	return NewFromEun(my:NthRootExp(n, n1, iff(isNegExp1, -(exp1), exp1), n2, iff(isNegExp2, -(exp2), exp2), targetLength, radix))
 end function
 
-public function EunNthRoot(integer dstEunId, integer dstExtraEunId, integer n, integer n1)
+public function EunNthRoot(integer dstEunId, integer dstExtraEunId, integer n, integer n1, integer guess1) -- guess can be zero (0)
 	-- returns if result is imaginary, or multiplied by sqrt(-1)
-	sequence s = my:EunNthRoot(n, GetEun(n1))
+	sequence s
+	s = GetEun(n1)
+	if guess1 = 0 then
+		s = my:EunNthRoot(n, s)
+	else
+		s = my:EunNthRoot(n, s, GetEun(guess1))
+	end if
 	if length(s) = 3 then
 		eun:replace_object(dstEunId, s[2])
 		eun:replace_object(dstExtraEunId, s[3])
@@ -757,7 +1001,7 @@ public function EunNthRoot(integer dstEunId, integer dstExtraEunId, integer n, i
 	else
 		eun:replace_object(dstEunId, s)
 		if dstExtraEunId then
-			eun:replace_object(dstExtraEunId, s)
+			eun:replace_object(dstExtraEunId, {}) -- {} is null in this case.
 		end if
 		return 0
 	end if
@@ -777,22 +1021,13 @@ end procedure
 
 -- mymath.e functions:
 
+-- ArcTan:
+
 public function EunArcTan(integer n1)
 	return NewFromEun(my:EunArcTan(GetEun(n1)))
 end function
 
-public function GetQuarterPI(integer targetLength, integer radix)
-	return NewFromEun(my:GetQuarterPI(targetLength, radix))
-end function
-public function GetHalfPI(integer targetLength = defaultTargetLength, integer radix = defaultRadix)
-	return NewFromEun(my:GetHalfPI(targetLength, radix))
-end function
-public function GetPI(integer targetLength = defaultTargetLength, integer radix = defaultRadix)
-	return NewFromEun(my:GetPI(targetLength, radix))
-end function
-public function GetE(integer targetLength, integer radix)
-	return NewFromEun(my:GetE(targetLength, radix))
-end function
+-- Exp: e^(n1)
 
 public function EunExp(integer n1)
 	-- ExpExp() doesn't like large numbers.
@@ -804,12 +1039,40 @@ public function EunExpFast(integer numerator, integer denominator)
 	return NewFromEun(my:EunExpFast(GetEun(numerator), GetEun(denominator)))
 end function
 
-public function EunLog(integer n1)
-	sequence s = my:EunLog(GetEun(n1))
+-- PI and E constants:
+
+public function GetQuarterPI(integer targetLength, integer radix)
+	return NewFromEun(my:GetQuarterPI(targetLength, radix))
+end function
+public function GetHalfPI(integer targetLength, integer radix)
+	return NewFromEun(my:GetHalfPI(targetLength, radix))
+end function
+public function GetPI(integer targetLength, integer radix)
+	return NewFromEun(my:GetPI(targetLength, radix))
+end function
+public function GetE(integer targetLength, integer radix)
+	return NewFromEun(my:GetE(targetLength, radix))
+end function
+
+-- Logarithms:
+
+public function EunLog(integer n1, integer guess1)
+	sequence s = GetEun(n1)
+	if guess1 = 0 then
+		s = my:EunLog(s)
+	else
+		s = my:EunLog(s, GetEun(guess1))
+	end if
 	if length(s) != 2 then
 		return NewFromEun(s)
 	end if
 	return 0 -- not doing complex mode, yet.
+end function
+
+-- Powers: a number (base), raised to the power of another number (raisedTo)
+
+public function EunPower(integer base, integer raisedTo)
+	return NewFromEun(my:EunPower(GetEun(base), GetEun(raisedTo)))
 end function
 
 -- Begin Trig Functions:
@@ -918,8 +1181,9 @@ public procedure EunTriangulation(integer eun_dst1, integer eun_dst2, integer eu
 	end if
 end procedure
 
--- euroots.e:
+-- myeuroots.e:
 
+-- "FindRoot" means: Find the roots (or zeros) of an equation.
 -- Find the roots of the equation, (a callback function)
 
 public function GetDelta() -- returns positive value of delta (which is negative)
@@ -930,6 +1194,14 @@ public procedure SetDelta(integer i) -- positive number to negate
 	-- "delta" should be a "small" negative number, such as (-10) to (-80)
 	my:delta[2] = -i
 end procedure
+
+public procedure SetEurootsAdjustRound(PositiveInteger i)
+	my:SetEurootsAdjustRound(i)
+end procedure
+
+public function GetEurootsAdjustRound()
+	return my:GetEurootsAdjustRound()
+end function
 
 function Func1Exp(sequence n1, integer exp1, integer targetLength, integer radix, integer cfunc1)
 	integer arrayId, ret
@@ -1017,6 +1289,14 @@ end function
 
 public function ComplexDivide(integer complex_a, integer complex_b)
 	return NewFromComplex(my:ComplexDivide(GetComplex(complex_a), GetComplex(complex_b)))
+end function
+
+public procedure SetComplexSqrtAdjustRound(PositiveInteger i)
+	my:SetComplexSqrtAdjustRound(i)
+end procedure
+
+public function GetComplexSqrtAdjustRound()
+	return my:GetComplexSqrtAdjustRound()
 end function
 
 public procedure ComplexSqrt(integer complex_dst1, integer complex_dst2, integer complex_a)
@@ -1372,6 +1652,9 @@ ifdef BITS64 then
 elsedef
 	ma = allocate_data(length(s) * 4)
 end ifdef
+	if ma = 0 then
+		return 0
+	end if
 	poke4(ma, s)
 	return pointers:new_object_from_data(ma)
 end function
@@ -1395,6 +1678,9 @@ ifdef BITS64 then
 elsedef
 	ma = allocate_data(length(s) * 4)
 end ifdef
+	if ma = 0 then
+		return 0
+	end if
 	poke4(ma, s)
 	return pointers:new_object_from_data(ma)
 end function
@@ -1408,21 +1694,6 @@ end function
 -- dropped support for the other "accurate" functions
 -- use the larger of the two, and then the smaller of the two's precision or targetLength
 
-public procedure SetForSmallRadix(integer i)
-	my:SetForSmallRadix(i)
-end procedure
-
-public function GetForSmallRadix()
-	return my:GetForSmallRadix()
-end function
-
-public procedure SetIsRoundToZero(integer i)
-	my:SetIsRoundToZero(i)
-end procedure
-public function GetIsRoundToZero()
-	return my:GetIsRoundToZero()
-end function
-
 public function EunGetPrec(integer eun_n1)
 	return my:EunGetPrec(GetEun(eun_n1))
 end function
@@ -1433,60 +1704,7 @@ public function EunTest(integer eun_n1, integer eun_n2)
 	return range[1]
 end function
 
-public function MultiplicativeInverseGuessExp(integer den1, integer exp1, integer targetLength, integer radix, integer guess_id)
-	return NewFromEun(my:MultiplicativeInverseExp(numArray:get_data_from_object(den1), exp1, targetLength, radix, numArray:get_data_from_object(guess_id)))
-end function
-
-public function EunMultiplicativeInverseGuess(integer n1, integer array_guess_id)
-	return NewFromEun(my:EunMultiplicativeInverse(GetEun(n1), numArray:get_data_from_object(array_guess_id)))
-end function
-
-public procedure SetDivideByZeroFlag(integer i)
-	my:SetDivideByZeroFlag(i)
-end procedure
-
--- public Bool zeroDividedByZeroFlag = TRUE -- if true, zero divided by zero returns one (0/0 = 1)
-
-public function GetZeroDividedByZeroFlag()
-	return my:GetZeroDividedByZeroFlag()
-end function
-public procedure SetZeroDividedByZeroFlag(integer i)
-	my:SetZeroDividedByZeroFlag(i)
-end procedure
-
-public function IsProperLengthAndRadix(integer targetLength, integer radix)
-	return my:IsProperLengthAndRadix(targetLength, radix)
-end function
-
-public function NewEunWithPointer(integer arrayid, integer signedExponentPointerId, integer radix, integer targetLength)
-ifdef BITS64 then
-	return NewFromEun(my:NewEun(numArray:get_data_from_object(arrayid), peek8s(pointers:get_data_from_object(signedExponentPointerId)), radix, targetLength))
-elsedef
-	return NewFromEun(my:NewEun(numArray:get_data_from_object(arrayid), peek4s(pointers:get_data_from_object(signedExponentPointerId)), radix, targetLength))
-end ifdef
-end function
-
-public procedure SetEurootsAdjustRound(PositiveInteger i)
-	my:SetEurootsAdjustRound(i)
-end procedure
-
-public function GetEurootsAdjustRound()
-	return my:GetEurootsAdjustRound()
-end function
-
-public procedure SetComplexSqrtAdjustRound(PositiveInteger i)
-	my:SetComplexSqrtAdjustRound(i)
-end procedure
-
-public function GetComplexSqrtAdjustRound()
-	return my:GetComplexSqrtAdjustRound()
-end function
-
-
-public function EunPower(integer base, integer raisedTo)
-	return NewFromEun(my:EunPower(GetEun(base), GetEun(raisedTo)))
-end function
-
+-- Matrix support:
 
 public function NewMatrix(integer rows, integer cols, integer pointer_to_eun_ids_null_terminating_array)
 	integer pos
@@ -1528,6 +1746,9 @@ public function MatrixToArray(integer id)
 	len = rows * cols
 	size = 4 * (len + 1)
 	ma = allocate_data(size)
+	if ma = 0 then
+		return 0
+	end if
 	mem_set(ma, 0, size)
 	offset = 0
 	for row = 1 to rows do
@@ -1556,36 +1777,6 @@ end function
 
 public function MatrixTransformation(integer id)
 	return matrix:new_object_from_data(my:MatrixTransformation(matrix:get_data_from_object(id)))
-end function
-
-public function GetNanoSleep()
--- returns a float64, or a C/C++ "double"
--- nanosleep is a fraction of a second (useful on Linux to make it run cooler); or -1 to disable sleep (this will make it run hot on Linux)
-	atom pointer, nanosleep
-	sequence s
-	nanosleep = my:GetNanoSleep()
-	s = atom_to_float64(nanosleep)
-	pointer = allocate_data(8)
-	poke(pointer, s)
-	return pointers:new_object_from_data(pointer)
-end function
-
-function get_doubleAtom(integer pointer_to_double)
-	return float64_to_atom(peek({pointers:get_data_from_object(pointer_to_double), 8}))
-end function
-
-public procedure SetNanoSleep(integer pointer_to_double) -- takes the registered pointer to a double, it should be a fraction of a second.
-	atom d
-	d = get_doubleAtom(pointer_to_double)
-	my:SetNanoSleep(d)
-end procedure
-
-public function Subtr(integer n1, integer n2)
-	return numArray:new_object_from_data(my:Subtr(numArray:get_data_from_object(n1), numArray:get_data_from_object(n2)))
-end function
-
-public function RemoveLastDigits(integer n1, integer digits)
-	return NewFromEun(my:RemoveLastDigits(GetEun(n1), digits))
 end function
 
 -- end of file.

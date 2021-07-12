@@ -23,7 +23,7 @@ ifdef BITS64 then
 	include std/sequence.e
 	include std/os.e
 elsedef
-	include allocate.e as os
+	include allocate.e
 end ifdef
 
 ifdef WINDOWS then
@@ -44,7 +44,7 @@ end function
 
 ifdef USE_SMALL_RADIX then
 	puts(1, "\nWarning: Using small radix.\nThis program is experimental.\nPress enter to continue, or any other key to exit.\n")
-	os:sleep(1) -- sleep for one (1) second.
+	sleep(1) -- sleep for one (1) second.
 	while get_key() != -1 do
 		sleep(nanosleep)
 	end while
@@ -58,7 +58,7 @@ end ifdef
 -- NOTE: Negated integer named variables should be in parenthesis.
 
 public function GetVersion() -- revision number
-	return 174 -- completely type checked version
+	return 175 -- completely type checked version
 end function
 
 -- MyEunumber
@@ -115,7 +115,7 @@ end function
 
 -- Eun (type)
 -- NewEun
--- EunAdjustRound(Eun n1, integer adjustBy = -1)
+-- EunAdjustRound(Eun n1, integer adjustBy = 0)
 -- EunMultiply
 -- EunSquare
 -- EunAdd
@@ -135,7 +135,7 @@ end function
 -- EunRoundSig -- Round to number of significant digits
 -- EunRoundSignificantDigits -- same as EunRoundSig
 -- EunRoundToInt -- Round to nearest integer
--- EunCombInt(Eun n1, integer adjustBy = -1)
+-- EunCombInt(Eun n1, integer adjustBy = 0)
 -- EunModf(Eun fp) -- similar to C's "modf()"
 -- EunfDiv(Eun num, Eun den) -- similar to C's "div()"
 -- EunfMod(Eun num, Eun den) -- similar to C's "fmod()", just the "mod" or remainder
@@ -143,21 +143,21 @@ end function
 ifdef BITS64 then
 public constant DOUBLE_MAX = 18446744073709551615 -- (power(2, 64) - 1)
 public constant DOUBLE_MIN = -DOUBLE_MAX
-public constant DOUBLE_RADIX = floor(sqrt(DOUBLE_MAX)) + 1 -- 4294967296
-public constant DOUBLE_RADIX10 = 1000000000
 public constant INT_MAX = power(2, 62) - 1 -- value: 4611686018427387903
-public constant MAX_RADIX = power(2, floor(62/2)-4) -- value: 134217728
 public constant INT_MAX10 = power(10, 18) -- value: 1000000000000000000
-public constant MAX_RADIX10 = power(10, 8-1) -- value: 100000000
+public constant MAX_RADIX10 = power(10, 6) -- value: 1000000
+public constant MAX_RADIX = MAX_RADIX10 -- power(2, floor(62/2)-4) -- value: 134217728
+public constant DOUBLE_RADIX = MAX_RADIX10 -- floor(sqrt(DOUBLE_MAX)) + 1 -- 4294967296
+public constant DOUBLE_RADIX10 = MAX_RADIX10 -- 1000000000
 elsedef
 public constant DOUBLE_MAX = 9007199254740991 -- (power(2, 53) - 1)
 public constant DOUBLE_MIN = -DOUBLE_MAX
-public constant DOUBLE_RADIX = floor(sqrt(DOUBLE_MAX)) + 1 -- 94906266
-public constant DOUBLE_RADIX10 = 10000000
 public constant INT_MAX = power(2, 30) - 1 -- value: 1073741823
-public constant MAX_RADIX = power(2, floor(30/2)-4) -- value: 2048
 public constant INT_MAX10 = power(10, 9) -- value: 1000000000
-public constant MAX_RADIX10 = power(10, 4-1) -- value: 1000
+public constant MAX_RADIX10 = power(10, 3) -- value: 1000
+public constant MAX_RADIX = MAX_RADIX10 -- power(2, floor(30/2)-4) -- value: 2048
+public constant DOUBLE_RADIX = MAX_RADIX10 -- floor(sqrt(DOUBLE_MAX)) + 1 -- 94906266
+public constant DOUBLE_RADIX10 = MAX_RADIX10 -- 10000000
 end ifdef
 
 public function iff(integer condition, object iftrue, object iffalse)
@@ -169,11 +169,11 @@ public function iff(integer condition, object iftrue, object iffalse)
 end function
 
 public function abs(atom a)
-	return iff(a >= 0, a, -a)
+	return iff(a >= 0, a, -(a))
 end function
 
 public function Ceil(atom a)
-	return -floor(-a)
+	return -(floor(-a))
 end function
 
 public type PositiveInteger(integer i)
@@ -244,7 +244,7 @@ public type TargetLength(integer i)
 	return i >= 1 -- 4
 end type
 
-public TargetLength defaultTargetLength = 60 -- 40 -- 70 -- 70 * 3 = 210 (I tried to keep it under 212)
+public TargetLength defaultTargetLength = 70 -- 70 * 3 = 210 (I tried to keep it under 212)
 public AtomRadix defaultRadix = 10 -- 10 is good for everything from 16-bit shorts, to 32-bit ints, to 64-bit long longs.
 public Bool isRoundToZero = FALSE -- make TRUE to allow rounding small numbers to zero.
 public PositiveInteger adjustRound = 5 -- 3 -- can be 0 to a small integer, removes digits of inaccuracy, or adds digits of accuracy under ROUND_TO_NEAREST_OPTION
@@ -298,7 +298,7 @@ public function GetCalcSpeed()
 end function
 
 public integer iter = 1000000000 -- max number of iterations before returning
-public integer lastIterCount = -1 -- MultiplicativeInverseExp has not been called yet, so the value is -1
+public integer lastIterCount = 0 -- MultiplicativeInverseExp has not been called yet, so the value is -1
 
 -- public constant ATOM_EPSILON = 2.22044604925031308085e-16 -- DBL_EPSILON 64-bit
 -- public constant ATOM_MAX = 1.0e+308 -- 1.79769313486231570815e+308 -- DBL_MAX 64-bit
@@ -464,7 +464,7 @@ public function NegativeCarry(sequence numArray, AtomRadix radix)
 	while i > 0 do
 		b = numArray[i]
 		if b <= negativeRadix then
-			q = -floor(b / negativeRadix) -- bug fix
+			q = -(floor(b / negativeRadix)) -- bug fix
 			r = remainder(b, radix)
 			numArray[i] = r
 			if i = 1 then
@@ -580,20 +580,23 @@ public function ConvertRadix(sequence number, AtomRadix fromRadix, AtomRadix toR
 end function
 
 public function Multiply(sequence n1, sequence n2, integer len = length(n1) + length(n2) - 1)
-	integer f, j
+	integer f, j, k, len1, len2
 	atom g
 	sequence numArray
-	if length(n1) = 0 or length(n2) = 0 then
+	len1 = length(n1)
+	len2 = length(n2)
+	if len1 = 0 or len2 = 0 then
 		return {}
 	end if
-	-- len = length(n1) + length(n2) - 1
+	-- len = len1 + len2 - 1
 -- This method may be faster:
 	numArray = repeat(0, len)
-	f = length(n2)
+	f = len2
 	for i = 1 to length(n1) do
 		g = n1[i]
 		j = 1
-		for h = i to iff(len < f, len, f) do
+		k = iff(len < f, len, f)
+		for h = i to k do
 			numArray[h] += g * n2[j]
 			j += 1
 			sleep(nanosleep)
@@ -844,14 +847,24 @@ end function
 integer multLastLen = 0
 atom multLastRadix = 0
 integer multLen
+atom multlogt, multlogr
 
 public function MultiplyExp(sequence n1, integer exp1, sequence n2, integer exp2, TargetLength targetLength, AtomRadix radix)
 	sequence numArray, ret
-	if multLastLen != targetLength or multLastRadix != radix then
-		multLastRadix = radix
+	integer flag = 0
+	if multLastLen != targetLength then
 		multLastLen = targetLength
+		multlogt = log(targetLength)
+		flag = 1
+	end if
+	if multLastRadix != radix then
+		multLastRadix = radix
+		multlogr = log(radix)
+		flag = 1
+	end if
+	if flag then
 		multLen = targetLength -- iff(length(n1) > length(n2), length(n1), length(n2))
-		multLen += Ceil(log(targetLength) / log(radix))
+		multLen += Ceil(multlogt / multlogr)
 		multLen += 1
 	end if
 	numArray = Multiply(n1, n2, multLen)
@@ -954,16 +967,19 @@ public function ProtoMultiplicativeInverseExp(sequence guess, integer exp0, sequ
 end function
 
 
-public function IntToDigits(atom x, AtomRadix radix)
+public function IntToDigits(atom x, AtomRadix radix, integer raised, integer optionNegOne = 1)
 	sequence numArray
 	atom a
-	numArray = {}
-	while x != 0 do
+	numArray = repeat(0, raised)
+	for i = raised to 1 by -1 do
+	-- while x != 0 do
 		a = remainder(x, radix)
-		numArray = prepend(numArray, a)
-		x = RoundTowardsZero(x / radix) -- must be Round() to work on negative numbers
+		numArray[i] = a * optionNegOne
+		-- numArray = prepend(numArray, a * optionNegOne)
+		x = floor(x / radix) -- must be Round() to work on negative numbers
 		sleep(nanosleep)
-	end while
+	-- end while
+	end for
 	return numArray
 end function
 
@@ -973,38 +989,34 @@ atom static_logRadix = 0
 
 public function ExpToAtom(sequence n1, integer exp1, PositiveInteger targetLen, AtomRadix radix)
 	atom p, ans, lookat, ele
+	integer overflowBy
 	if length(n1) = 0 then
 		return 0 -- tried to divide by zero
 	end if
-	-- what if exp1 is too large?
 	if static_multInvRadix != radix then
 		static_multInvRadix = radix
 		static_logRadix = log(radix)
-		sigDigits = floor(LOG_INT_MAX / static_logRadix) -- not used in this function, kept to make everything work properly.
+		sigDigits = floor(floor(LOG_INT_MAX / static_logRadix) / 2) -- not used in this function, kept to make everything work properly.
 	end if
-	if exp1 > sigDigits then
-		exp1 = sigDigits
-	elsif exp1 < sigDigits then
-		exp1 = sigDigits
+	-- what if exp1 is too large?
+	overflowBy = exp1 - sigDigits + 2 -- +2 may need to be bigger
+			-- overflowBy = exp1 - floor(LOG_ATOM_MAX / p) + 2 -- +2 may need to be bigger
+	if overflowBy > 0 then
+		-- overflow warning in "power()" function
+		-- reduce size
+		exp1 -= overflowBy
+	else
+		-- what if exp1 is too small?
+		overflowBy = exp1 - sigDigits - 2 -- -2 may need to be bigger
+				-- overflowBy = exp1 - floor(LOG_ATOM_MIN / p) - 2 -- -2 may need to be bigger
+		if overflowBy < 0 then
+			exp1 -= overflowBy
+		--else
+		--	overflowBy = 0
+		end if
 	end if
-	--overflowBy = exp1 - sigDigits + 2 -- +2 may need to be bigger
-	--		-- overflowBy = exp1 - floor(LOG_ATOM_MAX / p) + 2 -- +2 may need to be bigger
-	--if overflowBy > 0 then
-	--	-- overflow warning in "power()" function
-	--	-- reduce size
-	--	exp1 -= overflowBy
-	--else
-	--	-- what if exp1 is too small?
-	--	overflowBy = exp1 - sigDigits - 2 -- -2 may need to be bigger
-	--			-- overflowBy = exp1 - floor(LOG_ATOM_MIN / p) - 2 -- -2 may need to be bigger
-	--	if overflowBy < 0 then
-	--		exp1 -= overflowBy
-	--	--else
-	--	--	overflowBy = 0
-	--	end if
-	--end if
-	-- exp1 -= targetLen
-	p = power(radix, exp1 - targetLen)
+	exp1 -= targetLen
+	p = power(radix, exp1)
 	ans = n1[1] * p
 	for i = 2 to length(n1) do
 		p = p / radix
@@ -1020,16 +1032,17 @@ public function ExpToAtom(sequence n1, integer exp1, PositiveInteger targetLen, 
 	end for
 	-- if overflowBy is positive, then there was an overflow
 	-- overflowBy is an offset of that overflow in the given radix
-	return {ans, exp1}
+	return {ans, overflowBy}
 end function
 
 public function GetGuess(sequence den, integer protoTargetLength, AtomRadix radix)
 	sequence guess, tmp
-	atom denom, one, ans, raised
+	atom denom, one, rem, ans
+	integer overflowBy, raised, quot, optionNegOne
 	if static_multInvRadix != radix then
 		static_multInvRadix = radix
 		static_logRadix = log(radix)
-		sigDigits = floor(LOG_INT_MAX / static_logRadix)
+		sigDigits = floor(floor(LOG_INT_MAX / static_logRadix) / 2)
 	end if
 		--ifdef BITS64 then
 		--	sigDigits = Ceil(18 / (log(radix) / log(10)))
@@ -1041,23 +1054,53 @@ public function GetGuess(sequence den, integer protoTargetLength, AtomRadix radi
 		--else
 		--	mySigDigits = sigDigits
 		--end if
-	tmp = ExpToAtom(den, length(den) - 1, iff(protoTargetLength < sigDigits, protoTargetLength, sigDigits), radix)
+	raised = length(den) - 1
+	tmp = ExpToAtom(den, raised, iff(protoTargetLength < sigDigits, protoTargetLength, sigDigits), radix)
 	denom = tmp[1]
-	raised = tmp[2]
+	raised -= tmp[2]
 	one = power(radix, raised)
+	if raised < 0 then
+		raised = - (raised)
+	end if
 	ans = RoundTowardsZero(one / denom)
-	guess = IntToDigits(ans, radix) -- works on negative numbers
+	-- guess = IntToDigits(ans, radix) -- works on negative numbers
+	rem = one
+	guess = {}
+	optionNegOne = (denom >= 0)
+	if not optionNegOne then
+		denom = - (denom)
+	end if
+	optionNegOne *= 2
+	optionNegOne -= 1
+	while length(guess) < protoTargetLength do
+		quot = floor(rem / denom)
+		rem = remainder(rem, denom)
+		rem *= one
+		guess = guess & IntToDigits(quot, radix, raised, optionNegOne)
+	end while
 	-- tmp = AdjustRound(guess, exp1, mySigDigits - 1, radix, FALSE)
 	-- tmp[3] = protoTargetLength
 	return guess
 end function
 
-public procedure DefaultDivideByZeroCallBack()
-	puts(1, "Error(1):  In MyEuNumber, tried to divide by zero (1/0).  See file: ex.err\n")
+public procedure DefaultDivideCallBack(integer i)
+	if i = 1 then
+		puts(1, "Error(1):  In MyEuNumber, tried to divide by zero (1/0).  See file: ex.err\n")
+	elsif i = 2 then
+		printf(1, "Error:  In MyEuNumber, forSmallRadix is %d, try increasing\n SetForSmallRadix() to a larger integer.  See file: ex.err\n", {forSmallRadix})
+	elsif i = 3 then
+		puts(1, "Error(4):  In MyEuNumber, too many iterations.  Unable to calculate number.\n  See file: ex.err\n")
+	elsif i = 4 then
+		puts(1, "Error(2):  In MyEuNumber, in real mode, even root of -1, i.e. sqrt(-1).\n  See file: ex.err\n")
+	elsif i = 5 then
+		puts(1, "Error(5):  In MyEuNumber, radixes are not equal.  See file: ex.err\n")
+	elsif i = 6 then
+		puts(1, "Error(3):  In MyEuNumber, negative argument(s) in \"EunTriangulation()\".\n  See file: ex.err\n")
+	end if
 	abort(1/0)
 end procedure
 
-public integer divideByZeroCallBackId = routine_id("DefaultDivideByZeroCallBack")
+public integer divideCallBackId = routine_id("DefaultDivideCallBack")
 
 public sequence howComplete = {-1, 0}
 
@@ -1068,7 +1111,7 @@ public function MultiplicativeInverseExp(sequence den1, integer exp1, TargetLeng
 	if length(den1) = 0 then
 		lastIterCount = 1
 		divideByZeroFlag = 1
-		call_proc(divideByZeroCallBackId, {})
+		call_proc(divideCallBackId, {1})
 		return {}
 	end if
 	if length(den1) = 1 then
@@ -1116,8 +1159,8 @@ public function MultiplicativeInverseExp(sequence den1, integer exp1, TargetLeng
 		sleep(nanosleep)
 	end for
 	if lastIterCount = iter then
-		printf(1, "Error:  In MyEuNumber, forSmallRadix is %d, try increasing\n SetForSmallRadix() to a larger integer.  See file: ex.err\n", {forSmallRadix})
-		abort(1/0)
+		call_proc(divideCallBackId, {2})
+		return {}
 	end if
 	return ret
 end function
@@ -1159,7 +1202,8 @@ end function
 
 
 public function IsProperLengthAndRadix(TargetLength targetLength = defaultTargetLength, AtomRadix radix = defaultRadix)
-	return (targetLength * power(radix - 1, 2) <= DOUBLE_MAX)
+	return (targetLength * power(radix - 1, 3) <= DOUBLE_MAX)
+--here
 -- On 64-bit systems, long double has significand precision of 64 bits: DOUBLE_MAX = (power(2, 64) - 1) -- value: 18446744073709551615
 -- On 32-bit systems, double has significand precision of 53 bits: DOUBLE_MAX = (power(2, 53) - 1) -- value: 9007199254740991
 end function
@@ -1190,15 +1234,15 @@ public function NewEun(sequence num = {}, integer exp = 0, TargetLength targetLe
 	return x
 end function
 
-public function EunAdjustRound(Eun n1, integer adjustBy = -1)
+public function EunAdjustRound(Eun n1, integer adjustBy = 0)
 	if length(n1[1]) = 0 then
 		return n1
 	end if
-	if adjustBy != -1 then
+	if adjustBy > 0 then
 		integer tmp
 		sequence s
 		tmp = adjustRound
-		adjustRound = adjustBy
+		adjustRound = adjustBy - 1
 		s = AdjustRound(n1[1], n1[2], n1[3], n1[4])
 		adjustRound = tmp
 		return s
@@ -1215,8 +1259,8 @@ end function
 public function EunMultiply(Eun n1, Eun n2)
 	TargetLength targetLength
 	if n1[4] != n2[4] then
-		puts(1, "Error(5):  In MyEuNumber, radixes do not equal.  See file: ex.err\n")
-		abort(1/0)
+		call_proc(divideCallBackId, {5})
+		return {}
 	end if
 	if n1[3] > n2[3] then
 		targetLength = n1[3]
@@ -1234,8 +1278,8 @@ end function
 public function EunAdd(Eun n1, Eun n2)
 	TargetLength targetLength
 	if n1[4] != n2[4] then
-		puts(1, "Error(5):  In MyEuNumber, radixes do not equal.  See file: ex.err\n")
-		abort(1/0)
+		call_proc(divideCallBackId, {5})
+		return {}
 	end if
 	if n1[3] > n2[3] then
 		targetLength = n1[3]
@@ -1268,8 +1312,8 @@ end function
 public function EunSubtract(Eun n1, Eun n2)
 	TargetLength targetLength
 	if n1[4] != n2[4] then
-		puts(1, "Error(5):  In MyEuNumber, radixes do not equal.  See file: ex.err\n")
-		abort(1/0)
+		call_proc(divideCallBackId, {5})
+		return {}
 	end if
 	if n1[3] > n2[3] then
 		targetLength = n1[3]
@@ -1286,8 +1330,8 @@ end function
 public function EunDivide(Eun n1, Eun n2)
 	TargetLength targetLength
 	if n1[4] != n2[4] then
-		puts(1, "Error(5):  In MyEuNumber, radixes do not equal.  See file: ex.err\n")
-		abort(1/0)
+		call_proc(divideCallBackId, {5})
+		return {}
 	end if
 	if n1[3] > n2[3] then
 		targetLength = n1[3]
@@ -1428,7 +1472,7 @@ type UpOneRange(integer i)
 	return i <= 1 and i >= -1
 end type
 
-public function EunCombInt(Eun n1, integer adjustBy = -1, UpOneRange upOne = 0) -- upOne should be: 1, 0, or -1
+public function EunCombInt(Eun n1, integer adjustBy = 0, UpOneRange upOne = 0) -- upOne should be: 1, 0, or -1
 -- if there is any fraction part, add or subtract one, away from zero,
 -- or add one towards positive infinity, if "up = 1"
 	integer len, exponent
@@ -1475,8 +1519,8 @@ end function
 
 -- Compression functions to store an "Eun" in memory:
 
-public function ToMemory(sequence n1)
-	integer offset
+public function ToMemory(sequence n1, integer windows = FALSE)
+	integer offset, size
 	atom ma
 	sequence n2
 	if not Eun(n1) then
@@ -1493,36 +1537,65 @@ public function ToMemory(sequence n1)
 		end if
 	end if
 ifdef BITS64 then
-	offset = 3 * 8 + 10
-	ma = allocate_data(length(n2) + offset)
-	if ma = 0 then
-		return 0 -- couldn't allocate data
+	if windows then
+		offset = 4 * 8 + 8
+		size = offset + length(n2)
+		ma = allocate_data(size)
+		if ma = 0 then
+			return 0 -- couldn't allocate data
+		end if
+		poke(ma, "eun" & 64 & "w   ") -- padded to 8-byte boundary
+		poke8(ma + 8, n1[1..3])
+		poke(ma + 4 * 8, atom_to_float64(n1[4]))
+		poke(ma + offset, n2)
+	else
+		offset = 4 * 8 + 10
+		size = offset + length(n2)
+		ma = allocate_data(size)
+		if ma = 0 then
+			return 0 -- couldn't allocate data
+		end if
+		poke(ma, "eun" & 64 & "    ") -- padded to 8-byte boundary
+		poke8(ma + 8, n1[1..3])
+		poke(ma + 4 * 8, atom_to_float80(n1[4]))
+		poke(ma + offset, n2)
 	end if
-	poke8(ma, n1[1..3])
-	poke(ma + 3 * 8, atom_to_float80(n1[4]))
-	poke(ma + offset, n2)
 elsedef
-	offset = 3 * 4 + 8
-	ma = allocate_data(length(n2) + offset)
+	offset = 4 * 4 + 8
+	size = offset + length(n2)
+	ma = allocate_data(size)
 	if ma = 0 then
 		return 0 -- couldn't allocate data
 	end if
-	poke4(ma, n1[1..3])
-	poke(ma + 3 * 4, atom_to_float64(n1[4]))
+	poke(ma, "eun" & 32)
+	poke4(ma + 4, n1[1..3])
+	poke(ma + 4 * 4, atom_to_float64(n1[4]))
 	poke(ma + offset, n2)
 end ifdef
-	return ma
+	return {ma, size}
 end function
 
 public function FromMemoryToEun(atom ma)
 	sequence n1, n2
+	n1 = peek({ma, 4})
+	if equal(n1, "eun" & 32) then
+		n1 = peek4s({ma, 4}) & float64_to_atom(peek({ma + 4 * 4, 8}))
+		n2 = peek({ma + 4 * 4 + 8, n1[1]})
+	else
 ifdef BITS64 then
-	n1 = peek8s({ma, 3}) & float80_to_atom(peek({ma + 3 * 8, 8}))
-	n2 = peek({ma + 3 * 8 + 10, n1[1]})
-elsedef
-	n1 = peek4s({ma, 3}) & float64_to_atom(peek({ma + 3 * 4, 8}))
-	n2 = peek({ma + 3 * 4 + 8, n1[1]})
+		n1 = peek({ma, 8})
+		if equal(n1, "eun" & 64 & "    ") then
+			n1 = peek8s({ma, 4}) & float80_to_atom(peek({ma + 4 * 8, 10}))
+			n2 = peek({ma + 4 * 8 + 10, n1[1]})
+		elsif equal(n1, "eun" & 64 & "w   ") then
+			n1 = peek8s({ma, 4}) & float64_to_atom(peek({ma + 4 * 8, 8}))
+			n2 = peek({ma + 4 * 8 + 8, n1[1]})
+		else
+			return 0 -- unsupported format
+		end if
 end ifdef
+	end if
+	n1 = n1[2..4]
 	if n1[3] < 0 then
 		-- signed
 		n1[3] = -n1[3]
@@ -1710,10 +1783,6 @@ end function
 
 -- Find the nth root of any number
 
--- Example: square root
-
--- ? EunNthRoot(2, {{1, 8}, 1, 100, 10}, {{4, 2}, 0, 100, 10})
-
 public Bool realMode = TRUE
 
 public procedure SetRealMode(Bool i)
@@ -1767,7 +1836,7 @@ public function GetNthRootMoreAccuracy()
 end function
 
 public integer nthRootIter = 1000000000
-public integer lastNthRootIter = -1
+public integer lastNthRootIter = 0
 
 public sequence nthRootHowComplete = {-1, 0}
 
@@ -1815,18 +1884,11 @@ public function NthRootExp(PositiveScalar n, sequence x1, integer x1Exp, sequenc
 		sleep(nanosleep)
 	end for
 	if lastNthRootIter = nthRootIter then
-		puts(1, "Error(4):  In MyEuNumber, too many iterations.  Unable to calculate number.\n  See file: ex.err\n")
-		abort(1/0)
+		call_proc(divideCallBackId, {3})
+		return {}
 	end if
 	return ret
 end function
-
-public procedure DefaultRealModeErrorCallBack()
-	puts(1, "Error(2):  In MyEuNumber, in real mode, even root of -1, i.e. sqrt(-1).\n  See file: ex.err\n")
-	abort(1/0)
-end procedure
-
-public integer realModeErrorCallBackId = routine_id("DefaultRealModeErrorCallBack")
 
 public function EunNthRoot(PositiveScalar n, Eun n1, object guess = 0)
 	integer targetLength, isImag, exp1, f
@@ -1859,18 +1921,12 @@ public function EunNthRoot(PositiveScalar n, Eun n1, object guess = 0)
 		guess = ToEun(a, n1[4], n1[3])
 	end if
 	if n1[4] != guess[4] then
-		puts(1, "Error(5):  In MyEuNumber, radixes do not equal.  See file: ex.err\n")
-		abort(1/0)
-	end if
-	if n1[3] > guess[3] then
-		targetLength = n1[3]
-	else
-		targetLength = guess[3]
+		guess = EunConvert(guess, n1[4], n1[3])
 	end if
 	if IsIntegerEven(n) then
 		if length(n1[1]) and n1[1][1] < 0 then
 			if realMode then
-				call_proc(realModeErrorCallBackId, {})
+				call_proc(divideCallBackId, {4})
 			end if
 			-- factor out sqrt(-1)
 			isImag = 1
@@ -1882,7 +1938,7 @@ public function EunNthRoot(PositiveScalar n, Eun n1, object guess = 0)
 			guess[1] = Negate(guess[1])
 		end if
 	end if
-	ret = NthRootExp(n, n1[1], n1[2], guess[1], guess[2], targetLength, n1[4])
+	ret = NthRootExp(n, n1[1], n1[2], guess[1], guess[2], n1[3], n1[4])
 	exp1 = floor(exp1 / n)
 	ret[2] += exp1
 	if IsIntegerOdd(n) then
@@ -1960,7 +2016,7 @@ public function GetArcTanMoreAccuracy()
 end function
 
 public integer arcTanIter = 1000000000
-public integer arcTanCount = -1
+public integer arcTanCount = 0
 
 public sequence arcTanHowComplete = {-1, 0}
 
@@ -2023,8 +2079,8 @@ public function ArcTanExp(sequence n1, integer exp1, TargetLength targetLength, 
 		sleep(nanosleep)
 	end for
 	if arcTanCount = arcTanIter then
-		puts(1, "Error(4):  In MyEuNumber, too many iterations.  Unable to calculate number.\n  See file: ex.err\n")
-		abort(1/0)
+		call_proc(divideCallBackId, {3})
+		return {}
 	end if
 	return ret
 end function
@@ -2054,7 +2110,7 @@ public function GetPI(TargetLength targetLength = defaultTargetLength, integer r
 end function
 
 
-public integer ExpExp1Iter = 1000
+public integer expExp1Iter = 1000
 public sequence exp1HowComplete = {-1, 0}
 
 public function ExpExp1(sequence n1, integer exp1, TargetLength targetLength, AtomRadix radix)
@@ -2080,13 +2136,13 @@ public function ExpExp1(sequence n1, integer exp1, TargetLength targetLength, At
 	sequence sum, tmp, den
 	exp1HowComplete = {-1, 0}
 	sum = {{1}, 0}
-	den = {{ExpExp1Iter + 1}, 0}
-	for i = ExpExp1Iter to 1 by -1 do
+	den = {{expExp1Iter + 1}, 0}
+	for i = expExp1Iter to 1 by -1 do
 		den = AddExp(den[1], den[2], {-1}, 0, targetLength, radix)
 		tmp = DivideExp(n1, exp1, den[1], den[2], targetLength, radix)
 		sum = MultiplyExp(sum[1], sum[2], tmp[1], tmp[2], targetLength, radix)
 		sum = AddExp(sum[1], sum[2], {1}, 0, targetLength, radix)
-		exp1HowComplete = {i, ExpExp1Iter}
+		exp1HowComplete = {i, expExp1Iter}
 		sleep(nanosleep)
 	end for
 	return sum
@@ -2195,7 +2251,7 @@ public function GetExpMoreAccuracy()
 end function
 
 public integer expExpIter = 1000000000
-public integer expExpCount = -1
+public integer expExpCount = 0
 
 public sequence expHowComplete = {-1, 0}
 
@@ -2259,8 +2315,8 @@ public function ExpExp(sequence n1, integer exp1, TargetLength targetLength, Ato
 		sleep(nanosleep)
 	end for
 	if expExpCount = expExpIter then
-		puts(1, "Error(4):  In MyEuNumber, too many iterations.  Unable to calculate number.\n  See file: ex.err\n")
-		abort(1/0)
+		call_proc(divideCallBackId, {3})
+		return {}
 	end if
 	return ret
 end function
@@ -2375,8 +2431,8 @@ public function EunExpFast(Eun numerator, Eun denominator)
 -- e^(x/y) = 1 + 2x/(2y-x+x^2/(6y+x^2/(10y+x^2/(14y+x^2/(18y+x^2/(22y+...
 	TargetLength targetLength
 	if numerator[4] != denominator[4] then
-		puts(1, "Error(5):  In MyEuNumber, radixes do not equal.  See file: ex.err\n")
-		abort(1/0)
+		call_proc(divideCallBackId, {5})
+		return {}
 	end if
 	if numerator[3] > denominator[3] then
 		targetLength = numerator[3]
@@ -2401,6 +2457,8 @@ public function EunExpFast(Eun numerator, Eun denominator)
 	return tmp1
 end function
 
+-- Logarithms:
+
 public PositiveOption logMoreAccuracy = -1 -- if -1, then use calculationSpeed
 
 public procedure SetLogMoreAccuracy(PositiveOption i)
@@ -2411,7 +2469,7 @@ public function GetLogMoreAccuracy()
 end function
 
 public integer logIter = 1000000000 -- 50
-public integer logIterCount = -1
+public integer logIterCount = 0
 
 public sequence logHowComplete = {-1, 0}
 
@@ -2454,41 +2512,45 @@ public function LogExp(sequence n1, integer exp1, sequence guess, integer exp0, 
 		sleep(nanosleep)
 	end for
 	if logIterCount = logIter then
-		puts(1, "Error(4):  In MyEuNumber, too many iterations.  Unable to calculate number.\n  See file: ex.err\n")
-		abort(1/0)
+		call_proc(divideCallBackId, {3})
+		return {}
 	end if
 	return ret
 end function
 
-public function EunLog(Eun n1)
-	object tmp
-	sequence guess, ret
+public function EunLog(Eun n1, object guess = 0)
+	sequence ret
 	integer isImag
 	atom a
-	tmp = ToAtom(n1)
-	a = tmp
-	if a < 0 then
-		-- result would be an imaginary number (imag == i)
-		-- ln(-1) = PI * i
-		-- ln(-a) = ln(a) + (PI * i)
-		isImag = 1
-		a = -a -- atom
-		n1[1] = Negate(n1[1])
-	else
-		isImag = 0
+	if atom(guess) then
+		guess = ToAtom(n1)
+		a = guess
+		isImag = (a < 0)
+		if isImag then
+			-- result would be an imaginary number (imag == i)
+			-- ln(-1) = PI * i
+			-- ln(-a) = ln(a) + (PI * i)
+			a = -a -- atom
+			n1[1] = Negate(n1[1])
+		end if
+		a = log(a) -- it makes a guess
+		guess = ToEun(a)
 	end if
-	a = log(a) -- it makes a guess
-	tmp = ToEun(a)
-	guess = tmp
 	if n1[4] != guess[4] then
 		guess = EunConvert(guess, n1[4], n1[3])
 	end if
 	ret = LogExp(n1[1], n1[2], guess[1], guess[2], n1[3], n1[4])
 	if isImag then
-		return {ret, GetPI(ret[3], ret[4])}
+		return { ret, GetPI(ret[3], ret[4]) }
 	else
 		return ret
 	end if
+end function
+
+-- Powers: a number (base), raised to the power of another number (raisedTo)
+
+public function EunPower(Eun base, Eun raisedTo)
+	return EunExp(EunMultiply(EunLog(base), raisedTo))
 end function
 
 --BEGIN TRIG FUNCTIONS:
@@ -2557,7 +2619,7 @@ public function GetSinMoreAccuracy()
 end function
 
 public integer sinIter = 1000000000 -- 500
-public integer sinIterCount = -1
+public integer sinIterCount = 0
 
 public function IsPositiveOdd(integer i)
     return and_bits(i, 1)
@@ -2620,8 +2682,8 @@ public function SinExp(sequence n1, integer exp1, TargetLength targetLength, Ato
 		sleep(nanosleep)
 	end for
 	if sinIterCount = sinIter then
-		puts(1, "Error(4):  In MyEuNumber, too many iterations.  Unable to calculate number.\n  See file: ex.err\n")
-		abort(1/0)
+		call_proc(divideCallBackId, {3})
+		return {}
 	end if
 	return ans
 end function
@@ -2638,7 +2700,7 @@ public function GetCosMoreAccuracy()
 end function
 
 public integer cosIter = 1000000000 -- 500
-public integer cosIterCount = -1
+public integer cosIterCount = 0
 
 public function CosExp(sequence n1, integer exp1, TargetLength targetLength, AtomRadix radix)
 -- cos(x) = 1 - ((x^2)/(2!)) + ((x^4)/(4!)) - ((x^6)/(6!)) + ((x^8)/(8!)) - ...
@@ -2687,8 +2749,8 @@ public function CosExp(sequence n1, integer exp1, TargetLength targetLength, Ato
 		sleep(nanosleep)
 	end for
 	if cosIterCount = cosIter then
-		puts(1, "Error(4):  In MyEuNumber, too many iterations.  Unable to calculate number.\n  See file: ex.err\n")
-		abort(1/0)
+		call_proc(divideCallBackId, {3})
+		return {}
 	end if
 	return ans
 end function
@@ -2786,7 +2848,7 @@ public function GetArcSinMoreAccuracy()
 end function
 
 public integer arcSinIter = 1000000000
-public integer arcSinIterCount = -1
+public integer arcSinIterCount = 0
 
 public sequence arcSinHowComplete = {-1, 0}
 
@@ -2842,8 +2904,8 @@ public function ArcSinExp(sequence n1, integer exp1, TargetLength targetLength, 
 		sleep(nanosleep)
 	end for
 	if arcSinIterCount = arcSinIter then
-		puts(1, "Error(4):  In MyEuNumber, too many iterations.  Unable to calculate number.\n  See file: ex.err\n")
-		abort(1/0)
+		call_proc(divideCallBackId, {3})
+		return {}
 	end if
 	return ret
 end function
@@ -2920,7 +2982,7 @@ end function
 -- This method for arctan function is Too slow:
 
 -- public integer arctanIter = 1000000000 -- 500
--- public integer lastIterCountArctan = -1
+-- public integer lastIterCountArctan = 0
 -- 
 -- public function ArctanExp(sequence n1, integer exp1, TargetLength targetLength, integer radix)
 -- -- works best with small numbers.
@@ -3183,8 +3245,8 @@ public function EunTriangulation(Eun angleA, Eun angleB, Eun distance, WhichOnes
 	sequence s, tmp
 	integer mode
 	if IsNegative(angleA[1]) or IsNegative(angleB[1]) or IsNegative(distance[1]) then
-		puts(1, "Error(3):  In MyEuNumber, negative argument(s) in \"EunTriangulation()\".\n  See file: ex.err\n")
-		abort(1/0)
+		call_proc(divideCallBackId, {6})
+		return {}
 	end if
 	mode = realMode
 	realMode = TRUE
@@ -3452,6 +3514,20 @@ public function NewComplex(Eun real = NewEun(), Eun imag = NewEun())
 	return {real, imag}
 end function
 
+public function ComplexCompare(Complex c1, Complex c2)
+	integer ret
+	ret = EunCompare(c1[REAL], c2[REAL])
+	if ret then
+		return ret
+	end if
+	ret = EunCompare(c1[IMAG], c2[IMAG])
+	return ret
+end function
+
+public function ComplexAdjustRound(Complex c1, integer adjustBy = 0)
+	return {EunAdjustRound(c1[1], adjustBy), EunAdjustRound(c1[2], adjustBy)}
+end function
+
 -- Negate the imaginary part of a Complex number
 public function NegateImag(Complex a)
 	a[IMAG][1] = Negate(a[IMAG][1])
@@ -3661,21 +3737,6 @@ end function
 
 -- Additions:
 
-public function ComplexCompare(Complex c1, Complex c2)
-	integer ret
-	ret = EunCompare(c1[REAL], c2[REAL])
-	if ret then
-		return ret
-	end if
-	ret = EunCompare(c1[IMAG], c2[IMAG])
-	return ret
-end function
-
-public function ComplexAdjustRound(Complex c1, integer adjustBy = -1)
-	return {EunAdjustRound(c1[1], adjustBy), EunAdjustRound(c1[2], adjustBy)}
-end function
-
-
 public function GetMoreAccuratePrec(Eun value1, PositiveScalar prec)
 -- prec should be less than or equal to value1[3]
 	return AdjustRound(value1[1], value1[2], prec + adjustRound, value1[4])
@@ -3696,10 +3757,6 @@ public function EunTest(Eun val0, Eun ans)
 	val1 = EunAdjustRound(val1)
 	range = Equaln(val0[1], val1[1])
 	return range
-end function
-
-public function EunPower(Eun base, Eun raisedTo)
-	return EunExp(EunMultiply(EunLog(base), raisedTo))
 end function
 
 -- Matrix support:

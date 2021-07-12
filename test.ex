@@ -13,7 +13,7 @@ include my.e
 
 useTaskYield = TRUE
 
-defaultRadix = 1000000 -- NOTE: If you change this, also change "%06d", below, as well.
+defaultRadix = 1000 -- NOTE: If you change this, also change "%03d", below, as well.
 
 type boolean(integer x)
 	return Bool(x)
@@ -36,11 +36,11 @@ procedure calc(integer len)
 	
 	task_yield()
 	
-	calculationSpeed = floor(len / 2)
+	calculationSpeed = floor(len / 3)
 	adjustRound = floor(len / 10)
 	
 	a = GetE(len)
-	pretty_print(1, a, {0, 2, 1, 78, "%06d"})
+	pretty_print(1, a, {0, 2, 1, 78, "%03d"})
 	puts(1, "\n\n")
 	? length(a[1])
 	a = ToString(a)
@@ -59,7 +59,7 @@ puts(1, "main task: start, press \"q\" to force stop\n")
 atom t1, t2
 
 t1 = task_create(routine_id("checkHowComplete"), {})
-t2 = task_create(routine_id("calc"), {100})
+t2 = task_create(routine_id("calc"), {200})
 
 task_schedule(t1, {1, 2})
 task_schedule(t2, 1)
