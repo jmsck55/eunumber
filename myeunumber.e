@@ -58,7 +58,7 @@ end ifdef
 -- NOTE: Negated integer named variables should be in parenthesis.
 
 public function GetVersion() -- revision number
-	return 177 -- completely type checked version
+	return 178 -- completely type checked version
 end function
 
 -- MyEunumber
@@ -140,36 +140,42 @@ end function
 -- EunfDiv(Eun num, Eun den) -- similar to C's "div()"
 -- EunfMod(Eun num, Eun den) -- similar to C's "fmod()", just the "mod" or remainder
 
+public constant DOUBLE_LARGEST = 1.0e+300
+public constant DOUBLE_SMALLEST = 1.0e-300
 ifdef BITS64 then
-public constant DOUBLE_MAX = 18446744073709551615 -- (power(2, 64) - 1)
-public constant DOUBLE_MIN = -DOUBLE_MAX
+public constant DOUBLE_INT_MAX = 18446744073709551615 -- (power(2, 64) - 1)
+public constant DOUBLE_INT_MIN = - (DOUBLE_INT_MAX)
 public constant INT_MAX = power(2, 62) - 1 -- value: 4611686018427387903
 public constant INT_MAX10 = power(10, 18) -- value: 1000000000000000000
 public constant MAX_RADIX10 = power(10, 6) -- value: 1000000
 public constant MAX_RADIX = MAX_RADIX10 -- power(2, floor(62/2)-4) -- value: 134217728
-public constant DOUBLE_RADIX = MAX_RADIX10 -- floor(sqrt(DOUBLE_MAX)) + 1 -- 4294967296
+public constant DOUBLE_RADIX = MAX_RADIX10 -- floor(sqrt(DOUBLE_INT_MAX)) + 1 -- 4294967296
 public constant DOUBLE_RADIX10 = MAX_RADIX10 -- 1000000000
 elsedef
-public constant DOUBLE_MAX = 9007199254740991 -- (power(2, 53) - 1)
-public constant DOUBLE_MIN = -DOUBLE_MAX
+public constant DOUBLE_INT_MAX = 9007199254740991 -- (power(2, 53) - 1)
+public constant DOUBLE_INT_MIN = - (DOUBLE_INT_MAX)
 public constant INT_MAX = power(2, 30) - 1 -- value: 1073741823
 public constant INT_MAX10 = power(10, 9) -- value: 1000000000
 public constant MAX_RADIX10 = power(10, 3) -- value: 1000
 public constant MAX_RADIX = MAX_RADIX10 -- power(2, floor(30/2)-4) -- value: 2048
-public constant DOUBLE_RADIX = MAX_RADIX10 -- floor(sqrt(DOUBLE_MAX)) + 1 -- 94906266
+public constant DOUBLE_RADIX = MAX_RADIX10 -- floor(sqrt(DOUBLE_INT_MAX)) + 1 -- 94906266
 public constant DOUBLE_RADIX10 = MAX_RADIX10 -- 10000000
 end ifdef
 
-public function iff(integer condition, object iftrue, object iffalse)
-	if condition then
-		return iftrue
-	else
-		return iffalse
-	end if
-end function
+--public function iff(integer condition, object iftrue, object iffalse)
+--	if condition then
+--		return iftrue
+--	else
+--		return iffalse
+--	end if
+--end function
 
 public function abs(atom a)
-	return iff(a >= 0, a, -(a))
+	if a >= 0 then
+		return a
+	else
+		return - (a)
+	end if
 end function
 
 public function Ceil(atom a)
@@ -301,9 +307,8 @@ public integer iter = 1000000000 -- max number of iterations before returning
 public integer lastIterCount = 0 -- MultiplicativeInverseExp has not been called yet, so the value is -1
 
 -- public constant ATOM_EPSILON = 2.22044604925031308085e-16 -- DBL_EPSILON 64-bit
--- public constant ATOM_MAX = 1.0e+308 -- 1.79769313486231570815e+308 -- DBL_MAX 64-bit
--- public constant ATOM_MIN = 1.0e-308 -- 2.22507385850720138309e-308 -- DBL_MIN 64-bit
-public constant LOG_INT_MAX = log(INT_MAX)
+public constant LOG_ATOM_SMALLEST = log(1.0e-300)
+public constant LOG_ATOM_LARGEST = log(1.0e+300)
 
 public constant ROUND_INF = 1 -- Round towards +infinity or -infinity, (positive or negative infinity)
 public constant ROUND_ZERO = 2 -- Round towards zero
@@ -887,7 +892,10 @@ public function MultiplyExp(sequence n1, integer exp1, sequence n2, integer exp2
 		multLen += 1
 	end if
 	len = length(n1) + length(n2) - 1
-	numArray = Multiply(n1, n2, iff(len < multLen, len, multLen))
+	if multLen < len then
+		len = multLen
+	end if
+	numArray = Multiply(n1, n2, len)
 	ret = AdjustRound(numArray, exp1 + exp2, targetLength, radix, FALSE) -- TRUE for backwards compatability
 	return ret
 end function
@@ -987,26 +995,36 @@ public function ProtoMultiplicativeInverseExp(sequence guess, integer exp0, sequ
 end function
 
 
-public function IntToDigits(atom x, AtomRadix radix, integer raised, integer optionNegOne = 1)
+public function IntToDigits(atom x, AtomRadix radix, integer raised = 0, integer optionNegOne = 1)
 	sequence numArray
 	atom a
+if raised then
 	numArray = repeat(0, raised)
 	for i = raised to 1 by -1 do
-	-- while x != 0 do
 		a = remainder(x, radix)
 		numArray[i] = a * optionNegOne
-		-- numArray = prepend(numArray, a * optionNegOne)
-		x = floor(x / radix) -- must be Round() to work on negative numbers
+		x = RoundTowardsZero(x / radix) -- must be Round() to work on negative numbers
 		sleep(nanosleep)
-	-- end while
 	end for
+else
+	numArray = {}
+	while x != 0 do
+		a = remainder(x, radix)
+		numArray = prepend(numArray, a * optionNegOne)
+		x = RoundTowardsZero(x / radix) -- must be Round() to work on negative numbers
+		sleep(nanosleep)
+	end while
+end if
 	return numArray
 end function
 
+constant logTen = log(10)
 integer sigDigits = 0
+integer minSigDigits = 0
+integer maxSigDigits = 0
 atom static_multInvRadix = 0
 atom static_logRadix = 0
-
+--here
 public function ExpToAtom(sequence n1, integer exp1, PositiveInteger targetLen, AtomRadix radix)
 	atom p, ans, lookat, ele
 	integer overflowBy
@@ -1016,10 +1034,12 @@ public function ExpToAtom(sequence n1, integer exp1, PositiveInteger targetLen, 
 	if static_multInvRadix != radix then
 		static_multInvRadix = radix
 		static_logRadix = log(radix)
-		sigDigits = floor(floor(LOG_INT_MAX / static_logRadix) / 2) -- not used in this function, kept to make everything work properly.
+		sigDigits = Ceil(15 / (log(radix) / logTen))
+		minSigDigits = floor(LOG_ATOM_SMALLEST / static_logRadix)
+		maxSigDigits = floor(LOG_ATOM_LARGEST / static_logRadix)
 	end if
 	-- what if exp1 is too large?
-	overflowBy = exp1 - sigDigits + 2 -- +2 may need to be bigger
+	overflowBy = exp1 - maxSigDigits + 2 -- +2 may need to be bigger
 			-- overflowBy = exp1 - floor(LOG_ATOM_MAX / p) + 2 -- +2 may need to be bigger
 	if overflowBy > 0 then
 		-- overflow warning in "power()" function
@@ -1027,12 +1047,12 @@ public function ExpToAtom(sequence n1, integer exp1, PositiveInteger targetLen, 
 		exp1 -= overflowBy
 	else
 		-- what if exp1 is too small?
-		overflowBy = exp1 - sigDigits - 2 -- -2 may need to be bigger
+		overflowBy = exp1 - minSigDigits - 2 -- -2 may need to be bigger
 				-- overflowBy = exp1 - floor(LOG_ATOM_MIN / p) - 2 -- -2 may need to be bigger
 		if overflowBy < 0 then
 			exp1 -= overflowBy
-		--else
-		--	overflowBy = 0
+		else
+			overflowBy = 0
 		end if
 	end if
 	exp1 -= targetLen
@@ -1057,51 +1077,62 @@ end function
 
 public function GetGuess(sequence den, integer protoTargetLength, AtomRadix radix)
 	sequence guess, tmp
-	atom denom, one, rem
-	integer raised, quot, optionNegOne
+	atom denom, one, rem, quot, ans
+	integer raised, optionNegOne, mySigDigits
+	den = TrimTrailingZeros(den)
 	if static_multInvRadix != radix then
 		static_multInvRadix = radix
 		static_logRadix = log(radix)
-		sigDigits = floor(floor(LOG_INT_MAX / static_logRadix) / 2)
+		sigDigits = Ceil(15 / (log(radix) / logTen))
+		minSigDigits = floor(LOG_ATOM_SMALLEST / static_logRadix)
+		maxSigDigits = floor(LOG_ATOM_LARGEST / static_logRadix)
 	end if
 		--ifdef BITS64 then
 		--	sigDigits = Ceil(18 / (log(radix) / log(10)))
 		--elsedef
 		--	sigDigits = Ceil(15 / (log(radix) / log(10)))
 		--end ifdef
-		--if protoTargetLength < sigDigits then
-		--	mySigDigits = protoTargetLength
-		--else
-		--	mySigDigits = sigDigits
-		--end if
+	if protoTargetLength < sigDigits then
+		mySigDigits = protoTargetLength
+	else
+		mySigDigits = sigDigits
+	end if
 	raised = length(den) - 1
-	tmp = ExpToAtom(den, raised, iff(protoTargetLength < sigDigits, protoTargetLength, sigDigits), radix)
+	tmp = ExpToAtom(den, raised, mySigDigits, radix)
 	denom = tmp[1]
 	raised -= tmp[2]
 	one = power(radix, raised)
-	if raised < 0 then
-		raised = - (raised)
-	end if
-	-- ans = RoundTowardsZero(one / denom)
-	-- guess = IntToDigits(ans, radix) -- works on negative numbers
-	rem = one
-	guess = {}
-	optionNegOne = (denom >= 0)
-	if not optionNegOne then
-		denom = - (denom)
-	end if
-	optionNegOne *= 2
-	optionNegOne -= 1
-	while length(guess) < protoTargetLength do
-		quot = floor(rem / denom)
-		rem = remainder(rem, denom)
-		rem *= one
-		guess = guess & IntToDigits(quot, radix, raised, optionNegOne)
-	end while
+	ans = RoundTowardsZero(one / denom)
+	guess = IntToDigits(ans, radix) -- works on negative numbers
 	-- tmp = AdjustRound(guess, exp1, mySigDigits - 1, radix, FALSE)
 	-- tmp[3] = protoTargetLength
 	return guess
 end function
+
+--public function LongDivision()
+--	if raised < 0 then
+--		raised = - (raised)
+--	end if
+--	optionNegOne = (denom >= 0)
+--	if not optionNegOne then
+--		denom = - (denom)
+--	end if
+--	--rem = guess[$]
+--	--guess = guess[1..$-1]
+--	rem = 1 -- note: could be anything.
+--	guess = {}
+--	optionNegOne *= 2
+--	optionNegOne -= 1
+--	while length(guess) < protoTargetLength do
+--		quot = floor(rem / denom)
+--		rem = remainder(rem, denom)
+--		if rem = 0 then
+--			exit
+--		end if
+--		rem *= radix
+--		guess = guess & IntToDigits(quot, radix, raised, optionNegOne)
+--	end while
+--end function
 
 public procedure DefaultDivideCallBack(integer i)
 	if i = 1 then
@@ -1222,7 +1253,7 @@ end function
 
 
 public function IsProperLengthAndRadix(TargetLength targetLength = defaultTargetLength, AtomRadix radix = defaultRadix)
-	return (targetLength * power(radix - 1, 3) <= DOUBLE_MAX)
+	return (targetLength * power(radix - 1, 3) <= DOUBLE_INT_MAX)
 --here
 -- On 64-bit systems, long double has significand precision of 64 bits: DOUBLE_MAX = (power(2, 64) - 1) -- value: 18446744073709551615
 -- On 32-bit systems, double has significand precision of 53 bits: DOUBLE_MAX = (power(2, 53) - 1) -- value: 9007199254740991
@@ -1377,10 +1408,20 @@ public function CompareExp(sequence n1, integer exp1, sequence n2, integer exp2)
 		if length(n2) = 0 then
 			return 0
 		end if
-		return iff(n2[1] > 0, -1, 1)
+		if n2[1] > 0 then
+			return -1
+		else
+			return 1
+		end if
+		-- return iff(n2[1] > 0, -1, 1)
 	end if
 	if length(n2) = 0 then
-		return iff(n1[1] > 0, 1, -1)
+		if n2[1] > 0 then
+			return 1
+		else
+			return -1
+		end if
+		-- return iff(n1[1] > 0, 1, -1)
 	end if
 	-- Case of unequal signs (mismatch of signs, sign(n1) xor sign(n2))
 	if n1[1] > 0 then
@@ -1787,7 +1828,7 @@ public function ToEun(object s, AtomRadix radix = defaultRadix, TargetLength tar
 		s = ToString(s)
 	end if
 	s = StringToNumberExp(s)
-	s = s & {Ceil((log(radix) / log(10)) * targetLength), 10, 0}
+	s = s & {Ceil((log(radix) / logTen) * targetLength), 10, 0}
 	if atom(s[1]) then
 		return s
 	end if
