@@ -549,13 +549,6 @@ public function GetRound()
 	return my:GetRound()
 end function
 
-public function GetExpFastIter()
-	return my:GetExpFastIter()
-end function
-public procedure SetExpFastIter(integer i)
-	my:SetExpFastIter(i)
-end procedure
-
 public function GetMultInvIter()
 	return my:iter
 end function
@@ -665,7 +658,7 @@ public function GetArcSinIter()
 	return my:arcSinIter
 end function
 public procedure SetArcSinIter(integer i)
-	my:ArcSinIter = i
+	my:arcSinIter = i
 end procedure
 public function GetLastArcSinIterCount()
 	return my:arcSinIterCount
@@ -1008,14 +1001,14 @@ public function EunNthRoot(integer dstEunId, integer dstExtraEunId, integer n, i
 end function
 
 public function EunSquareRoot(integer dstEunId, integer dstExtraEunId, integer n1)
-	return EunNthRoot(dstEunId, dstExtraEunId, 2, n1)
+	return EunNthRoot(dstEunId, dstExtraEunId, 2, n1, 0)
 end function
 
 public procedure EunCubeRoot(integer dstEunId, integer n1)
 	-- results are never imaginary for "EunCubeRoot()"
 	-- return result in "dstEunId" just like the other NthRoot functions.
 	-- treat function as procedure:
-	if EunNthRoot(dstEunId, NULL, 3, n1) then
+	if EunNthRoot(dstEunId, NULL, 3, n1, 0) then
 	end if
 end procedure
 
