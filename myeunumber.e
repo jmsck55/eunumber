@@ -58,7 +58,7 @@ end ifdef
 -- NOTE: Negated integer named variables should be in parenthesis.
 
 public function GetVersion() -- revision number
-	return 176 -- completely type checked version
+	return 177 -- completely type checked version
 end function
 
 -- MyEunumber
@@ -580,7 +580,7 @@ public function ConvertRadix(sequence number, AtomRadix fromRadix, AtomRadix toR
 end function
 
 public function Multiply(sequence n1, sequence n2, integer len = length(n1) + length(n2) - 1)
-	integer f, j, k, len1, len2
+	integer f, j, len1, len2
 	atom g
 	sequence numArray
 	len1 = length(n1)
@@ -591,12 +591,31 @@ public function Multiply(sequence n1, sequence n2, integer len = length(n1) + le
 	-- len = len1 + len2 - 1
 -- This method may be faster:
 	numArray = repeat(0, len)
-	f = len2
-	for i = 1 to length(n1) do
+	-- f1 = len2
+	-- k = iff(len < f1, len, f1)
+	f = 1
+	if len > len2 then
+		for k = len2 to len do
+		-- for i = 1 to length(n1) do
+			g = n1[f]
+			j = 1
+			-- k = iff(len < f1, len, f1)
+			for h = f to k do
+				numArray[h] += g * n2[j]
+				j += 1
+				sleep(nanosleep)
+			end for
+			f += 1
+			sleep(nanosleep)
+		-- end for
+		-- sleep(nanosleep)
+		end for
+	end if
+	for i = f to length(n1) do
 		g = n1[i]
 		j = 1
-		k = iff(len < f, len, f)
-		for h = i to k do
+		-- k = iff(len < f1, len, f1)
+		for h = i to len do
 			numArray[h] += g * n2[j]
 			j += 1
 			sleep(nanosleep)
@@ -851,7 +870,7 @@ atom multlogt, multlogr
 
 public function MultiplyExp(sequence n1, integer exp1, sequence n2, integer exp2, TargetLength targetLength, AtomRadix radix)
 	sequence numArray, ret
-	integer flag = 0
+	integer len, flag = 0
 	if multLastLen != targetLength then
 		multLastLen = targetLength
 		multlogt = log(targetLength)
@@ -867,7 +886,8 @@ public function MultiplyExp(sequence n1, integer exp1, sequence n2, integer exp2
 		multLen += Ceil(multlogt / multlogr)
 		multLen += 1
 	end if
-	numArray = Multiply(n1, n2, multLen)
+	len = length(n1) + length(n2) - 1
+	numArray = Multiply(n1, n2, iff(len < multLen, len, multLen))
 	ret = AdjustRound(numArray, exp1 + exp2, targetLength, radix, FALSE) -- TRUE for backwards compatability
 	return ret
 end function
