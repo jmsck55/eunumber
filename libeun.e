@@ -22,7 +22,7 @@ include classfile.e as matrix
 include myeunumber.e as my
 
 public function Version()
-	return 57 -- Need to debug with Wrapper "Stub" (myeun.h)
+	return 58 -- Need to debug with Wrapper "Stub" (myeun.h)
 end function
 
 public function UsingHowManyBits()
@@ -159,7 +159,10 @@ function NewFromEun(object n1)
 end function
 
 public function NewEun(integer arrayid, integer exp, integer targetLength, integer radix, Bool sign_of_exp)
-	return NewFromEun(my:NewEun(numArray:get_data_from_object(arrayid), iff(sign_of_exp, -(exp), exp), targetLength, radix))
+	if sign_of_exp then
+		exp = -(exp)
+	end if
+	return NewFromEun(my:NewEun(numArray:get_data_from_object(arrayid), exp, targetLength, radix))
 end function
 
 public function NewEunWithPointer(integer arrayid, integer signedExponentPointerId, integer targetLength, integer radix)
@@ -670,11 +673,19 @@ end procedure
 -- MyEuNumber Functions:
 
 public function Min(integer a, integer b)
-	return my:iff(a < b, a, b)
+	if a < b then
+		return a
+	else
+		return b
+	end if
 end function
 
 public function Max(integer a, integer b)
-	return my:iff(a > b, a, b)
+	if a > b then
+		return a
+	else
+		return b
+	end if
 end function
 
 public function RoundTowardsZero(integer dblId)
@@ -778,26 +789,50 @@ end function
 
 public function AdjustRound(integer num, integer exponent, integer targetLength, integer radix, integer optionsIsMixed, Bool isNegExp)
 	-- default optionsIsMixed is 1, can be: (0, 1, 2)
-	return NewFromEun(my:AdjustRound(numArray:get_data_from_object(num), iff(isNegExp, -(exponent), exponent), targetLength, radix, optionsIsMixed))
+	if isNegExp then
+		exponent = - (exponent)
+	end if
+	return NewFromEun(my:AdjustRound(numArray:get_data_from_object(num), exponent, targetLength, radix, optionsIsMixed))
 end function
 
 --here, make Exp functions have flags for "exp1 and exp2"'s sign.
 
 
 public function MultiplyExp(integer n1, integer exp1, integer n2, integer exp2, integer targetLength, integer radix, Bool isNegExp1, Bool isNegExp2)
-	return NewFromEun(my:MultiplyExp(numArray:get_data_from_object(n1), iff(isNegExp1, -(exp1), exp1), numArray:get_data_from_object(n2), iff(isNegExp2, -(exp2), exp2), targetLength, radix))
+	if isNegExp1 then
+		exp1 = - (exp1)
+	end if
+	if isNegExp2 then
+		exp2 = - (exp2)
+	end if
+	return NewFromEun(my:MultiplyExp(numArray:get_data_from_object(n1), exp1, numArray:get_data_from_object(n2), exp2, targetLength, radix))
 end function
 
 public function SquareExp(integer n1, integer exp1, integer targetLength, integer radix, Bool isNegExp1)
-	return NewFromEun(my:SquareExp(numArray:get_data_from_object(n1), iff(isNegExp1, -(exp1), exp1), targetLength, radix))
+	if isNegExp1 then
+		exp1 = - (exp1)
+	end if
+	return NewFromEun(my:SquareExp(numArray:get_data_from_object(n1), exp1, targetLength, radix))
 end function
 
 public function AddExp(integer n1, integer exp1, integer n2, integer exp2, integer targetLength, integer radix, Bool isNegExp1, Bool isNegExp2)
-	return NewFromEun(my:AddExp(numArray:get_data_from_object(n1), iff(isNegExp1, -(exp1), exp1), numArray:get_data_from_object(n2), iff(isNegExp2, -(exp2), exp2), targetLength, radix))
+	if isNegExp1 then
+		exp1 = - (exp1)
+	end if
+	if isNegExp2 then
+		exp2 = - (exp2)
+	end if
+	return NewFromEun(my:AddExp(numArray:get_data_from_object(n1), exp1, numArray:get_data_from_object(n2), exp2, targetLength, radix))
 end function
 
 public function SubtractExp(integer n1, integer exp1, integer n2, integer exp2, integer targetLength, integer radix, Bool isNegExp1, Bool isNegExp2)
-	return NewFromEun(my:SubtractExp(numArray:get_data_from_object(n1), iff(isNegExp1, -(exp1), exp1), numArray:get_data_from_object(n2), iff(isNegExp2, -(exp2), exp2), targetLength, radix))
+	if isNegExp1 then
+		exp1 = - (exp1)
+	end if
+	if isNegExp2 then
+		exp2 = - (exp2)
+	end if
+	return NewFromEun(my:SubtractExp(numArray:get_data_from_object(n1), exp1, numArray:get_data_from_object(n2), exp2, targetLength, radix))
 end function
 
 procedure dummy(integer i)
@@ -812,19 +847,31 @@ public function MultiplicativeInverseExp(integer den1, integer exp1, integer tar
 	if guess > 0 then
 		s = numArray:get_data_from_object(guess)
 	end if
-	s = my:MultiplicativeInverseExp(numArray:get_data_from_object(den1), iff(isNegExp1, -(exp1), exp1), targetLength, radix, s)
+	if isNegExp1 then
+		exp1 = - (exp1)
+	end if
+	s = my:MultiplicativeInverseExp(numArray:get_data_from_object(den1), exp1, targetLength, radix, s)
 	return NewFromEun(s)
 end function
 --here
 public function DivideExp(integer num1, integer exp1, integer den2, integer exp2, integer targetLength, integer radix, Bool isNegExp1, Bool isNegExp2)
 	sequence s
-	s = my:DivideExp(numArray:get_data_from_object(num1), iff(isNegExp1, -(exp1), exp1), numArray:get_data_from_object(den2), iff(isNegExp2, -(exp2), exp2), targetLength, radix)
+	if isNegExp1 then
+		exp1 = - (exp1)
+	end if
+	if isNegExp2 then
+		exp2 = - (exp2)
+	end if
+	s = my:DivideExp(numArray:get_data_from_object(num1), exp1, numArray:get_data_from_object(den2), exp2, targetLength, radix)
 	return NewFromEun(s)
 end function
 
 public function ConvertExp(integer n1, integer exp1, integer targetLength, integer fromRadix, integer toRadix, Bool isNegExp1)
 	sequence s
-	s = my:ConvertExp(numArray:get_data_from_object(n1), iff(isNegExp1, -(exp1), exp1), targetLength, fromRadix, toRadix)
+	if isNegExp1 then
+		exp1 = - (exp1)
+	end if
+	s = my:ConvertExp(numArray:get_data_from_object(n1), exp1, targetLength, fromRadix, toRadix)
 	return NewFromEun(s)
 end function
 
@@ -884,7 +931,13 @@ public function EunConvert(integer n1, integer toRadix, integer targetLength)
 end function
 
 public function CompareExp(sequence n1, integer exp1, sequence n2, integer exp2, Bool isNegExp1, Bool isNegExp2)
-	return my:CompareExp(numArray:get_data_from_object(n1), iff(isNegExp1, -(exp1), exp1), numArray:get_data_from_object(n2), iff(isNegExp2, -(exp2), exp2)) + 1
+	if isNegExp1 then
+		exp1 = - (exp1)
+	end if
+	if isNegExp2 then
+		exp2 = - (exp2)
+	end if
+	return my:CompareExp(numArray:get_data_from_object(n1), exp1, numArray:get_data_from_object(n2), exp2) + 1
 end function
 
 public function GetEqualLength()
@@ -973,9 +1026,15 @@ end function
 
 public function NthRootExp(PositiveScalar n, integer x1, integer exp1, integer guess, integer exp2, integer targetLength, integer radix, Bool isNegExp1, Bool isNegExp2)
 	sequence n1, n2
+	if isNegExp1 then
+		exp1 = - (exp1)
+	end if
+	if isNegExp2 then
+		exp2 = - (exp2)
+	end if
 	n1 = numArray:get_data_from_object(x1)
 	n2 = numArray:get_data_from_object(guess)
-	return NewFromEun(my:NthRootExp(n, n1, iff(isNegExp1, -(exp1), exp1), n2, iff(isNegExp2, -(exp2), exp2), targetLength, radix))
+	return NewFromEun(my:NthRootExp(n, n1, exp1, n2, exp2, targetLength, radix))
 end function
 
 public function EunNthRoot(integer dstEunId, integer dstExtraEunId, integer n, integer n1, integer guess1) -- guess can be zero (0)

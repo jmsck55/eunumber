@@ -3,6 +3,7 @@
 // "Stub" test program.
 
 #include <stdio.h>
+#include <float.h>
 
 #include "myeun.h"
 
@@ -17,7 +18,7 @@
 
 int main()
 {
-    // int i;
+    int mant = DBL_MANT_DIG;
 #if __SIZEOF_POINTER__ == 8
     printf("Using GCC for 64-bit.\n");
 #endif
@@ -27,7 +28,7 @@ int main()
     myeun_PrintVersion();
 
     // Add more code...
-
+    printf("(Informational) Double's mant is: %i\n", mant);
 
     // Remember to free library before exitting.
     myeun_free_library();
