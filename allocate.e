@@ -60,17 +60,26 @@ global function sprint(object x)
 end function
 
 -- pretty print variables
+object pretty_file
 integer pretty_end_col, pretty_chars, pretty_start_col, pretty_level, 
-	pretty_file, pretty_ascii, pretty_indent, pretty_ascii_min,
+	pretty_ascii, pretty_indent, pretty_ascii_min,
 	pretty_ascii_max, pretty_line_count, pretty_line_max, pretty_dots
 sequence pretty_fp_format, pretty_int_format, pretty_line
+
+procedure pretty_puts(object x)
+	if atom(pretty_file) then
+		puts(pretty_file, pretty_line)
+	else
+		pretty_file = pretty_file & x
+	end if
+end procedure
 
 procedure pretty_out(object text)
 -- Output text, keeping track of line length.
 -- Buffering lines speeds up Windows console output.
     pretty_line &= text
     if equal(text, '\n') then
-	puts(pretty_file, pretty_line)
+	pretty_puts(pretty_line)
 	pretty_line = ""
 	pretty_line_count += 1
     end if
@@ -200,35 +209,7 @@ procedure rPrint(object a)
     end if
 end procedure
 
-
-global procedure pretty_print(integer fn, object x, sequence options)
--- Print any Euphoria object x, to file fn, in a form that shows 
--- its structure.
---
--- argument 1: file number to write to
--- argument 2: the object to display
--- argument 3: is an (up to) 8-element options sequence:
---   Pass {} to select the defaults, or set options as below:
---   [1] display ASCII characters:
---       0: never
---       1: alongside any integers in printable ASCII range (default)
---       2: display as "string" when all integers of a sequence 
---          are in ASCII range
---       3: show strings, and quoted characters (only) for any integers 
---          in ASCII range as well as the characters: \t \r \n
---   [2] amount to indent for each level of sequence nesting - default: 2
---   [3] column we are starting at - default: 1
---   [4] approximate column to wrap at - default: 78
---   [5] format to use for integers - default: "%d"
---   [6] format to use for floating-point numbers - default: "%.10g"
---   [7] minimum value for printable ASCII - default 32
---   [8] maximum value for printable ASCII - default 127
---   [9] maximum number of lines to output
--- 
--- If the length is less than 8, unspecified options at 
--- the end of the sequence will keep the default values.    
--- e.g. {0, 5} will choose "never display ASCII", 
--- plus 5-character indentation, with defaults for everything else  
+procedure pretty_options(object fn, sequence options)
     integer n
     
     -- set option defaults 
@@ -278,10 +259,51 @@ global procedure pretty_print(integer fn, object x, sequence options)
     pretty_line = ""
     pretty_line_count = 0
     pretty_dots = 0
-    rPrint(x)
-    puts(pretty_file, pretty_line)
 end procedure
 
+global procedure pretty_print(integer fn, object x, sequence options)
+-- Print any Euphoria object x, to file fn, in a form that shows 
+-- its structure.
+--
+-- argument 1: file number to write to
+-- argument 2: the object to display
+-- argument 3: is an (up to) 8-element options sequence:
+--   Pass {} to select the defaults, or set options as below:
+--   [1] display ASCII characters:
+--       0: never
+--       1: alongside any integers in printable ASCII range (default)
+--       2: display as "string" when all integers of a sequence 
+--          are in ASCII range
+--       3: show strings, and quoted characters (only) for any integers 
+--          in ASCII range as well as the characters: \t \r \n
+--   [2] amount to indent for each level of sequence nesting - default: 2
+--   [3] column we are starting at - default: 1
+--   [4] approximate column to wrap at - default: 78
+--   [5] format to use for integers - default: "%d"
+--   [6] format to use for floating-point numbers - default: "%.10g"
+--   [7] minimum value for printable ASCII - default 32
+--   [8] maximum value for printable ASCII - default 127
+--   [9] maximum number of lines to output
+-- 
+-- If the length is less than 8, unspecified options at 
+-- the end of the sequence will keep the default values.    
+-- e.g. {0, 5} will choose "never display ASCII", 
+-- plus 5-character indentation, with defaults for everything else  
+
+    pretty_options(fn, options)
+    rPrint(x)
+    pretty_puts(pretty_line)
+end procedure
+
+global function pretty_sprint(object x, sequence options)
+    sequence st
+    pretty_options({}, options)
+    rPrint(x)
+    pretty_puts(pretty_line)
+    st = pretty_file
+    pretty_file = {}
+    return st
+end function
 
 -- trig formulas provided by Larry Gregg
 
