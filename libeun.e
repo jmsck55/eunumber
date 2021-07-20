@@ -13,7 +13,6 @@
 
 include allocate.e
 include dll.e
-include std/pretty.e
 include classfile.e as pointers
 include classfile.e as numArray
 include classfile.e as eun

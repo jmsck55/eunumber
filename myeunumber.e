@@ -2,7 +2,7 @@
 -- Eunumber, advanced sequence based arithmetic with exponents
 
 --FILES: (All as one file.)
---namespace my
+--namespace myeunumber
 --public include myeunumber.e
 --public include numio.e
 --public include nthroot.e

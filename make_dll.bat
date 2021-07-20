@@ -14,6 +14,9 @@ SET EDPATH=%ONEDRIVE%\EUPHORIA\WATCOM\EDDAT
 SET WHTMLHELP=%ONEDRIVE%\EUPHORIA\WATCOM\BINNT\HELP
 SET WIPFC=%ONEDRIVE%\EUPHORIA\WATCOM\WIPFC
 pause
+euc -o libminieun.dll -strict -dll -wat -keep libminieun.e
+upx libminieun.dll
+pause
 euc -o libmyeun.dll -strict -dll -wat -keep libeun.e
 upx libmyeun.dll
 pause
