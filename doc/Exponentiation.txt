@@ -1,0 +1,51 @@
+
+-- Exponentiation, e^x
+
+"ln" is log[e](), "log" is log[10]()
+
+e^x = 10^n, solve for x
+10 = radix
+
+e^(n * ln(10)) = 10^n
+10^(x * log(e)) = e^x
+
+n * ln(10) = x
+
+(e^a) * (e^b) = e^(a + b)
+
+e^(m + n * ln(10)) = (e^m) * (e^(n * ln(10))) = (e^m) * (10^n)
+
+x - m = n * ln(10)
+
+x - n * ln(10) = m, floor(x / ln(10)) = n
+
+n = (x - m) / (ln(10))
+
+----
+
+x = 55, n = floor(x / ln(10)) = floor(55 / ln(10)) = 23
+
+m = x - n * ln(10) = 55 - 23 * ln(10) = 2.040542861
+
+e^x = (e^m) * (10^n) = 7.694785265 * 10^23 = e^55
+
+10 can be any radix.
+n becomes the exponent.
+
+-- ----
+-- 
+-- 1. Precalculate:
+-- c = ln(radix)
+-- 
+-- 2. In exp(x), Eun's:
+-- n = floor( x / c )
+-- 
+-- 3. Do the exponentiation:
+-- numArray = e^( x - (n * c) )
+-- 
+-- 4. Round the exponent:
+-- exponent = round(ToAtom(n))
+-- 
+-- 5. Return the Eun:
+-- {numArray, exponent, targetLength = 70, radix = 10}
+

@@ -1,0 +1,15 @@
+
+MyEun.e is a class file, where much of the library's low level functions are hidden.
+They can be found in "minieun.e" and "myeunumber.e"
+
+"*Exp" suffix functions are functions with an exponent.
+"Eun*" prefix functions are functions that use an Eun datatype.
+
+Eun datatypes contain 4 to 6 parts:
+[1] number array (numArray)
+[2] exponent (exp)
+[3] target length (targetLength)
+[4] radix (radix)
+(5) optional, rounded up or rounded down
+(6) optional, precision in radix of 2 (prec)
+

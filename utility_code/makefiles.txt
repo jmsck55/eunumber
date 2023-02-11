@@ -1,0 +1,107 @@
+
+-- -- variables
+-- 
+-- adjustPrecision
+-- isrealmode
+-- 
+-- -- Exponentation and Logarithms
+-- 
+-- EunNthRoot
+-- EunSquareRoot
+-- EunCubeRoot
+-- EunFourthRoot
+-- 
+-- Exponentiation
+-- 
+-- EunExp1
+-- EunExpWhole
+-- EunExp
+-- EunExpFast
+-- 
+-- GetE
+-- 
+-- EunLog
+-- GetPrecision
+-- 
+-- EunPower
+-- EunGeneralRoot
+-- 
+-- -- Trig functions:
+-- 
+-- EunCos
+-- EunSin
+-- EunTan
+-- 
+-- EunArcTanA
+-- EunArcTanB
+-- EunArcTan
+-- EunArcTan2
+-- 
+-- GetPI
+-- 
+-- radiansconvert
+-- 
+-- EunArcSin
+-- EunArcCos
+-- 
+-- EunCsc
+-- EunSec
+-- EunCot
+-- EunArcCsc
+-- EunArcSec
+-- EunArcCot
+-- 
+-- -- Hyperbolic functions:
+-- 
+-- EunSinh
+-- EunCosh
+-- EunTanh
+-- EunCoth
+-- EunSech
+-- EunCsch
+-- 
+-- -- See also:
+-- -- https://en.wikipedia.org/wiki/Inverse_hyperbolic_functions
+-- 
+-- EunArcSinh
+-- EunArcCosh
+-- EunArcTanh
+-- EunArcCoth
+-- EunArcSech
+-- EunArcCsch
+-- 
+-- -- EunTriangulation
+-- 
+-- EunTriangulation
+-- 
+-- -- Find roots of an equation
+-- 
+-- EunFindRoot
+-- 
+-- -- Complex functions
+-- 
+-- Complex
+-- ComplexAdjustRound
+-- ComplexAbsoluteValue
+-- ComplexConjugate
+-- ComplexAdd
+-- ComplexNegate
+-- ComplexSubtract
+-- ComplexMultiply
+-- ComplexSquared
+-- ComplexMultiplicativeInverse
+-- ComplexDivide
+-- ComplexSquareRootA
+-- ComplexSquareRoot
+-- ComplexExp
+-- ComplexLog
+-- ComplexPower
+-- ComplexSin
+-- ComplexCos
+-- ComplexTan
+-- ComplexCosh
+-- ComplexSinh
+-- ComplexArcTanA
+-- ComplexArcTan
+-- ComplexQuadraticEquation
+-- EunQuadraticEquation

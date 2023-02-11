@@ -1,0 +1,107 @@
+Copyright (c) 2021 James Cook
+
+-- Inverse trigonometric functions.
+
+-- NOTES:
+-- arctan() can be used for arcsin() and arccos(). --jjchere, bookmark
+
+Informational:
+
+https://en.wikipedia.org/wiki/Inverse_trigonometric_functions
+
+Name          Usual notation  Definition  Domain of "x" for real result  Range of usual principal value (radians)  Range of usual principal value (degrees)
+----          --------------  ----------  -----------------------------  ----------------------------------------  ----------------------------------------
+arcsine       y=arcsin(x)     x = sin(y)  -1 <= x <= 1                   -(PI / 2) <= y <= (PI / 2)                -90(DEGREES) <= y <= 90(DEGREES)
+arccosine     y=arccos(x)     x = cos(y)  -1 <= x <= 1                   0 <= y <= PI                              0(DEGREES) <= y <= 180(DEGREES)
+arctangent    y=arctan(x)     x = tan(y)  all real numbers               -(PI / 2) <= y <= (PI / 2)                -90(DEGREES) <= y <= 90(DEGREES)
+arccotangent  y=arccot(x)     x = cot(y)  all real numbers               0 <= y <= PI                              0(DEGREES) <= y <= 180(DEGREES)
+arcsecant     y=arcsec(x)     x = sec(y)  x <= -1 [or] x >= 1            0 <= y < (PI / 2) < y <= PI               0(DEGREES) <= y < 90(DEGREES) < y <= 180(DEGREES)
+arccosecant   y=arccsc(x)     x = csc(y)  x <= -1 [or] x >= 1            -(PI / 2) <= y < 0 < y <= (PI / 2)        -90(DEGREES) <= y < 0 < y <= 90(DEGREES)
+
+
+Original function  Abbreviation  Domain                        Image/range                Inverse function  Domain of inverse          Range of usual principal values of inverse
+-----------------  ------------  ------                        -----------                ----------------  -----------------          ------------------------------------------
+sine               sin :         {R}                           [-1, 1]                    arcsin :          [-1, 1]                    [-(pi / 2), (pi / 2)]
+cosine             cos :         {R}                           [-1, 1]                    arccos :          [-1, 1]                    [0, pi]
+tangent            tan :         pi{Z} + (- (pi / 2), pi / 2)  {R}                        arctan :          {R}                        [-(pi / 2), (pi / 2)]
+cotangent          cot :         pi{Z} + (0, pi)               {R}                        arccot :          {R}                        (0, pi)
+secant             sec :         pi{Z} + (- (pi / 2), pi / 2)  (-inf, -1] \cup [1, +inf)  arcsec :          (-inf, -1] \cup [1, +inf)  [0, (pi / 2)) \cup ((pi / 2), pi]
+cosecant           csc :         pi{Z} + (0, pi)               (-inf, -1] \cup [1, +inf)  arccsc :          (-inf, -1] \cup [1, +inf)  [-(pi / 2), 0) \cup (0, (pi / 2)]
+
+
+Given: {R} is all real numbers, {Z} is all integers.
+
+
+>>>Relationships among the inverse trigonometric functions<<<
+
+Complementary angles:
+
+arccos(x) = (PI / 2) - arcsin(x)
+arccot(x) = (PI / 2) - arctan(x)
+arccsc(x) = (PI / 2) - arcsec(x)
+
+Negative arguments:
+
+arcsin(-x) = -arcsin(x)
+arccos(-x) = PI - arccos(x)
+arctan(-x) = -arctan(x)
+arccot(-x) = PI - arccot(x)
+arcsec(-x) = PI - arcsec(x)
+arccsc(-x) = -arccsc(x)
+
+Reciprocal arguments:
+
+arccos(1 / x) = arcsec(x)
+arcsin(1 / x) = arccsc(x)
+arctan(1 / x) = (PI / 2) - arctan(x) == arccot(x), if x > 0.
+arctan(1 / x) = -(PI / 2) - arctan(x) == arccot(x) - PI, if x < 0.
+arccot(1 / x) = (PI / 2) - arccot(x) == arctan(x), if x > 0.
+arccot(1 / x) = ((3 * PI) / 2) - arccot(x) == PI + arctan(x), if x < 0.
+arcsec(1 / x) = arccos(x)
+arccsc(1 / x) = arcsin(x)
+
+Useful identities if one only has a fragment of a sine table:
+
+Given: [ x^2 == x*x ], [ sqrt(x) "is the square root of x"], [ sgn(x) "is the sign of x" ]
+
+arccos(x) = arcsin( sqrt(1 - x^2) ), if 0 <= x <= 1, "from which you get:"
+arccos( (1 - x^2) / (1 + x^2) ) = arcsin( (2 * x) / (1 + x^2) ), if 0 <= x <= 1
+arcsin( sqrt(1 - x^2) ) = (PI / 2) - sgn(x) * arcsin(x)
+arccos(x) = (1 / 2) * arccos((2 * x^2) - 1), if 0 <= x <= 1
+arcsin(x) = (1 / 2) * arccos(1 - (2 * x^2)), if 0 <= x <= 1
+arcsin(x) = arctan( x / sqrt(1 - x^2) ) --jjchere, bookmark
+arccos(x) = arctan( sqrt(1 - x^2) / x ) --jjchere, bookmark
+arctan(x) = arcsin( x / sqrt(1 + x^2) )
+arccot(x) = arccos( x / sqrt(1 + x^2) )
+
+Calculating:
+
+Given: [z is a complex number], [abs(z) is the absolute value of z], [ x! is x factorial, 3! == 1*2*3 ]
+
+arctan(z) = z - (z^3)/3 + (z^5)/5 - (z^7)/7 + ....
+arctan(z) == Sumation of (n=0 to +inf), (((-1)^n) * z^(2*n + 1))/(2*n + 1); abs(z) <= 1, z != i, -i
+
+
+Leonhard Euler found a series for the arctangent that converges more quickly than its Taylor series:
+{\displaystyle \arctan(z)={\frac {z}{1+z^{2}}}\sum _{n=0}^{\infty }\prod _{k=1}^{n}{\frac {2kz^{2}}{(2k+1)(1+z^{2})}}.}{\displaystyle \arctan(z)={\frac {z}{1+z^{2}}}\sum _{n=0}^{\infty }\prod _{k=1}^{n}{\frac {2kz^{2}}{(2k+1)(1+z^{2})}}.}
+
+               z        +inf         n             2kz^2
+arctan(z) = ------- * Sumation of Product of --------------------
+            1 + z^2     n=0         k=1      (2k + 1) * (1 + z^2)
+
+(The term in the sum for n = 0 is the empty product, so is 1.)
+
+Expanded, it is: [ ] --jjchere, bookmark
+
+Alternatively, this can be expressed as:
+arctan(z) == Sumation of (n=0 to +inf), ((2^(2*n) * (n!)^2)/((2*n + 1)!)) * ((z^(2*n + 1))/((1 + z^2)^(n + 1)))
+
+
+Another series for the arctangent function is given by:
+
+Given: [ i == sqrt(-1), the imaginary unit ]
+
+arctan(z) = i * Sumation of (n=1 to +inf), (1 / (2*n - 1)) * ( (1 / ((1 + 2i/z)^(2*n - 1))) - (1 / ((1 - 2i/z)^(2*n - 1))) )
+
+
+-- end of file.
