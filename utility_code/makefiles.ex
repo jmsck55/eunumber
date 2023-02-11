@@ -1,3 +1,4 @@
+-- Copyright (c) 2016-2023 James Cook
 
 with trace
 trace(1)

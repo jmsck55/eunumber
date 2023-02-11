@@ -20,12 +20,13 @@ global constant CARRY_ADJUST = 0, BORROW_ADJUST = 1, NO_SUBTRACT_ADJUST = 2
 global function AdjustRound(sequence num, integer exponent, TargetLength targetLength, AtomRadix radix, ThreeOptions isMixed = 1)
     integer oldlen, roundTargetLength, rounded, isNeg
     atom halfRadix, compareHalfRadix, f
-    sequence ret
+    sequence ret, roundedDigits
     ifdef USE_TASK_YIELD then
         if useTaskYield then
             task_yield()
         end if
     end ifdef
+    roundedDigits = {}
     -- if not CheckLengthAndRadix(targetLength, radix) then
     --      puts(2, "Error, bad length and radix.\n")
     --      abort(1/0)
@@ -47,9 +48,9 @@ global function AdjustRound(sequence num, integer exponent, TargetLength targetL
         num = TrimLeadingZeros(num)
     end if
     exponent += (length(num) - (oldlen))
-    rounded = 0
+    -- rounded = 0
     --if length(num) = 0 then
-    --    ret = {{}, exponent, targetLength, radix, rounded}
+    --    ret = {{}, exponent, targetLength, radix} --, rounded}
     --    return ret
     --end if
 
@@ -70,24 +71,35 @@ global function AdjustRound(sequence num, integer exponent, TargetLength targetL
     -- Round2: num, exponent, targetLength, radix
     roundTargetLength = targetLength
     if isRoundToZero then
-        if exponent - 1 <= - (targetLength) then
-            roundTargetLength = 0
-            --ret = {{}, exponent, targetLength, radix, (num[1] < 0) - (num[1] > 0)} -- "rounded"
+        if exponent <= - (targetLength) then
+            if targetLength = 1 and exponent = -1 then
+                num = {0} & num
+                exponent = 0
+                roundTargetLength = 1
+            else
+                roundTargetLength = 0
+            end if
+            --ret = {{}, exponent, targetLength, radix} --, (num[1] < 0) - (num[1] > 0)} -- "rounded"
             --return ret
         end if
     elsif ROUND_TO_NEAREST_OPTION then -- IntegerMode
         roundTargetLength = exponent + 1 + integerModeFloat
         if roundTargetLength < 0 then
             roundTargetLength = 0
-            -- num = {}
-        elsif roundTargetLength > targetLength then
+        elsif roundTargetLength = 0 then
+            num = {0} & num
+            exponent += 1
+            roundTargetLength = 1
+        end if
+        if roundTargetLength > targetLength then
             targetLength = roundTargetLength
         end if
     end if
     if roundTargetLength < length(num) and roundTargetLength >= 0 then
+        roundedDigits = {{0} & num[roundTargetLength + 1..$], exponent - roundTargetLength + 1}
         isNeg = num[1] < 0
-        if ROUND = ROUND_TRUNCATE or roundTargetLength <= 1 then
-            rounded = isNeg - (num[1] > 0) -- give the opposite of the sign
+        if ROUND = ROUND_TRUNCATE or roundTargetLength = 0 then
+            -- rounded = isNeg - (num[1] > 0) -- give the opposite of the sign
             num = num[1..roundTargetLength]
         else
             halfRadix = floor(radix / 2)
@@ -110,7 +122,7 @@ end ifdef
                 end for
             end if
             if f = compareHalfRadix then
-                if length(num) > roundTargetLength + 1 then
+                if length(num) > roundTargetLength then
                     f *= 2
                 else
                     if ROUND = ROUND_EVEN then
@@ -129,10 +141,11 @@ end ifdef
                 f -= 1
             end if
             num = num[1..roundTargetLength]
-            rounded = (f > halfRadix) - (f < - (halfRadix)) -- 1 for round up, -1 for round down.
+            rounded = (f > halfRadix) - (f < - (halfRadix))
             if rounded then
+                roundedDigits[1][1] = - (rounded)
                 num[roundTargetLength] += rounded
-                if rounded > 0 then
+                if rounded <= 0 then
                     num = Carry(num, radix)
                 else
                     num = NegativeCarry(num, radix)
@@ -155,8 +168,8 @@ end ifdef
                     targetLength += oldlen -- Under integerMode, targetLength always increases as value increases.
                 end if
                 exponent += oldlen
-            else
-                rounded = isNeg - (num[1] > 0) -- give the opposite of the sign
+            -- else
+                -- rounded = isNeg - (num[1] > 0) -- give the opposite of the sign
             end if
         end if
     end if
@@ -165,8 +178,10 @@ end ifdef
         oldlen = length(num)
         num = TrimLeadingZeros(num)
         exponent += (length(num) - (oldlen))
+    else
+        exponent = 0
     end if
-    ret = {num, exponent, targetLength, radix, rounded} -- why do we need "rounded" variable?  Could it be significant digits?
+    ret = {num, exponent, targetLength, radix, roundedDigits} -- why do we need "rounded" variable?  Could it be significant digits?
     return ret
 end function
 

@@ -1,6 +1,6 @@
 
 
-include eunumber/eun/minieun/FindIter.e
+include eunumber/minieun/FindIter.e
 
 include std/rand.e
 

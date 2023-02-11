@@ -41,12 +41,14 @@ global type Eun(object x)
                 if length(x) = 4 then
                     return TRUE
                 end if
-            if integer(x[5]) then -- true if rounded
+            if sequence(x[5]) then -- true if roundedDigits
                 if length(x) = 5 then
                     return TRUE
                 end if
             if integer(x[6]) then
-                return x[6] >= 0
+                --if length(x) = 6 then
+                    return TRUE -- x[6] >= 0
+                --end if
 --                      if Round2(x[6]) then -- RoundingMethod
 --                      if CalcSpeedType(x[7]) then -- calculationSpeed
 --                              return x[7] <= x[3]
@@ -117,7 +119,7 @@ global function NewEun(
             integer exp = 0,
             integer targetLength = defaultTargetLength,
             atom radix = defaultRadix,
-            integer rounded = 0, --here, make into significantDigits, or positiveHalf and negativeHalf, or last digit before rounded last digit.
+            sequence roundedDigits = {}, --here, make into significantDigits, or positiveHalf and negativeHalf, or last digit before roundedDigits last digit.
             integer prec = 0
 --                      integer roundingMethod = ROUND_INF, --here, what about "round to nearest option" ???
 --                      atom calculationSpeed = targetLength
@@ -132,13 +134,13 @@ global function NewEun(
         Eun ret -- does type checking.
         if prec then
             targetLength = PrecisionToTargetLength(prec, radix)
-            ret = {num, exp, targetLength, radix, rounded, prec}
-        elsif rounded then
-            ret = {num, exp, targetLength, radix, rounded}
+            ret = {num, exp, targetLength, radix, roundedDigits, prec}
+        elsif length(roundedDigits) then
+            ret = {num, exp, targetLength, radix, roundedDigits}
         else
             ret = {num, exp, targetLength, radix}
         end if
-        --ret = {num, exp, targetLength, radix, rounded, prec, roundingMethod, calculationSpeed}
+        --ret = {num, exp, targetLength, radix, roundedDigits, prec, roundingMethod, calculationSpeed}
         return ret
     -- end if
 end function
