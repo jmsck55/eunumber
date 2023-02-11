@@ -1,0 +1,46 @@
+
+TODO:
+Update at Noon-time, no later.
+Make a release at the beginning of every week (Monday).
+
+Analyze: testcode.txt results
+For negative and positive numbers.
+Between -0.75 and -0.5
+Increment by 0.25
+
+
+
+Next:
+Figure out EunLog:
+
+y = EunExp(-100)
+-100 = EunLog(y)
+
+End Next.
+
+
+-- Work on making Exp() and Log() more accurate.
+
+
+After that:
+Work on error messages.
+
+
+
+
+-- Should there be a Significant Digits variable?
+
+TargetLength = 13, Significant Digits = 10
+(Precision)
+
+
+Re-organize folder structure.
+
+
+Test: EunRoundLastDigits()
+
+
+--here:
+-- work on EunRoundToInt() for IntegerMode.
+-- integerModeFloat
+
