@@ -20,6 +20,5 @@ global function EunAdjustRound(Eun n1, integer adjustBy = 0, integer isMixed = N
         end if
     end if
     ret = AdjustRound(n1[1], n1[2], len, n1[4], isMixed)
-    -- ret[3] = n1[3]
     return ret
 end function
