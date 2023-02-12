@@ -1,18 +1,19 @@
 
--- with trace
+--with trace
 
 include eunumber/my.e
 
 object a, b, c, d
 
-isRoundToZero = FALSE
+--isRoundToZero = FALSE
 
-a = ToEun("-0.55555")
+a = ToEun("-0.0095555")
 
 b = AdjustRound(a[1], a[2], 0, a[4], NO_SUBTRACT_ADJUST)
 ? b
 b = AdjustRound(a[1], a[2], 1, a[4], NO_SUBTRACT_ADJUST)
 ? b
+trace(1)
 b = AdjustRound(a[1], a[2], 2, a[4], NO_SUBTRACT_ADJUST)
 ? b
 c = AdjustRound(a[1], a[2], 3, a[4], NO_SUBTRACT_ADJUST)

@@ -33,7 +33,7 @@ global function AddExp(sequence n1, integer exp1, sequence n2, integer exp2, Tar
             numArray = n2
             exponent = exp2
         else
-            return {{}, max(exp1, exp2), targetLength, radix}
+            return {{}, 0, targetLength, radix}
         end if
     end if
     ret = AdjustRound(numArray, exponent, targetLength, radix, flag)

@@ -11,16 +11,16 @@ include Carry.e
 include Add.e
 
 global function MultiplyByDigit(sequence n1, atom digit)
-ifdef NEW_PROCESSOR_MODE then
-    for j = 1 to length(n1) do
-        n1[j] *= digit
-ifdef not NO_SLEEP_OPTION then
-            sleep(nanoSleep)
-end ifdef
-    end for
-    return n1
+ifdef OLD_PROCESSOR_MODE then
+        return n1 * digit
 elsedef
-    return n1 * digit
+        for j = 1 to length(n1) do
+            n1[j] *= digit
+    ifdef not NO_SLEEP_OPTION then
+            sleep(nanoSleep)
+    end ifdef
+        end for
+        return n1
 end ifdef
 end function
 
