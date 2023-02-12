@@ -33,7 +33,7 @@ global function AddExp(sequence n1, integer exp1, sequence n2, integer exp2, Tar
             numArray = n2
             exponent = exp2
         else
-            return {{}, max(exp1, exp2), targetLength, radix}
+            return {{}, 0, targetLength, radix}
         end if
     end if
     ret = AdjustRound(numArray, exponent, targetLength, radix, flag)
@@ -42,7 +42,7 @@ end function
 
 ifdef USE_OLD_SUBTR then
 
-include array/negate.e
+include ../array/Negate.e
 
 global function SubtractExp(sequence n1, integer exp1, sequence n2, integer exp2, TargetLength targetLength, AtomRadix radix)
     return AddExp(n1, exp1, Negate(n2), exp2, targetLength, radix)

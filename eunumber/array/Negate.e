@@ -8,7 +8,9 @@ end ifdef
 include ../minieun/NanoSleep.e
 
 global function Negate(sequence numArray)
-ifdef NEW_PROCESSOR_MODE then
+ifdef OLD_PROCESSOR_MODE then
+        return - numArray
+elsedef
         for i = 1 to length(numArray) do
             numArray[i] = - (numArray[i])
     ifdef not NO_SLEEP_OPTION then
@@ -16,8 +18,6 @@ ifdef NEW_PROCESSOR_MODE then
     end ifdef
         end for
         return numArray
-elsedef
-        return - numArray
 end ifdef
 end function
 

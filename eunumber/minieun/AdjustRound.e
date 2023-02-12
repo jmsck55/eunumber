@@ -71,24 +71,18 @@ global function AdjustRound(sequence num, integer exponent, TargetLength targetL
     -- Round2: num, exponent, targetLength, radix
     roundTargetLength = targetLength
     if isRoundToZero then
-        if exponent <= - (targetLength) then
-            if targetLength = 1 and exponent = -1 then
-                num = {0} & num
-                exponent = 0
-                roundTargetLength = 1
-            else
+        if targetLength then
+            if -(targetLength) > exponent then
                 roundTargetLength = 0
+            elsif -(targetLength) = exponent then
+                roundTargetLength = 1
             end if
-            --ret = {{}, exponent, targetLength, radix} --, (num[1] < 0) - (num[1] > 0)} -- "rounded"
-            --return ret
         end if
     elsif ROUND_TO_NEAREST_OPTION then -- IntegerMode
         roundTargetLength = exponent + 1 + integerModeFloat
         if roundTargetLength < 0 then
             roundTargetLength = 0
         elsif roundTargetLength = 0 then
-            num = {0} & num
-            exponent += 1
             roundTargetLength = 1
         end if
         if roundTargetLength > targetLength then
@@ -97,11 +91,11 @@ global function AdjustRound(sequence num, integer exponent, TargetLength targetL
     end if
     if roundTargetLength < length(num) and roundTargetLength >= 0 then
         roundedDigits = {{0} & num[roundTargetLength + 1..$], exponent - roundTargetLength + 1}
-        isNeg = num[1] < 0
         if ROUND = ROUND_TRUNCATE or roundTargetLength = 0 then
             -- rounded = isNeg - (num[1] > 0) -- give the opposite of the sign
             num = num[1..roundTargetLength]
         else
+            isNeg = num[1] < 0
             halfRadix = floor(radix / 2)
             f = num[roundTargetLength + 1]
             if isNeg then
@@ -145,7 +139,7 @@ end ifdef
             if rounded then
                 roundedDigits[1][1] = - (rounded)
                 num[roundTargetLength] += rounded
-                if rounded <= 0 then
+                if rounded >= 0 then
                     num = Carry(num, radix)
                 else
                     num = NegativeCarry(num, radix)
