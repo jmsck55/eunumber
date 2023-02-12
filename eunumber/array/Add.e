@@ -43,9 +43,9 @@ end ifdef
     return dst
 end function
 
-include negate.e
-
 ifdef USE_OLD_SUBTR then
+
+include Negate.e
 
 global function Subtr(sequence n1, sequence n2)
     return Add(n1, Negate(n2))
@@ -58,19 +58,23 @@ elsedef
 ------------------------
 
 global function Subtr(sequence n1, sequence n2)
-    integer c
-    if length(n1) < length(n2) then
-        n1 = Negate(n2[1..$ - length(n1)]) & n1
+    integer c, len
+    sequence numArray
+    numArray = n1
+    len = length(n2)
+    if length(numArray) < len then
+        c = len - length(numArray)
+        numArray = repeat(0, c) & numArray
     end if
-    c = length(n1) - length(n2)
-    for i = 1 to length(n2) do
+    c = length(numArray) - (len)
+    for i = 1 to len do
         c += 1
-        n1[c] -= n2[i]
+        numArray[c] -= n2[i]
 ifdef not NO_SLEEP_OPTION then
         sleep(nanoSleep)
 end ifdef
     end for
-    return n1
+    return numArray
 end function
 
 end ifdef

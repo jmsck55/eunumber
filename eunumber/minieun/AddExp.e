@@ -17,18 +17,11 @@ global function AddExp(sequence n1, integer exp1, sequence n2, integer exp2, Tar
             exponent = max(exp1, exp2)
             size = (length(n1) - (exp1)) - (length(n2) - (exp2))
             if size < 0 then
-                size = - (size)
-                numArray = n2[size..$]
-                n2 = n2[1..size - 1]
-                -- n1 = n1 & repeat(0, - (size))
+                n1 = n1 & repeat(0, - (size))
             elsif size > 0 then
-                numArray = n1[size..$]
-                n1 = n1[1..size - 1]
-                -- n2 = n2 & repeat(0, size)
-            else
-                numArray = {}
+                n2 = n2 & repeat(0, size)
             end if
-            numArray = Add(n1, n2) & numArray
+            numArray = Add(n1, n2)
         else
             flag = NO_SUBTRACT_ADJUST
             numArray = n1
@@ -47,9 +40,9 @@ global function AddExp(sequence n1, integer exp1, sequence n2, integer exp2, Tar
     return ret
 end function
 
-include ../array/negate.e
-
 ifdef USE_OLD_SUBTR then
+
+include ../array/Negate.e
 
 global function SubtractExp(sequence n1, integer exp1, sequence n2, integer exp2, TargetLength targetLength, AtomRadix radix)
     return AddExp(n1, exp1, Negate(n2), exp2, targetLength, radix)
@@ -74,18 +67,11 @@ global function SubtractExp(sequence n1, integer exp1, sequence n2, integer exp2
         end if
         size = (length(n1) - (exp1)) - (length(n2) - (exp2))
         if size < 0 then
-            size = - (size)
-            numArray = Negate(n2[size..$])
-            n2 = n2[1..size - 1]
-            -- n1 = n1 & repeat(0, - (size))
+            n1 = n1 & repeat(0, - (size))
         elsif size > 0 then
-            numArray = n1[size..$]
-            n1 = n1[1..size - 1]
-            -- n2 = n2 & repeat(0, size)
-        else
-            numArray = {}
+            n2 = n2 & repeat(0, size)
         end if
-        numArray = Subtr(n1, n2) & numArray
+        numArray = Subtr(n1, n2)
     else
         flag = NO_SUBTRACT_ADJUST
         numArray = n1

@@ -27,6 +27,12 @@ Work on error messages.
 
 
 
+-- Should there be a Significant Digits variable?
+
+TargetLength = 13, Significant Digits = 10
+(Precision)
+
+
 
 Test: EunRoundLastDigits()
 
@@ -35,6 +41,3 @@ Test: EunRoundLastDigits()
 -- work on EunRoundToInt() for IntegerMode.
 -- integerModeFloat
 
-
-
-IntegerMode in AdjustRound
