@@ -98,9 +98,11 @@ global function AdjustRound(sequence num, integer exponent, TargetLength targetL
     if roundTargetLength < length(num) and roundTargetLength >= 0 then
         roundedDigits = {{0} & num[roundTargetLength + 1..$], exponent - roundTargetLength + 1}
         isNeg = num[1] < 0
-        if ROUND = ROUND_TRUNCATE or roundTargetLength = 0 then
+        if ROUND = ROUND_TRUNCATE then --or roundTargetLength = 0 then
             -- rounded = isNeg - (num[1] > 0) -- give the opposite of the sign
             num = num[1..roundTargetLength]
+        elsif roundTargetLength = 0 then
+            num = {}
         else
             halfRadix = floor(radix / 2)
             f = num[roundTargetLength + 1]
