@@ -50,11 +50,11 @@ export function GetTableData()
 end function
 
 export function SwapTable(sequence x = GetTableData())
-    sequence tmp = GetTableData()
+    sequence oldvalue = GetTableData()
     table = x[TABLE]
     freeList = x[FREELIST]
     privateData = x[PRIVATEDATA]
-    return tmp
+    return oldvalue
 end function
 
 export function GetTableId()

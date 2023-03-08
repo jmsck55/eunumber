@@ -158,10 +158,12 @@ end ifdef
                 --      end if
                 --end if
                 oldlen = length(num) - (roundTargetLength)
-                if ROUND_TO_NEAREST_OPTION then
-                    targetLength += oldlen -- Under integerMode, targetLength always increases as value increases.
-                end if
                 exponent += oldlen
+                if ROUND_TO_NEAREST_OPTION then
+                    if length(num) > targetLength then
+                        targetLength = length(num)
+                    end if
+                end if
             -- else
                 -- rounded = isNeg - (num[1] > 0) -- give the opposite of the sign
             end if

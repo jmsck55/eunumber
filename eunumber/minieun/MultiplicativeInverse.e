@@ -322,11 +322,9 @@ global function MultiplicativeInverseExp(sequence den1, integer exp1, TargetLeng
             return NewEun(den1, exp0, targetLength, radix)
         end if
         if den1[1] = 2 or den1[1] = -2 then
-            object half
+            object half = floor(radix / 2)
             if den1[1] < 0 then
-                half = floor((-(radix)) / 2)
-            else
-                half = floor(radix / 2)
+                half = -(half)
             end if
             if IsIntegerEven(radix) then
                 half = {half}

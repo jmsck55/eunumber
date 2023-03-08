@@ -1,13 +1,18 @@
 
---with trace
+with trace
 
 include eunumber/my.e
 
 object a, b, c, d
 
---isRoundToZero = FALSE
+trace(1)
 
-a = ToEun("-0.0095555")
+isRoundToZero = FALSE
+
+IntegerModeOn()
+
+a = ToEun("95.555") --here, working on IntegerMode in AdjustRound()
+? a
 
 b = AdjustRound(a[1], a[2], 0, a[4], NO_SUBTRACT_ADJUST)
 ? b

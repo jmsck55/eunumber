@@ -37,6 +37,8 @@ TargetLength = 13, Significant Digits = 10
 Test: EunRoundLastDigits()
 
 
+[ ] Work on integer mode in AdjustRound().
+
 
 -- work on EunRoundToInt() for IntegerMode.
 -- integerModeFloat
