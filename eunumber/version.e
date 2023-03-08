@@ -10,3 +10,7 @@ end function
 -- Tested on Win32, and OSX.
 
 -- To do: Test all functions.
+
+-- Try increasing the protoTargetLength when caught in an infinite loop.
+
+--here: Make two versions, one for speed, one for accuracy.
