@@ -13,6 +13,8 @@ global AtomRadix defaultRadix = 10 -- or 11 for 10% more accuracy. 10 or 11 is g
 global PositiveAtom calculationSpeed = 23 -- floor(defaultTargetLength / 3) -- can be 0 or from 1 to targetLength
 global Bool isRoundToZero = TRUE -- make TRUE to allow rounding small numbers (infinitesimals) to zero.
 
+global Bool FOR_ACCURACY = TRUE
+
 -- For Integer Mode:
 global Bool ROUND_TO_NEAREST_OPTION = FALSE -- Round to nearest whole number (Eun integer), true or false
 global integer integerModeFloat = 0 -- usually, integerModeFloat is positive >= 0, (or it could be negative < 0), it is the number of decimal points in IntegerMode.

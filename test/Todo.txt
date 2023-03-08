@@ -1,7 +1,5 @@
 
 TODO:
-Update at Noon-time, no later.
-Make a release at the beginning of every week (Monday).
 
 Analyze: testcode.txt results
 For negative and positive numbers.
