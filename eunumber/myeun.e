@@ -276,7 +276,7 @@ global function NewId(atom id = 0)
             return GetNewId() -- returns an uninitialized id.
         end if
     else
-        return New(0) -- initializes it to an Eun with the value of zero (0).
+        return New(NewEun()) -- initializes it to an Eun with the value of zero (0).
             -- Defaults can be changed in SetDefaultPrecision().
             -- Then, use MySetPrecision() or MySetAllPrecision() on all ids.
     end if
