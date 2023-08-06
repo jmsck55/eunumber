@@ -37,7 +37,7 @@ global function abs(atom a)
 end function
 
 global function Ceil(atom a)
-    return -(floor(-a))
+    return -(floor(-(a)))
 end function
 
 global function RoundTowardsZero(atom x)
