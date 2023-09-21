@@ -66,7 +66,10 @@ global function GetUseLongDivision()
     return useLongDivision
 end function
 
-constant two = {2}
+constant one = {1}, two = {2}
+
+--here, Todo: figure out forSmallRadix, for radixes such as four (4).
+
 PositiveInteger forSmallRadix = 0 -- this number can be 0 or greater
 
 global procedure SetForSmallRadix(PositiveInteger i)
@@ -77,7 +80,10 @@ global function GetForSmallRadix()
     return forSmallRadix
 end function
 
-global function ProtoMultiplicativeInverseExp(sequence guess, integer exp0, sequence den1, integer exp1, TargetLength targetLength, AtomRadix radix)
+integer multiplicativeInverseOldVal = -1
+global PositiveInteger moreAccuracy = 10 -- could be any value greater than or equal to one (1).
+
+global function ProtoMultiplicativeInverseExp(sequence guess, integer exp0, sequence den1, integer exp1, TargetLength targetLength, AtomRadix radix, integer retLength)
     -- a = guess
     -- n1 = den1
     -- f(a) = a * (2 - n1 * a)
@@ -109,6 +115,23 @@ global function ProtoMultiplicativeInverseExp(sequence guess, integer exp0, sequ
                 return {guess, exp0}
             end if
         end if
+    end if
+--here, FOR_ACCURACY, see how close these numbers are, that turn to one (1).
+    if FOR_ACCURACY then
+        integer a, b, roundToZero
+        roundToZero = isRoundToZero
+        isRoundToZero = 0
+        tmp = SubtractExp(one, 0, numArray, exp2, retLength, radix) -- close to zero (0).
+        isRoundToZero = roundToZero
+        if length(tmp[1]) = 0 then
+            return {guess, exp0}
+        end if
+        a = exp0 - tmp[2] -- -1 - -3 = 2
+        b = retLength - a -- 4 - 2 = 2 -- 2 is less accurate than 1
+        if b >= multiplicativeInverseOldVal then -- 1, 2
+            targetLength += moreAccuracy
+        end if
+        multiplicativeInverseOldVal = b
     end if
     ret = MultiplyExp(guess, exp0, numArray, exp2, targetLength, radix) -- a * tmp
 -- ret -- turns to ans
@@ -316,9 +339,9 @@ global function MultiplicativeInverseExp(sequence den1, integer exp1, TargetLeng
     end if
     if length(den1) = 1 then
         if den1[1] = 1 or den1[1] = -1 then -- optimization
+            exp0 = -(exp1)
             howComplete = {1, 1, {}}
             lastIterCount = 1
-            exp0 = -(exp1)
             return NewEun(den1, exp0, targetLength, radix)
         end if
         if den1[1] = 2 or den1[1] = -2 then
@@ -332,17 +355,24 @@ global function MultiplicativeInverseExp(sequence den1, integer exp1, TargetLeng
                 half = repeat(half, targetLength)
             end if
             exp0 = -(exp1) - 1
+            howComplete = {1, 1, {}}
+            lastIterCount = 1
             return NewEun(half, exp0, targetLength, radix)
         end if
     end if
-    if multInvMoreAccuracy >= 0 then
-        protoMoreAccuracy = multInvMoreAccuracy
-    elsif calculationSpeed then
-        protoMoreAccuracy = Ceil(targetLength / calculationSpeed)
+    if FOR_ACCURACY then
+        multiplicativeInverseOldVal = -1
+        protoTargetLength = targetLength
     else
-        protoMoreAccuracy = 0 -- changed to 0
+        if multInvMoreAccuracy >= 0 then
+            protoMoreAccuracy = multInvMoreAccuracy
+        elsif calculationSpeed then
+            protoMoreAccuracy = Ceil(targetLength / calculationSpeed)
+        else
+            protoMoreAccuracy = 0 -- changed to 0
+        end if
+        protoTargetLength = targetLength + protoMoreAccuracy + 1
     end if
-    protoTargetLength = targetLength + protoMoreAccuracy + 1
     if length(guess) then
         exp0 = - (exp1) - 1
         ret = AdjustRound(guess, exp0, protoTargetLength, radix, FALSE)
@@ -356,10 +386,10 @@ global function MultiplicativeInverseExp(sequence den1, integer exp1, TargetLeng
     lookat = {}
     calculating = ID_MultiplicativeInverse -- begin calculating
     lastIterCount = 1
-    while calculating and lastIterCount <= iter do
+    while calculating and lastIterCount < iter do
     -- for i = 1 to iter do
         --lookat = ret
-        ret = ProtoMultiplicativeInverseExp(ret[1], ret[2], den1, exp1, protoTargetLength, radix)
+        ret = ProtoMultiplicativeInverseExp(ret[1], ret[2], den1, exp1, ret[3], radix, targetLength)
         --guess = ret[1]
         -- ? {length(guess), protoTargetLength}
         --exp0 = ret[2]
