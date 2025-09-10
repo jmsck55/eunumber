@@ -63,8 +63,8 @@ global function MatrixMultiply(matrix a, matrix b)
 -- row1 = a[i]
     integer rows, cols, len
     sequence row0, row1, sum, ret
-    -- Eun sum
-    -- matrix ret
+    Eun sum
+    matrix ret
     len = GetMatrixRows(b)
     if GetMatrixCols(a) != len then
         puts(1, "Error(8):  In MyEuNumber, in MatrixMultiply(), column-row mix-match.\n  See file: ex.err\n")
