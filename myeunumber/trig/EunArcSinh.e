@@ -12,7 +12,7 @@ include ../myeun/EunLog.e
 global function EunArcSinh(Eun a)
 -- arcsinh(x) = ln(x + sqrt(x^2 + 1))
     sequence tmp
-    tmp = EunSquareRoot(EunAdd(EunMultiply(a, NewEun({2}, 0, a[3], a[4])), NewEun({1}, 0, a[3], a[4])))
+    tmp = EunSquareRoot(EunAdd(EunMultiply(a, a), NewEun({1}, 0, a[3], a[4])))
     if tmp[1] then
         puts(1, "Error(7):  In MyEuNumber, EunArcSinh(): error, encountered imaginary number,\n something went wrong internally.\n  See file: ex.err\n")
         abort(1/0)
