@@ -46,7 +46,7 @@ include GetPI.e
 --      return arcSinHowComplete[2]
 -- end function
 --
--- global function ArcSinExp(sequence n1, integer exp1, TargetLength targetLength, AtomRadix radix)
+-- global function ArcSinExp(sequence n1, integer exp1, TargetLength targetLength, AtomBase base)
 -- --something wrong with arcsin()?
 --
 -- -- working on Trig functions
@@ -66,31 +66,31 @@ include GetPI.e
 --      protoTargetLength = targetLength + moreAccuracy + 1
 --      -- sum = {n1, exp1}
 --      x = {n1, exp1}
---      xSquared = SquaredExp(n1, exp1, targetLength, radix)
+--      xSquared = SquaredExp(n1, exp1, targetLength, base)
 --      bottom = {{2}, 0}
 --      odd = {{3}, 0}
 --      -- First iteration:
---      tmp = MultiplyExp(bottom[1], bottom[2], odd[1], odd[2], targetLength, radix)
---      x = MultiplyExp(x[1], x[2], xSquared[1], xSquared[2], targetLength, radix)
---      tmp = DivideExp(x[1], x[2], tmp[1], tmp[2], targetLength, radix)
---      sum = AddExp(sum[1], sum[2], tmp[1], tmp[2], targetLength, radix)
+--      tmp = MultiplyExp(bottom[1], bottom[2], odd[1], odd[2], targetLength, base)
+--      x = MultiplyExp(x[1], x[2], xSquared[1], xSquared[2], targetLength, base)
+--      tmp = DivideExp(x[1], x[2], tmp[1], tmp[2], targetLength, base)
+--      sum = AddExp(sum[1], sum[2], tmp[1], tmp[2], targetLength, base)
 --      -- Second iteration(s):
 --      top = {{1}, 0}
 --      even = {{2}, 0}
 --      ret = sum
 --      arcSinIterCount = arcSinIter
 --      for n = 1 to arcSinIter do
---              even = AddExp(even[1], even[2], {2}, 0, protoTargetLength, radix)
---              bottom = MultiplyExp(bottom[1], bottom[2], even[1], even[2], protoTargetLength, radix)
---              top  = MultiplyExp(top[1], top[2], odd[1], odd[2], protoTargetLength, radix)
---              odd = AddExp(odd[1], odd[2], {2}, 0, protoTargetLength, radix)
---              tmp = MultiplyExp(bottom[1], bottom[2], odd[1], odd[2], protoTargetLength, radix)
---              x = MultiplyExp(x[1], x[2], xSquared[1], xSquared[2], protoTargetLength, radix)
---              tmp = DivideExp(x[1], x[2], tmp[1], tmp[2], protoTargetLength, radix)
---              tmp = MultiplyExp(tmp[1], tmp[2], top[1], top[2], protoTargetLength, radix)
---              sum = AddExp(sum[1], sum[2], tmp[1], tmp[2], protoTargetLength, radix)
+--              even = AddExp(even[1], even[2], {2}, 0, protoTargetLength, base)
+--              bottom = MultiplyExp(bottom[1], bottom[2], even[1], even[2], protoTargetLength, base)
+--              top  = MultiplyExp(top[1], top[2], odd[1], odd[2], protoTargetLength, base)
+--              odd = AddExp(odd[1], odd[2], {2}, 0, protoTargetLength, base)
+--              tmp = MultiplyExp(bottom[1], bottom[2], odd[1], odd[2], protoTargetLength, base)
+--              x = MultiplyExp(x[1], x[2], xSquared[1], xSquared[2], protoTargetLength, base)
+--              tmp = DivideExp(x[1], x[2], tmp[1], tmp[2], protoTargetLength, base)
+--              tmp = MultiplyExp(tmp[1], tmp[2], top[1], top[2], protoTargetLength, base)
+--              sum = AddExp(sum[1], sum[2], tmp[1], tmp[2], protoTargetLength, base)
 --              lookat = ret
---              ret = AdjustRound(sum[1], sum[2], targetLength, radix, NO_SUBTRACT_ADJUST)
+--              ret = AdjustRound(sum[1], sum[2], targetLength, base, NO_SUBTRACT_ADJUST)
 --              if ret[2] = lookat[2] then
 --                      arcSinHowComplete = Equaln(ret[1], lookat[1])
 --                      if arcSinHowComplete[1] = arcSinHowComplete[2] then
@@ -108,7 +108,7 @@ include GetPI.e
 --              return {}
 --      end if
 --      -- targetLength -= adjustPrecision
---      ret = AdjustRound(ret[1], ret[2], targetLength, radix, NO_SUBTRACT_ADJUST)
+--      ret = AdjustRound(ret[1], ret[2], targetLength, base, NO_SUBTRACT_ADJUST)
 --      return ret
 -- end function
 

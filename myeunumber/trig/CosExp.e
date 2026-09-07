@@ -30,7 +30,7 @@ global integer cosIterCount = 0
 
 global constant ID_Cosine = 8
 
-global function CosExp(sequence n1, integer exp1, TargetLength targetLength, AtomRadix radix, integer inside = 0)
+global function CosExp(sequence n1, integer exp1, TargetLength targetLength, AtomBase base, integer inside = 0)
 -- cos(x) = 1 - ((x^2)/(2!)) + ((x^4)/(4!)) - ((x^6)/(6!)) + ((x^8)/(8!)) - ...
     -- Range: -PI/2 to PI/2, exclusive
     sequence a, b, tmp, xSquared, lookat, ret, s
@@ -46,14 +46,14 @@ global function CosExp(sequence n1, integer exp1, TargetLength targetLength, Ato
     -- targetLength += adjustPrecision
     protoTargetLength = targetLength + moreAccuracy + 1
     step = 0 -- CosExp() uses 0
-    xSquared = SquaredExp(n1, exp1, protoTargetLength, radix)
+    xSquared = SquaredExp(n1, exp1, protoTargetLength, base)
     n1 = {1}
     exp1 = 0
     a = {n1, exp1} -- a is the numerator, CosExp() starts with 1.
     b = a -- b is the denominator.
     -- copy "1" to ans:
     -- ret = a -- in CosExp(), ans starts with 1.
-    ret = NewEun(n1, exp1, targetLength, radix)
+    ret = NewEun(n1, exp1, targetLength, base)
     lookat = {}
     if inside then
         calculating = inside
@@ -65,21 +65,21 @@ global function CosExp(sequence n1, integer exp1, TargetLength targetLength, Ato
     -- for i = 1 to cosIter do
         -- first step is 2, for CosExp()
         step += 2
-        tmp = MultiplyExp({step - 1}, 0, {step}, 0, protoTargetLength, radix)
-        b = MultiplyExp(b[1], b[2], tmp[1], tmp[2], protoTargetLength, radix)
-        a = MultiplyExp(a[1], a[2], xSquared[1], xSquared[2], protoTargetLength, radix)
-        tmp = DivideExp(a[1], a[2], b[1], b[2], protoTargetLength, radix)
+        tmp = MultiplyExp({step - 1}, 0, {step}, 0, protoTargetLength, base)
+        b = MultiplyExp(b[1], b[2], tmp[1], tmp[2], protoTargetLength, base)
+        a = MultiplyExp(a[1], a[2], xSquared[1], xSquared[2], protoTargetLength, base)
+        tmp = DivideExp(a[1], a[2], b[1], b[2], protoTargetLength, base)
         --lookat = ret
         if IsPositiveOdd(cosIterCount) then
             -- Subtract
-            ret = SubtractExp(ret[1], ret[2], tmp[1], tmp[2], protoTargetLength, radix)
+            ret = SubtractExp(ret[1], ret[2], tmp[1], tmp[2], protoTargetLength, base)
         else
-            ret = AddExp(ret[1], ret[2], tmp[1], tmp[2], protoTargetLength, radix)
+            ret = AddExp(ret[1], ret[2], tmp[1], tmp[2], protoTargetLength, base)
         end if
         --n1 = ret[1]
         --exp1 = ret[2]
         -- if useExtraAdjustRound then
-        --     ret = AdjustRound(n1, exp1, targetLength + adjustRound, radix, NO_SUBTRACT_ADJUST)
+        --     ret = AdjustRound(n1, exp1, targetLength + adjustRound, base, NO_SUBTRACT_ADJUST)
         -- end if
         -- if ret[2] = lookat[2] then
         --     trigHowComplete = Equaln(ret[1], lookat[1], trigHowComplete[1]) -- , targetLength - adjustRound)
@@ -88,7 +88,7 @@ global function CosExp(sequence n1, integer exp1, TargetLength targetLength, Ato
         --         exit
         --     end if
         -- end if
-        s = ReturnToUserCallBack(ID_Cosine, trigHowComplete, targetLength, ret, lookat, radix)
+        s = ReturnToUserCallBack(ID_Cosine, trigHowComplete, targetLength, ret, lookat, base)
         lookat = s[2]
         trigHowComplete = s[3]
         if s[1] then
@@ -105,6 +105,6 @@ end ifdef
         abort(1/0)
     end if
     -- targetLength -= adjustPrecision
-    ret = AdjustRound(ret[1], ret[2], targetLength, radix, NO_SUBTRACT_ADJUST)
+    ret = AdjustRound(ret[1], ret[2], targetLength, base, NO_SUBTRACT_ADJUST)
     return ret
 end function

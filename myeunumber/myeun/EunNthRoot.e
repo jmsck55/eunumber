@@ -27,15 +27,15 @@ include RealMode.e
 -- Find the nth root of any number
 
 global function IntPowerExp(PositiveInteger toPower, sequence n1, integer exp1,
-                    TargetLength targetLength, AtomRadix radix)
+                    TargetLength targetLength, AtomBase base)
 -- b^x = e^(x * ln(b))
     sequence p
     if toPower = 0 then
-        return {{1}, 0, targetLength, radix, 0}
+        return {{1}, 0, targetLength, base, 0}
     end if
     p = {n1, exp1}
     for i = 2 to toPower do
-        p = MultiplyExp(p[1], p[2], n1, exp1, targetLength, radix)
+        p = MultiplyExp(p[1], p[2], n1, exp1, targetLength, base)
 ifdef not NO_SLEEP_OPTION then
         sleep(nanoSleep)
 end ifdef
@@ -52,13 +52,13 @@ end function
 
 global function NthRootProtoExp(PositiveScalar n, sequence x1, integer x1Exp,
                    sequence guess, integer guessExp,
-                   TargetLength targetLength, AtomRadix radix)
+                   TargetLength targetLength, AtomBase base)
     sequence p, quot, average
-    p = IntPowerExp(n - 1, guess, guessExp, targetLength, radix)
-    quot = DivideExp(x1, x1Exp, p[1], p[2], targetLength, radix)
-    p = MultiplyExp({n - 1}, 0, guess, guessExp, targetLength, radix)
-    p = AddExp(p[1], p[2], quot[1], quot[2], targetLength, radix)
-    average = DivideExp(p[1], p[2], {n}, 0, targetLength, radix)
+    p = IntPowerExp(n - 1, guess, guessExp, targetLength, base)
+    quot = DivideExp(x1, x1Exp, p[1], p[2], targetLength, base)
+    p = MultiplyExp({n - 1}, 0, guess, guessExp, targetLength, base)
+    p = AddExp(p[1], p[2], quot[1], quot[2], targetLength, base)
+    average = DivideExp(p[1], p[2], {n}, 0, targetLength, base)
     return average
 end function
 
@@ -87,20 +87,20 @@ end function
 global constant ID_NthRoot = 3
 
 global function NthRootExp(PositiveScalar n, sequence x1, integer x1Exp, sequence guess,
-            integer guessExp, TargetLength targetLength, AtomRadix radix)
+            integer guessExp, TargetLength targetLength, AtomBase base)
     sequence lookat, ret, s
     integer protoTargetLength, moreAccuracy
     nthRootHowComplete = {1, 0}
     if length(x1) = 0 then
         nthRootHowComplete = {0, 0}
         lastNthRootIter = 1
-        return {x1, x1Exp, targetLength, radix, 0}
+        return {x1, x1Exp, targetLength, base, 0}
     end if
     if length(x1) = 1 then
         if x1[1] = 1 or x1[1] = -1 then
             nthRootHowComplete = {1, 1}
             lastNthRootIter = 1
-            return {x1, x1Exp, targetLength, radix, 0}
+            return {x1, x1Exp, targetLength, base, 0}
         end if
     end if
     if nthRootMoreAccuracy >= 0 then
@@ -113,18 +113,18 @@ global function NthRootExp(PositiveScalar n, sequence x1, integer x1Exp, sequenc
     -- Use adjustPrecision for higher order functions, such as Trig functions.
     -- targetLength += adjustPrecision
     protoTargetLength = targetLength + moreAccuracy + 1
-    ret = AdjustRound(guess, guessExp, protoTargetLength, radix, FALSE)
+    ret = AdjustRound(guess, guessExp, protoTargetLength, base, FALSE)
     lookat = {}
     calculating = ID_NthRoot -- begin calculating
     lastNthRootIter = 1
     while calculating and lastNthRootIter <= nthRootIter do
     -- for i = 1 to nthRootIter do
         --lookat = ret
-        ret = NthRootProtoExp(n, x1, x1Exp, ret[1], ret[2], protoTargetLength, radix)
+        ret = NthRootProtoExp(n, x1, x1Exp, ret[1], ret[2], protoTargetLength, base)
         --guess = ret[1]
         --guessExp = ret[2]
         --if useExtraAdjustRound then
-        --    ret = AdjustRound(guess, guessExp, targetLength + adjustRound, radix, NO_SUBTRACT_ADJUST)
+        --    ret = AdjustRound(guess, guessExp, targetLength + adjustRound, base, NO_SUBTRACT_ADJUST)
         --end if
         --if ret[2] = lookat[2] then
         --    nthRootHowComplete = Equaln(ret[1], lookat[1], nthRootHowComplete[1]) -- , targetLength - adjustRound)
@@ -133,7 +133,7 @@ global function NthRootExp(PositiveScalar n, sequence x1, integer x1Exp, sequenc
         --        exit
         --    end if
         --end if
-        s = ReturnToUserCallBack(ID_NthRoot, nthRootHowComplete, targetLength, ret, lookat, radix)
+        s = ReturnToUserCallBack(ID_NthRoot, nthRootHowComplete, targetLength, ret, lookat, base)
         lookat = s[2]
         nthRootHowComplete = s[3]
         if s[1] then
@@ -149,7 +149,7 @@ end ifdef
         printf(1, "Error %d\n", 3)
         abort(1/0)
     end if
-    ret = AdjustRound(ret[1], ret[2], targetLength, radix, NO_SUBTRACT_ADJUST)
+    ret = AdjustRound(ret[1], ret[2], targetLength, base, NO_SUBTRACT_ADJUST)
     return ret
 end function
 

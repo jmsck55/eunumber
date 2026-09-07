@@ -83,11 +83,11 @@ include RealMode.e
 -- Step 4: Add "n" to the answer, and return it.
 --
 
-global function GetLogGuess(sequence n1, integer exp1, TargetLength targetLength, AtomRadix radix)
+global function GetLogGuess(sequence n1, integer exp1, TargetLength targetLength, AtomBase base)
     atom a
     sequence guessExp
     -- Get guessExp:
-    a = ToAtom({n1, exp1, targetLength, radix})
+    a = ToAtom({n1, exp1, targetLength, base})
     if a < 0 then
         if realMode then -- not needed, caught in previous lines of code, leave it here for now.
             puts(1, "Error.\n")
@@ -99,11 +99,11 @@ global function GetLogGuess(sequence n1, integer exp1, TargetLength targetLength
         a = -a -- atom
     end if
     a = log(a) -- it makes a guess
-    guessExp = ToEun(sprintf("%e", a), radix, targetLength) -- need to return this value.
+    guessExp = ToEun(sprintf("%e", a), base, targetLength) -- need to return this value.
     return guessExp
 end function
 
-global function GetLogDomain(sequence n1, integer exp1, TargetLength targetLength, AtomRadix radix)
+global function GetLogDomain(sequence n1, integer exp1, TargetLength targetLength, AtomBase base)
     -- n1 is positive and != 1, test if it is less than 1.
     -- Use: (still using this one)
     -- If n > 0, m > 1 // use if x >= 2, to put it back in the domain of (0..2) exclusively.
@@ -113,21 +113,21 @@ global function GetLogDomain(sequence n1, integer exp1, TargetLength targetLengt
     -- integer n
     sequence t, m --, guessExp
     -- -- Step 1:
-    m = GetE(targetLength, radix)
-    t = FindPowerOfGreaterThan(n1, exp1, targetLength, radix, m[1], m[2], FIND_POWER_LESS_THAN) -- Less than.
+    m = GetE(targetLength, base)
+    t = FindPowerOfGreaterThan(n1, exp1, targetLength, base, m[1], m[2], FIND_POWER_LESS_THAN) -- Less than.
     -- n = m[1] -- need to return this value.
     m = t[2] -- a power of GetE()
     -- Step 2:
     if t[1] < 0 then
-        m = MultiplyExp(n1, exp1, m[1], m[2], targetLength, radix) -- need to return m
+        m = MultiplyExp(n1, exp1, m[1], m[2], targetLength, base) -- need to return m
     else
-        m = DivideExp(n1, exp1, m[1], m[2], targetLength, radix) -- need to return m
+        m = DivideExp(n1, exp1, m[1], m[2], targetLength, base) -- need to return m
     end if
     t[2] = m
     -- a = ToAtom(m)
     -- Get guessExp:
-    -- guessExp = GetLogGuess(n1, exp1, targetLength, radix)
-    -- a = ToAtom({n1, exp1, targetLength, radix})
+    -- guessExp = GetLogGuess(n1, exp1, targetLength, base)
+    -- a = ToAtom({n1, exp1, targetLength, base})
     -- if a < 0 then
     --     if realMode then -- not needed, caught in previous lines of code, leave it here for now.
     --         puts(1, "Error.\n")
@@ -139,7 +139,7 @@ global function GetLogDomain(sequence n1, integer exp1, TargetLength targetLengt
     --     a = -a -- atom
     -- end if
     -- a = log(a) -- it makes a guess
-    -- guessExp = ToEun(sprintf("%e", a), radix, targetLength) -- need to return this value.
+    -- guessExp = ToEun(sprintf("%e", a), base, targetLength) -- need to return this value.
     -- return guessExp
     return t -- {n, m} -- {eun guess, eun m (n1), integer n}
 end function
@@ -170,7 +170,7 @@ global constant ID_Log = 6
 
 -- Raw function: Natural Logarithm
 
-global function NaturalLogarithm(sequence n1, integer exp1, TargetLength targetLength, AtomRadix radix)
+global function NaturalLogarithm(sequence n1, integer exp1, TargetLength targetLength, AtomBase base)
     -- Function: NaturalLogarithm()
     -- Use for testing the method.
     -- Alternative, between 0 and 2 exclusively:
@@ -205,7 +205,7 @@ global function NaturalLogarithm(sequence n1, integer exp1, TargetLength targetL
     if CompareExp(n1, exp1, {}, 0) <= 0 then
         return 0 -- domain error
     end if
-    p = SubtractExp({1}, 0, n1, exp1, targetLength, radix)
+    p = SubtractExp({1}, 0, n1, exp1, targetLength, base)
     xNegativePlusOne = p
     sum = p
     k = {{2}, 0}
@@ -213,16 +213,16 @@ global function NaturalLogarithm(sequence n1, integer exp1, TargetLength targetL
     calculating = ID_Log -- begin calculating
     logIterCount = 1
     while calculating and logIterCount <= logIter do
-        p = MultiplyExp(p[1], p[2], xNegativePlusOne[1], xNegativePlusOne[2], targetLength, radix)
-        s = DivideExp(p[1], p[2], k[1], k[2], targetLength, radix)
-        sum = AddExp(sum[1], sum[2], s[1], s[2], targetLength, radix)
-        s = ReturnToUserCallBack(ID_Log, logHowComplete, targetLength, sum, lookat, radix)
+        p = MultiplyExp(p[1], p[2], xNegativePlusOne[1], xNegativePlusOne[2], targetLength, base)
+        s = DivideExp(p[1], p[2], k[1], k[2], targetLength, base)
+        sum = AddExp(sum[1], sum[2], s[1], s[2], targetLength, base)
+        s = ReturnToUserCallBack(ID_Log, logHowComplete, targetLength, sum, lookat, base)
         lookat = s[2]
         logHowComplete = s[3]
         if s[1] then
             exit
         end if
-        k = AddExp(k[1], k[2], {1}, 0, targetLength, radix)
+        k = AddExp(k[1], k[2], {1}, 0, targetLength, base)
         logIterCount += 1
 ifdef not NO_SLEEP_OPTION then
         sleep(nanoSleep)
@@ -236,7 +236,7 @@ end ifdef
     return sum
 end function
 
-global function LogExpA(sequence n1, integer exp1, TargetLength targetLength, AtomRadix radix)
+global function LogExpA(sequence n1, integer exp1, TargetLength targetLength, AtomBase base)
     -- n1 is positive and != 0, test if >= 2.
     -- Use: (still using this one)
     -- If n > 0, m > 1 // use if x >= 2, to put it back in the domain of (0..2) exclusively.
@@ -252,13 +252,13 @@ global function LogExpA(sequence n1, integer exp1, TargetLength targetLength, At
     object guess
     --logHowComplete = {1, 0, {}}
     if length(n1) = 0 then -- tests for the value of zero (0)
-        return {-1, 0, targetLength, radix} -- returns the Eun for negative infinity (-inf)
+        return {-1, 0, targetLength, base} -- returns the Eun for negative infinity (-inf)
     end if
     if exp1 = 0 then
         if equal(n1, {1}) then
-            return {{}, 0, targetLength, radix}
+            return {{}, 0, targetLength, base}
         elsif equal(n1, {-1}) then -- complex number:
-            return {{{}, 0, targetLength, radix}, GetPI(targetLength, radix)}
+            return {{{}, 0, targetLength, base}, GetPI(targetLength, base)}
         end if
     end if
     isImag = IsNegative(n1) -- need to return this value
@@ -282,28 +282,28 @@ global function LogExpA(sequence n1, integer exp1, TargetLength targetLength, At
     -- Step 1 and Step 2:
     --if CompareExp(n1, exp1, {2}, 0) >= 0 then
         sequence t
-        guess = GetLogDomain(n1, exp1, protoTargetLength, radix)
+        guess = GetLogDomain(n1, exp1, protoTargetLength, base)
         n = guess[1]
         n1 = guess[2][1]
         exp1 = guess[2][2]
     --end if
     -- Step 3:
-    guess = NaturalLogarithm(n1, exp1, protoTargetLength, radix)
+    guess = NaturalLogarithm(n1, exp1, protoTargetLength, base)
     -- Step 4:
     if n != 0 then
         sequence tmp
-        tmp = AdjustRound({n}, 0, radix, protoTargetLength, CARRY_ADJUST)
-        guess = AddExp(guess[1], guess[2], tmp[1], tmp[2], protoTargetLength, radix)
+        tmp = AdjustRound({n}, 0, base, protoTargetLength, CARRY_ADJUST)
+        guess = AddExp(guess[1], guess[2], tmp[1], tmp[2], protoTargetLength, base)
     end if
-    guess = AdjustRound(guess[1], guess[2], targetLength, radix, NO_SUBTRACT_ADJUST)
+    guess = AdjustRound(guess[1], guess[2], targetLength, base, NO_SUBTRACT_ADJUST)
     if isImag then -- return a complex number: guess must be positive.
-        return { guess, GetPI(targetLength, radix) } -- (ret[3] - adjustPrecision)
+        return { guess, GetPI(targetLength, base) } -- (ret[3] - adjustPrecision)
     else
         return guess
     end if
 end function
 
-global function LogExpB(sequence n1, integer exp1, TargetLength targetLength, AtomRadix radix) --, object guess = 0)
+global function LogExpB(sequence n1, integer exp1, TargetLength targetLength, AtomBase base) --, object guess = 0)
     -- ln(x) == natrual logarithm, ln(e) = 1, "e" is Euler's constant.
     -- ln(x) = y[n] = y[n - 1] + 2 * (x - exp(y[n - 1]))/(x + exp(y[n - 1]))
     -- Alternative, for between 0 and 2 exclusively: ln(x) = - Sum[k = 1 to inf] ((-1)^k * (-1 + x)^k) / k, for abs(-1 + x) < 1; x > 0 and x < 2;
@@ -316,13 +316,13 @@ global function LogExpB(sequence n1, integer exp1, TargetLength targetLength, At
     object guess
     logHowComplete = {1, 0, {}}
     if length(n1) = 0 then -- tests for the value of zero (0)
-        return {-1, 0, targetLength, radix} -- returns the Eun for negative infinity (-inf)
+        return {-1, 0, targetLength, base} -- returns the Eun for negative infinity (-inf)
     end if
     if exp1 = 0 then
         if equal(n1, {1}) then
-            return {{}, 0, targetLength, radix}
+            return {{}, 0, targetLength, base}
         elsif equal(n1, {-1}) then -- complex number:
-            return {{{}, 0, targetLength, radix}, GetPI(targetLength, radix)}
+            return {{{}, 0, targetLength, base}, GetPI(targetLength, base)}
         end if
     end if
     isImag = IsNegative(n1) -- need to return this value
@@ -344,13 +344,13 @@ global function LogExpB(sequence n1, integer exp1, TargetLength targetLength, At
     protoTargetLength = targetLength + moreAccuracy + 1
     --if atom(guess) then
     -- -- Calculate the guess, Step 1 and Step 2:
-    guess = GetLogGuess(n1, exp1, protoTargetLength, radix)
+    guess = GetLogGuess(n1, exp1, protoTargetLength, base)
     -- guess = t[1]
     -- n1 = t[2][1]
     -- exp1 = t[2][2]
     -- n = t[3]
     --else
-    --    guess = {guess[1], guess[2], protoTargetLength, radix}
+    --    guess = {guess[1], guess[2], protoTargetLength, base}
     --    n = 0
     --end if
     -- Step 3:
@@ -361,15 +361,15 @@ global function LogExpB(sequence n1, integer exp1, TargetLength targetLength, At
     -- for i = 1 to logIter do
     -- guess = guess + 2 * (num1 - exp(guess))/(num1 + exp(guess))
         expY = EunExp(guess)
-        --expY = ExpExp(guess[1], guess[2], protoTargetLength, radix)
-        xPlus = AddExp(n1, exp1, expY[1], expY[2], protoTargetLength, radix)
-        xMinus = SubtractExp(n1, exp1, expY[1], expY[2], protoTargetLength, radix)
-        tmp = DivideExp(xMinus[1], xMinus[2], xPlus[1], xPlus[2], protoTargetLength, radix)
-        tmp = MultiplyExp({2}, 0, tmp[1], tmp[2], protoTargetLength, radix)
+        --expY = ExpExp(guess[1], guess[2], protoTargetLength, base)
+        xPlus = AddExp(n1, exp1, expY[1], expY[2], protoTargetLength, base)
+        xMinus = SubtractExp(n1, exp1, expY[1], expY[2], protoTargetLength, base)
+        tmp = DivideExp(xMinus[1], xMinus[2], xPlus[1], xPlus[2], protoTargetLength, base)
+        tmp = MultiplyExp({2}, 0, tmp[1], tmp[2], protoTargetLength, base)
         --lookat = guess
-        guess = AddExp(guess[1], guess[2], tmp[1], tmp[2], protoTargetLength, radix)
+        guess = AddExp(guess[1], guess[2], tmp[1], tmp[2], protoTargetLength, base)
         -- if useExtraAdjustRound then
-        --     guess = AdjustRound(guess[1], guess[2], targetLength + adjustRound, radix, NO_SUBTRACT_ADJUST)
+        --     guess = AdjustRound(guess[1], guess[2], targetLength + adjustRound, base, NO_SUBTRACT_ADJUST)
         -- end if
         -- if guess[2] = lookat[2] then
         --     logHowComplete = Equaln(guess[1], lookat[1], logHowComplete[1]) -- , targetLength - adjustRound)
@@ -378,7 +378,7 @@ global function LogExpB(sequence n1, integer exp1, TargetLength targetLength, At
         --         exit
         --     end if
         -- end if
-        s = ReturnToUserCallBack(ID_Log, logHowComplete, targetLength, guess, lookat, radix)
+        s = ReturnToUserCallBack(ID_Log, logHowComplete, targetLength, guess, lookat, base)
         lookat = s[2]
         logHowComplete = s[3]
         if s[1] then
@@ -392,16 +392,16 @@ end ifdef
     -- end for
     -- -- Step 4:
     -- if n != 0 then
-    --     tmp = ToEun(n, radix, protoTargetLength)
-    --     guess = AddExp(guess[1], guess[2], tmp[1], tmp[2], protoTargetLength, radix)
+    --     tmp = ToEun(n, base, protoTargetLength)
+    --     guess = AddExp(guess[1], guess[2], tmp[1], tmp[2], protoTargetLength, base)
     -- end if
     if logIterCount = logIter then
         printf(1, "Error %d\n", 3)
         abort(1/0)
     end if
-    guess = AdjustRound(guess[1], guess[2], targetLength, radix, NO_SUBTRACT_ADJUST)
+    guess = AdjustRound(guess[1], guess[2], targetLength, base, NO_SUBTRACT_ADJUST)
     if isImag then -- return a complex number: guess must be positive.
-        return { guess, GetPI(targetLength, radix) } -- (ret[3] - adjustPrecision)
+        return { guess, GetPI(targetLength, base) } -- (ret[3] - adjustPrecision)
     else
         return guess
     end if
@@ -409,62 +409,62 @@ end function
 
 -- Begin EunLog1:
 
--- EunLogRadix()
+-- EunLogBase()
 
-global sequence eunLogRadix = {}
+global sequence eunLogBase = {}
 
--- NOTE: To precalculate, put the largest value for targetLength first, then use the same radix for all your calculations, before switching to another radix.
+-- NOTE: To precalculate, put the largest value for targetLength first, then use the same base for all your calculations, before switching to another base.
 -- Or, you can also use the "SwapE()" function below:
 
-global function SwapLogRadix(sequence s = eunLogRadix) -- SwapE when changing radixes, then swap back when changing back.
-    object oldvalue = eunLogRadix
-    eunLogRadix = s
+global function SwapLogBase(sequence s = eunLogBase) -- SwapE when changing basees, then swap back when changing back.
+    object oldvalue = eunLogBase
+    eunLogBase = s
     return oldvalue
 end function
 
-global function EunLogRadix(TargetLength targetLength = defaultTargetLength, AtomRadix radix = defaultRadix)
+global function EunLogBase(TargetLength targetLength = defaultTargetLength, AtomBase base = defaultBase)
     -- targetLength += adjustPrecision
-    if not length(eunLogRadix) or not length(eunLogRadix[1]) or eunLogRadix[3] <= targetLength or eunLogRadix[4] != radix then
-        eunLogRadix = LogExpB({1}, 1, targetLength + 1, radix)
+    if not length(eunLogBase) or not length(eunLogBase[1]) or eunLogBase[3] <= targetLength or eunLogBase[4] != base then
+        eunLogBase = LogExpB({1}, 1, targetLength + 1, base)
     end if
-    return AdjustRound(eunLogRadix[1], eunLogRadix[2], targetLength, radix, NO_SUBTRACT_ADJUST)
+    return AdjustRound(eunLogBase[1], eunLogBase[2], targetLength, base, NO_SUBTRACT_ADJUST)
 end function
 
 -- EunLogTwo()
 
 global sequence eunLogTwo = {}
 
--- NOTE: To precalculate, put the largest value for targetLength first, then use the same radix for all your calculations, before switching to another radix.
+-- NOTE: To precalculate, put the largest value for targetLength first, then use the same base for all your calculations, before switching to another base.
 -- Or, you can also use the "SwapE()" function below:
 
-global function SwapLogTwo(sequence s = eunLogTwo) -- SwapE when changing radixes, then swap back when changing back.
+global function SwapLogTwo(sequence s = eunLogTwo) -- SwapE when changing basees, then swap back when changing back.
     object oldvalue = eunLogTwo
     eunLogTwo = s
     return oldvalue
 end function
 
-global function EunLogTwo(TargetLength targetLength = defaultTargetLength, AtomRadix radix = defaultRadix)
+global function EunLogTwo(TargetLength targetLength = defaultTargetLength, AtomBase base = defaultBase)
     -- targetLength += adjustPrecision
-    if not length(eunLogTwo) or not length(eunLogTwo[1]) or eunLogTwo[3] <= targetLength or eunLogTwo[4] != radix then
-        eunLogTwo = LogExpB({2}, 0, targetLength + 1, radix)
+    if not length(eunLogTwo) or not length(eunLogTwo[1]) or eunLogTwo[3] <= targetLength or eunLogTwo[4] != base then
+        eunLogTwo = LogExpB({2}, 0, targetLength + 1, base)
     end if
-    return AdjustRound(eunLogTwo[1], eunLogTwo[2], targetLength, radix, NO_SUBTRACT_ADJUST)
+    return AdjustRound(eunLogTwo[1], eunLogTwo[2], targetLength, base, NO_SUBTRACT_ADJUST)
 end function
 
 -- EunLog1()
 
 global function EunLog1(Eun x)
-    sequence logRadix, logTwo, tmp, ret, imag
+    sequence logBase, logTwo, tmp, ret, imag
     integer exp1, targetLength
-    atom radix
+    atom base
     exp1 = x[2]
     targetLength = x[3]
-    radix = x[4]
-    -- Precalculate: log(radix), log(sqrt(2)) or log(2)
-    logRadix = EunLogRadix(targetLength, radix)
-    logTwo = EunLogTwo(targetLength, radix)
-    -- tmp = 2 * x / radix^(exp1 + 1)
-    tmp = MultiplyExp(x[1], -1, {2}, 0, targetLength, radix)
+    base = x[4]
+    -- Precalculate: log(base), log(sqrt(2)) or log(2)
+    logBase = EunLogBase(targetLength, base)
+    logTwo = EunLogTwo(targetLength, base)
+    -- tmp = 2 * x / base^(exp1 + 1)
+    tmp = MultiplyExp(x[1], -1, {2}, 0, targetLength, base)
     -- ret = log(tmp)
     ret = LogExpA(tmp[1], tmp[2], tmp[3], tmp[4])
     if length(ret) = 2 then
@@ -477,12 +477,12 @@ global function EunLog1(Eun x)
     if not Eun(ret) then
         return ret
     end if
-    -- ret = ret + ((exp1 + 1) * log(radix))
-    tmp = AdjustRound({exp1 + 1}, 0, targetLength, radix, CARRY_ADJUST)
-    tmp = MultiplyExp(tmp[1], tmp[2], logRadix[1], logRadix[2], targetLength, radix)
-    ret = AddExp(ret[1], ret[2], tmp[1], tmp[2], targetLength, radix)
+    -- ret = ret + ((exp1 + 1) * log(base))
+    tmp = AdjustRound({exp1 + 1}, 0, targetLength, base, CARRY_ADJUST)
+    tmp = MultiplyExp(tmp[1], tmp[2], logBase[1], logBase[2], targetLength, base)
+    ret = AddExp(ret[1], ret[2], tmp[1], tmp[2], targetLength, base)
     -- ret = ret - log(2)
-    ret = SubtractExp(ret[1], ret[2], logTwo[1], logTwo[2], targetLength, radix)
+    ret = SubtractExp(ret[1], ret[2], logTwo[1], logTwo[2], targetLength, base)
     if length(imag) then
         ret = {ret, imag}
     end if

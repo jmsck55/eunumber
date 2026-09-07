@@ -15,26 +15,26 @@ include ExpExp.e
 
 global sequence eunE = {}
 
--- NOTE: To precalculate, put the largest value for targetLength first, then use the same radix for all your calculations, before switching to another radix.
+-- NOTE: To precalculate, put the largest value for targetLength first, then use the same base for all your calculations, before switching to another base.
 -- Or, you can also use the "SwapE()" function below:
 
-global function SwapE(sequence s = eunE) -- SwapE when changing radixes, then swap back when changing back.
+global function SwapE(sequence s = eunE) -- SwapE when changing basees, then swap back when changing back.
     object oldvalue = eunE
     eunE = s
     return oldvalue
 end function
 
-global function GetE(TargetLength targetLength = defaultTargetLength, AtomRadix radix = defaultRadix)
+global function GetE(TargetLength targetLength = defaultTargetLength, AtomBase base = defaultBase)
     -- targetLength += adjustPrecision
-    if not length(eunE) or not length(eunE[1]) or eunE[3] <= targetLength or eunE[4] != radix then
+    if not length(eunE) or not length(eunE[1]) or eunE[3] <= targetLength or eunE[4] != base then
 ifdef DEBUG_TASK then
     puts(1, "Calculating GetE()\n")
 end ifdef
-        eunE = ExpExp({1}, 0, targetLength + 1, radix, FALSE) -- FALSE for no factoring.
+        eunE = ExpExp({1}, 0, targetLength + 1, base, FALSE) -- FALSE for no factoring.
 ifdef DEBUG_TASK then
     puts(1, "Finished Calculating GetE()\n")
 end ifdef
     end if
-    return AdjustRound(eunE[1], eunE[2], targetLength, radix, NO_SUBTRACT_ADJUST)
+    return AdjustRound(eunE[1], eunE[2], targetLength, base, NO_SUBTRACT_ADJUST)
 end function
 

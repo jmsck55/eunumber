@@ -31,7 +31,7 @@ global function GetExp1Iter()
     return exp1Iter
 end function
 
-global procedure SetExp1Iter(integer i) -- when switching radixes, store exp1Iter, switch, and then call SetExp1Iter() when you switch back.
+global procedure SetExp1Iter(integer i) -- when switching basees, store exp1Iter, switch, and then call SetExp1Iter() when you switch back.
     exp1Iter = i
 end procedure
 
@@ -47,7 +47,7 @@ global function GetExp1HowCompleteMax()
 end function
 
 
-global function ExpExp1(sequence n1, integer exp1, TargetLength targetLength, AtomRadix radix, PositiveScalar theExp1Iter)
+global function ExpExp1(sequence n1, integer exp1, TargetLength targetLength, AtomBase base, PositiveScalar theExp1Iter)
 -- not quite accurate enough for large numbers.
 
 -- it doesn't like large numbers.
@@ -72,12 +72,12 @@ global function ExpExp1(sequence n1, integer exp1, TargetLength targetLength, At
     sequence sum, tmp, den
     exp1HowComplete = {1, 0}
     sum = {{1}, 0}
-    den = AdjustRound({theExp1Iter}, 0, targetLength, radix, 0)
+    den = AdjustRound({theExp1Iter}, 0, targetLength, base, 0)
     for i = theExp1Iter to 1 by -1 do
-        tmp = DivideExp(n1, exp1, den[1], den[2], targetLength, radix)
-        sum = MultiplyExp(sum[1], sum[2], tmp[1], tmp[2], targetLength, radix)
-        sum = AddExp(sum[1], sum[2], {1}, 0, targetLength, radix)
-        den = AddExp(den[1], den[2], {-1}, 0, targetLength, radix)
+        tmp = DivideExp(n1, exp1, den[1], den[2], targetLength, base)
+        sum = MultiplyExp(sum[1], sum[2], tmp[1], tmp[2], targetLength, base)
+        sum = AddExp(sum[1], sum[2], {1}, 0, targetLength, base)
+        den = AddExp(den[1], den[2], {-1}, 0, targetLength, base)
         exp1HowComplete[1] = i
 ifdef not NO_SLEEP_OPTION then
         sleep(nanoSleep)
@@ -101,24 +101,24 @@ global function EunExp1(Eun a)
 --      (A^T)*10^(C) = R
 --      Disp R
 -- end My TI-83 Basic code.
-    object t, b, c, lnRadix, y
+    object t, b, c, lnBase, y
     sequence s, lookat, ret
     integer targetLength = a[3]
-    atom radix = a[4]
-    lnRadix = GetLnRadix(targetLength, radix)
-    b = DivideExp(a[1], a[2], lnRadix[1], lnRadix[2], targetLength, radix)
+    atom base = a[4]
+    lnBase = GetLnBase(targetLength, base)
+    b = DivideExp(a[1], a[2], lnBase[1], lnBase[2], targetLength, base)
     c = EunFloor(b) -- should this be EunFloor() or something else?  For negative numbers?
-    b = SubtractExp(b[1], b[2], c[1], c[2], targetLength, radix)
-    y = MultiplyExp(b[1], b[2], lnRadix[1], lnRadix[2], targetLength, radix)
+    b = SubtractExp(b[1], b[2], c[1], c[2], targetLength, base)
+    y = MultiplyExp(b[1], b[2], lnBase[1], lnBase[2], targetLength, base)
     --t = {{1}, 0}
-    --y = DivideExp(y[1], y[2], t[1], t[2], targetLength, radix)
+    --y = DivideExp(y[1], y[2], t[1], t[2], targetLength, base)
     
     -- exp1HowComplete = {1, 0}
     calculating = 999
     while calculating with entry do
-        lookat = ExpExp1(y[1], y[2], targetLength + 1, radix, exp1Iter - 1)
+        lookat = ExpExp1(y[1], y[2], targetLength + 1, base, exp1Iter - 1)
 
-        s = ReturnToUserCallBack(999, exp1HowComplete, targetLength, ret, lookat, radix)
+        s = ReturnToUserCallBack(999, exp1HowComplete, targetLength, ret, lookat, base)
         ret = s[2]
         exp1HowComplete = s[3]
         ExpFindIter(s[1])
@@ -129,7 +129,7 @@ global function EunExp1(Eun a)
         ifdef DEBUG_TASK then
             printf(1, "exp1Iter in EunExp1() = %d\n", exp1Iter)
         end ifdef
-        ret = ExpExp1(y[1], y[2], targetLength + 1, radix, exp1Iter)
+        ret = ExpExp1(y[1], y[2], targetLength + 1, base, exp1Iter)
         
 ifdef not NO_SLEEP_OPTION then
         sleep(nanoSleep)
@@ -139,7 +139,7 @@ end ifdef
         printf(1, "exp1Iter after EunExp1() = %d\n", exp1Iter)
     end ifdef
     ret[2] += ToAtom(c)
-    ret = AdjustRound(ret[1], ret[2], targetLength, radix, NO_SUBTRACT_ADJUST)
+    ret = AdjustRound(ret[1], ret[2], targetLength, base, NO_SUBTRACT_ADJUST)
     return ret
 end function
 

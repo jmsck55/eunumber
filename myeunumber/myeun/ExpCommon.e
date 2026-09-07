@@ -6,7 +6,7 @@
 -- "ln" is log[e](), "log" is log[10]()
 -- 
 -- e^x = 10^n, solve for x
--- 10 = radix
+-- 10 = base
 -- 
 -- e^(n * ln(10)) = 10^n
 -- 10^(x * log(e)) = e^x
@@ -31,13 +31,13 @@
 -- 
 -- e^x = (e^m) * (10^n) = 7.694785265 * 10^23 = e^55
 -- 
--- 10 can be any radix.
+-- 10 can be any base.
 -- n becomes the exponent.
 -- 
 -- ----
 -- 
 -- 1. Precalculate:
--- c = ln(radix)
+-- c = ln(base)
 -- 
 -- 2. In exp(x), Eun's:
 -- n = floor( x / c )
@@ -46,7 +46,7 @@
 -- numArray = e^( x - (n * c) )
 -- 
 -- 4. Return the Eun:
--- {numArray, exponent, targetLength = 70, radix = 10}
+-- {numArray, exponent, targetLength = 70, base = 10}
 
 
 include ../../eunumber/minieun/common.e
@@ -55,19 +55,19 @@ include ../../eunumber/minieun/AdjustRound.e
 include EunLog.e
 
 
-global sequence lnRadix = {}
+global sequence lnBase = {}
 
-global function SwapLnRadix(sequence s = lnRadix)
-    object oldvalue = lnRadix
-    lnRadix = s
+global function SwapLnBase(sequence s = lnBase)
+    object oldvalue = lnBase
+    lnBase = s
     return oldvalue
 end function
 
-global function GetLnRadix(TargetLength targetLength = defaultTargetLength, AtomRadix radix = defaultRadix)
-    if not length(lnRadix) or not length(lnRadix[1]) or lnRadix[3] <= targetLength or lnRadix[4] != radix then
-        lnRadix = EunLog({{1}, 1, targetLength + 1, radix})
+global function GetLnBase(TargetLength targetLength = defaultTargetLength, AtomBase base = defaultBase)
+    if not length(lnBase) or not length(lnBase[1]) or lnBase[3] <= targetLength or lnBase[4] != base then
+        lnBase = EunLog({{1}, 1, targetLength + 1, base})
     end if
-    return AdjustRound(lnRadix[1], lnRadix[2], targetLength, radix, NO_SUBTRACT_ADJUST)
+    return AdjustRound(lnBase[1], lnBase[2], targetLength, base, NO_SUBTRACT_ADJUST)
 end function
 
 
@@ -83,8 +83,8 @@ global function EunExpId(integer eunExpId, Eun x)
     sequence c, tmp
     integer isNeg = IsNegative(x[1])
     -- 1. Precalculate:
-    -- c = ln(radix)
-    c = GetLnRadix(x[3], x[4])
+    -- c = ln(base)
+    c = GetLnBase(x[3], x[4])
     -- 2. In exp(x), Eun's:
     -- n = floor( x / c )
     tmp = EunFloor(EunDivide(x, c))
@@ -103,7 +103,7 @@ global function EunExpId(integer eunExpId, Eun x)
         c = EunSquared(c)
     end for
     -- 4. Return the Eun:
-    -- {numArray, exponent, targetLength = 70, radix = 10}
+    -- {numArray, exponent, targetLength = 70, base = 10}
     return c
 end function
 

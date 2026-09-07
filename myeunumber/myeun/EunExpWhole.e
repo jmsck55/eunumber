@@ -40,13 +40,13 @@ end function
 global function EunExpWhole(Eun u, Eun m)
 -- exp function for whole numbers
     sequence q, prod, current
-    integer targetLength, radix, isNeg
+    integer targetLength, base, isNeg
     expWholeHowComplete = {0, -1}
     current = u
     targetLength = current[3]
-    radix = current[4]
-    if m[4] != radix then
-        q = EunConvert(m, radix, targetLength)
+    base = current[4]
+    if m[4] != base then
+        q = EunConvert(m, base, targetLength)
     else
         q = m
         q[3] = targetLength
@@ -55,15 +55,15 @@ global function EunExpWhole(Eun u, Eun m)
     if isNeg then -- Take the absolute value of the number, while saving isNeg.
         q[1] = Negate(q[1])
     end if
-    prod = {{1}, 0, targetLength, radix}
+    prod = {{1}, 0, targetLength, base}
     while CompareExp(q[1], q[2], {}, 0) = 1 do
         expWholeHowComplete = {q[2], -1}
         if Remainder2Exp(q[1], q[2]) = 1 then
             prod = EunMultiply(prod, current)
-            q = AddExp({-1}, 0, q[1], q[2], targetLength, radix)
+            q = AddExp({-1}, 0, q[1], q[2], targetLength, base)
         end if
         current = EunSquared(current)
-        q = DivideExp(q[1], q[2], {2}, 0, targetLength, radix)
+        q = DivideExp(q[1], q[2], {2}, 0, targetLength, base)
 ifdef not NO_SLEEP_OPTION then
         sleep(nanoSleep)
 end ifdef
@@ -74,10 +74,10 @@ end ifdef
 --             expWholeHowComplete = {q[2], -1}
 --             if Remainder2Exp(q[1], q[2]) = -1 then
 --                 prod = EunDivide(prod, current)
---                 q = AddExp({1}, 0, q[1], q[2], targetLength, radix)
+--                 q = AddExp({1}, 0, q[1], q[2], targetLength, base)
 --             end if
 --             current = EunMultiply(current, current)
---             q = DivideExp(q[1], q[2], {2}, 0, targetLength, radix)
+--             q = DivideExp(q[1], q[2], {2}, 0, targetLength, base)
 -- ifdef not NO_SLEEP_OPTION then
 --             sleep(nanoSleep)
 -- end ifdef

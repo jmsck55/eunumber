@@ -41,11 +41,11 @@ Use instead: aEun = ToEun("1.23e2")
 </pre>
 
 Change your units so that they are close to one (1). If you have 1000 grams, use 1 kilogram for instance.
-This would be represented as the sequence: {{1} , 0 , maxlength , radix} of type "eun";
+This would be represented as the sequence: {{1} , 0 , maxlength , base} of type "eun";
 
 Example: 1000 grams would be: {{1} , 3 , maxlength , 10}; or {{1} , 0 , maxlength/3 , 1000};
 
-Zero is represented as: {{} , 0 , maxlength , radix}; notice the empty sequence as the first argument.
+Zero is represented as: {{} , 0 , maxlength , base}; notice the empty sequence as the first argument.
 
 2.17 is: {{2 , 1 , 7} , 0 , maxlength , 10};
 
@@ -67,7 +67,7 @@ Decrease it to get less accuracy, with smaller maxlengths.
 
 "moreAccuracy" variable should be about one seventh (1/7) to one sixth (1/6) of maxlength, (1/6 being larger than 1/7).
 
-You can use radix of 2 to 1000 on 32-bit, up to 100,000,000 safely on 64-bit. (It can actually be a little larger than this).
+You can use base of 2 to 1000 on 32-bit, up to 100,000,000 safely on 64-bit. (It can actually be a little larger than this).
 I favor preserving accuracy over speed or size, in programming.
 
 Keep in mind: Square roots (even roots) are always plus (+) and minus (-),

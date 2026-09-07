@@ -30,7 +30,7 @@ global integer sinIterCount = 0
 
 global constant ID_Sine = 7
 
-global function SinExp(sequence n1, integer exp1, TargetLength targetLength, AtomRadix radix, integer inside = 0)
+global function SinExp(sequence n1, integer exp1, TargetLength targetLength, AtomBase base, integer inside = 0)
 -- sine(x) = x - ((x^3)/(3!)) + ((x^5)/(5!)) - ((x^7)/(7!)) + ((x^9)/(9!)) - ...
     -- Cases: 0 equals zero (0)
     -- Range: -PI/2 to PI/2, inclusive
@@ -38,7 +38,7 @@ global function SinExp(sequence n1, integer exp1, TargetLength targetLength, Ato
     integer step, protoTargetLength, moreAccuracy
     if length(n1) = 0 then
         trigHowComplete = {0, 0, {}}
-        return NewEun({}, 0, targetLength, radix)
+        return NewEun({}, 0, targetLength, base)
     end if
     trigHowComplete = {1, 0, {}}
     if sinMoreAccuracy >= 0 then
@@ -51,12 +51,12 @@ global function SinExp(sequence n1, integer exp1, TargetLength targetLength, Ato
     -- targetLength += adjustPrecision
     protoTargetLength = targetLength + moreAccuracy + 1
     step = 1 -- SinExp() uses 1
-    xSquared = SquaredExp(n1, exp1, protoTargetLength, radix)
+    xSquared = SquaredExp(n1, exp1, protoTargetLength, base)
     a = {n1, exp1} -- a is the numerator, SinExp() starts with x.
     b = {{1}, 0} -- b is the denominator.
     -- copy x to ans:
     -- ret = a -- in SinExp(), ret starts with x.
-    ret = NewEun(n1, exp1, targetLength, radix)
+    ret = NewEun(n1, exp1, targetLength, base)
     lookat = {}
     if inside then
         calculating = inside
@@ -68,21 +68,21 @@ global function SinExp(sequence n1, integer exp1, TargetLength targetLength, Ato
     -- for i = 1 to sinIter do
         -- first step is 3, for SinExp()
         step += 2
-        tmp = MultiplyExp({step - 1}, 0, {step}, 0, protoTargetLength, radix)
-        b = MultiplyExp(b[1], b[2], tmp[1], tmp[2], protoTargetLength, radix)
-        a = MultiplyExp(a[1], a[2], xSquared[1], xSquared[2], protoTargetLength, radix)
-        tmp = DivideExp(a[1], a[2], b[1], b[2], protoTargetLength, radix)
+        tmp = MultiplyExp({step - 1}, 0, {step}, 0, protoTargetLength, base)
+        b = MultiplyExp(b[1], b[2], tmp[1], tmp[2], protoTargetLength, base)
+        a = MultiplyExp(a[1], a[2], xSquared[1], xSquared[2], protoTargetLength, base)
+        tmp = DivideExp(a[1], a[2], b[1], b[2], protoTargetLength, base)
         --lookat = ret
         if IsPositiveOdd(sinIterCount) then
             -- Subtract
-            ret = SubtractExp(ret[1], ret[2], tmp[1], tmp[2], protoTargetLength, radix)
+            ret = SubtractExp(ret[1], ret[2], tmp[1], tmp[2], protoTargetLength, base)
         else
-            ret = AddExp(ret[1], ret[2], tmp[1], tmp[2], protoTargetLength, radix)
+            ret = AddExp(ret[1], ret[2], tmp[1], tmp[2], protoTargetLength, base)
         end if
         --n1 = ret[1]
         --exp1 = ret[2]
         -- if useExtraAdjustRound then
-        --     ret = AdjustRound(n1, exp1, targetLength + adjustRound, radix, NO_SUBTRACT_ADJUST)
+        --     ret = AdjustRound(n1, exp1, targetLength + adjustRound, base, NO_SUBTRACT_ADJUST)
         -- end if
         -- if ret[2] = lookat[2] then
         --     trigHowComplete = Equaln(ret[1], lookat[1], trigHowComplete[1]) -- , targetLength - adjustRound)
@@ -91,7 +91,7 @@ global function SinExp(sequence n1, integer exp1, TargetLength targetLength, Ato
         --         exit
         --     end if
         -- end if
-        s = ReturnToUserCallBack(ID_Sine, trigHowComplete, targetLength, ret, lookat, radix)
+        s = ReturnToUserCallBack(ID_Sine, trigHowComplete, targetLength, ret, lookat, base)
         lookat = s[2]
         trigHowComplete = s[3]
         if s[1] then
@@ -108,6 +108,6 @@ end ifdef
         abort(1/0)
     end if
     -- targetLength -= adjustPrecision
-    ret = AdjustRound(ret[1], ret[2], targetLength, radix, NO_SUBTRACT_ADJUST)
+    ret = AdjustRound(ret[1], ret[2], targetLength, base, NO_SUBTRACT_ADJUST)
     return ret
 end function
