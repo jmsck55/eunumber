@@ -31,13 +31,13 @@ end function
 
 global function EunUnCompressLeadingDigit(Eun n1)
     sequence num = n1[1]
-    atom f, a, radix = n1[4]
+    atom f, a, base = n1[4]
     if length(num) then
         f = num[1]
         a = abs(f)
-        if a >= radix then
-            num[1] = remainder(f, radix)
-            a = floor(a / radix)
+        if a >= base then
+            num[1] = remainder(f, base)
+            a = floor(a / base)
             if f < 0 then
                 a = - (a)
             end if

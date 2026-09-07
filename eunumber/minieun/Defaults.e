@@ -9,7 +9,7 @@ include Common.e
 -- Defaulted values, and the routines to retrieve them ("get") or modify them ("set").
 
 global TargetLength defaultTargetLength = 70 -- 70 * 3 = 210 (I tried to keep it under 212)
-global AtomRadix defaultRadix = 10 -- or 11 for 10% more accuracy. 10 or 11 is good for everything from 16-bit shorts, to 32-bit ints, to 64-bit long longs.
+global AtomBase defaultBase = 10 -- or 11 for 10% more accuracy. 10 or 11 is good for everything from 16-bit shorts, to 32-bit ints, to 64-bit long longs.
 global PositiveAtom calculationSpeed = 23 -- floor(defaultTargetLength / 3) -- can be 0 or from 1 to targetLength
 global Bool isRoundToZero = TRUE -- make TRUE to allow rounding small numbers (infinitesimals) to zero.
 
@@ -27,12 +27,12 @@ global function GetDefaultTargetLength()
     return defaultTargetLength
 end function
 
-global procedure SetDefaultRadix(AtomRadix i)
-    defaultRadix = i
+global procedure SetDefaultBase(AtomBase i)
+    defaultBase = i
 end procedure
 
-global function GetDefaultRadix()
-    return defaultRadix
+global function GetDefaultBase()
+    return defaultBase
 end function
 
 global type CalcSpeedType(atom speed)

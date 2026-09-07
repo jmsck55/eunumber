@@ -30,9 +30,9 @@ include my.e
 --global function GetZeroDividedByZero()
 --global procedure SetZeroDividedByZero(Bool i)
 
---global procedure SetDefaultPrecision(integer prec, atom radix = 0, Bool isSetSpeed = 0, PositiveAtom speedDivBy = 3)
+--global procedure SetDefaultPrecision(integer prec, atom base = 0, Bool isSetSpeed = 0, PositiveAtom speedDivBy = 3)
 --global function GetDefaultPrecision()
---global function GetDefaultLimbRadix()
+--global function GetDefaultLimbBase()
 --global function GetDefaultLimbLength()
 --global function GetDefaultSpeed()
 
@@ -70,7 +70,7 @@ include my.e
 --global procedure MySetPrecision(integer id)
 --global procedure MySetAllPrecision()
 
---global procedure MyRoundForAtomRadix(integer id, object correction = {})
+--global procedure MyRoundForAtomBase(integer id, object correction = {})
 --global procedure MyCompressLeadingDigit(integer id, object compressLead = {})
 --global procedure MyUnCompressLeadingDigit(integer id)
 
@@ -86,7 +86,7 @@ include my.e
 --global function MyEunSubtract(integer retid, integer id1, integer id2)
 --global function MyEunMultiplicativeInverse(integer retid, integer id1, sequence guess = {})
 --global function MyEunDivide(integer retid, integer id1, integer id2)
---global function MyEunConvert(integer retid, integer id1, atom toRadix, TargetLength targetLength)
+--global function MyEunConvert(integer retid, integer id1, atom toBase, TargetLength targetLength)
 --global function MyEunRoundPrecision(integer retid, integer id1, integer prec = 0)
 --global function MyEunCompare(integer id1, integer id2)
 --global function MyGetEqualLength()
@@ -260,7 +260,7 @@ global function New(object x = {}) -- x can be a string, an atom, or an Eun
     -- x can be an atom or a string
     integer id
     if not Eun(x) then
-        x = ToEun(x) -- uses defaultRadix and defaultTargetLength (see: "SetDefaultPrecision()"), takes either an atom or a string.
+        x = ToEun(x) -- uses defaultBase and defaultTargetLength (see: "SetDefaultPrecision()"), takes either an atom or a string.
     end if
     id = GetNewId(x)
     return id
@@ -377,16 +377,16 @@ global procedure SetZeroDividedByZero(Bool i)
 end procedure
 
 -- About Precision, base2 precision is:
--- Good for Eun_precision up to approximately 10^300000000 (for 32-bit Euphoria), using radix of 10,
--- or, floor(log(2)/log(radix) * maxInt) == maximum targetLength, for precision of base2
--- maximum Eun_precision == radix^(maximum targetLength)
+-- Good for Eun_precision up to approximately 10^300000000 (for 32-bit Euphoria), using base of 10,
+-- or, floor(log(2)/log(base) * maxInt) == maximum targetLength, for precision of base2
+-- maximum Eun_precision == base^(maximum targetLength)
 
 integer defaultPrecision = 0 -- base2 precision
 
-global procedure SetDefaultPrecision(integer prec, atom radix = 0, Bool isSetSpeed = 0, PositiveAtom speedDivBy = 3)
+global procedure SetDefaultPrecision(integer prec, atom base = 0, Bool isSetSpeed = 0, PositiveAtom speedDivBy = 3)
     defaultPrecision = prec
-    if radix then
-        SetDefaultRadix(radix)
+    if base then
+        SetDefaultBase(base)
     end if
     SetDefaultTargetLength( PrecisionToTargetLength(prec) )
     if isSetSpeed then
@@ -399,9 +399,9 @@ global function GetDefaultPrecision()
     return defaultPrecision
 end function
 
-global function GetDefaultLimbRadix()
+global function GetDefaultLimbBase()
     -- Set in "SetDefaultPrecision()" function.
-    return GetDefaultRadix()
+    return GetDefaultBase()
 end function
 
 global function GetDefaultLimbLength()
@@ -469,7 +469,7 @@ end function
 -- Sets or gets the number of decimal places after an IntegerMode floating point number:
 
 global procedure SetIntegerModeDecimals(integer i = 0)
-    -- Under IntegerMode, this sets the number of radix decimal places smaller than one (1).
+    -- Under IntegerMode, this sets the number of base decimal places smaller than one (1).
     -- This works on all calculations.
     integerModeFloat = i
 end procedure
@@ -508,7 +508,7 @@ global procedure MySetPrecision(integer id)
     -- Use on all ids, after SetDefaultPrecision(), using MySetAllPrecision()
     -- or, use on an individual id, using MySetPrecision().
     Eun a = Get(id)
-    object x = EunConvert(a, defaultRadix, defaultTargetLength)
+    object x = EunConvert(a, defaultBase, defaultTargetLength)
     x &= {0, defaultPrecision}
     Set(id, x)
 end procedure
@@ -527,7 +527,7 @@ end procedure
 -- End Set Precision functions.
 -------------------------------
 
-global procedure MyRoundForAtomRadix(integer id, object correction = {})
+global procedure MyRoundForAtomBase(integer id, object correction = {})
     Eun a = Get(id)
     object x
     if equal(correction, {}) then
@@ -642,9 +642,9 @@ end function
 
 -- EunConvert:
 
-global function MyEunConvert(integer retid, integer id1, atom toRadix, TargetLength targetLength)
+global function MyEunConvert(integer retid, integer id1, atom toBase, TargetLength targetLength)
     Eun n1 = Get(id1)
-    object x = EunConvert(n1, toRadix, targetLength)
+    object x = EunConvert(n1, toBase, targetLength)
     Set(retid, x)
     return retid
 end function
@@ -911,7 +911,7 @@ end function
 -- Trig Functions (use radians)
 
 global function MyGetQuarterPI(integer retid, integer multBy = 1)
-    object x = GetQuarterPI(defaultTargetLength, defaultRadix, multBy)
+    object x = GetQuarterPI(defaultTargetLength, defaultBase, multBy)
     Set(retid, x)
     return retid
 end function

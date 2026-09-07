@@ -11,8 +11,8 @@ include ../minieun/MathConst.e
 
 ifdef USE_OLD_CARRY then
 
-global function Carry(sequence numArray, AtomRadix radix)
-    ifdef USE_ATOM_RADIX then
+global function Carry(sequence numArray, AtomBase base)
+    ifdef USE_ATOM_BASE then
         atom emax = DOUBLE_INT_MAX
     elsedef
         atom emax = INT_MAX
@@ -22,10 +22,10 @@ global function Carry(sequence numArray, AtomRadix radix)
     i = length(numArray)
     while i > 0 do
         b = numArray[i]
-        if b >= radix then
+        if b >= base then
             -- round function? for atoms --here
-            q = floor(b / radix)
-            r = remainder(b, radix)
+            q = floor(b / base)
+            r = remainder(b, base)
             numArray[i] = r
             if i = 1 then
                 numArray = prepend(numArray, q)
@@ -48,21 +48,21 @@ end ifdef
     return numArray
 end function
 
-global function NegativeCarry(sequence numArray, AtomRadix radix)
-    ifdef USE_ATOM_RADIX then
+global function NegativeCarry(sequence numArray, AtomBase base)
+    ifdef USE_ATOM_BASE then
         atom emin = DOUBLE_INT_MIN
     elsedef
         atom emin = INT_MIN
     end ifdef
-    atom q, r, b, negativeRadix
+    atom q, r, b, negativeBase
     integer i
-    negativeRadix = -radix
+    negativeBase = -base
     i = length(numArray)
     while i > 0 do
         b = numArray[i]
-        if b <= negativeRadix then
-            q = -(floor(b / negativeRadix)) -- bug fix
-            r = remainder(b, radix)
+        if b <= negativeBase then
+            q = -(floor(b / negativeBase)) -- bug fix
+            r = remainder(b, base)
             numArray[i] = r
             if i = 1 then
                 numArray = prepend(numArray, q)
@@ -91,9 +91,9 @@ elsedef
 -- New Carry() function:
 ------------------------
 
-global function Carry(sequence numArray, AtomRadix radix)
+global function Carry(sequence numArray, AtomBase base)
     integer i, sign
-    ifdef USE_ATOM_RADIX then
+    ifdef USE_ATOM_BASE then
         atom q, r, b, emax = DOUBLE_INT_MAX, emin = DOUBLE_INT_MIN
     elsedef
         integer q, r, b, emax = INT_MAX, emin = INT_MIN
@@ -111,7 +111,7 @@ global function Carry(sequence numArray, AtomRadix radix)
             if sign then
                 b = -(b)
             end if
-            if b >= radix then
+            if b >= base then
                 exit
             end if
             i -= 1
@@ -119,10 +119,10 @@ global function Carry(sequence numArray, AtomRadix radix)
                 sleep(nanoSleep)
             end ifdef
         end while
-        -- b >= radix
+        -- b >= base
         -- round function? for atoms --here
-        q = floor(b / radix)
-        r = remainder(b, radix)
+        q = floor(b / base)
+        r = remainder(b, base)
         if sign then
             q = -(q)
             r = -(r)
@@ -150,16 +150,16 @@ global function Carry(sequence numArray, AtomRadix radix)
     -- return numArray
 end function
 
-global function NegativeCarry(sequence numArray, atom radix)
-    return Carry(numArray, radix)
+global function NegativeCarry(sequence numArray, atom base)
+    return Carry(numArray, base)
 end function
 
 end ifdef
 
---global function NegativeCarry(sequence numArray, AtomRadix radix)
---    atom q, r, b, negativeRadix
+--global function NegativeCarry(sequence numArray, AtomBase base)
+--    atom q, r, b, negativeBase
 --    integer i
---    negativeRadix = -radix
+--    negativeBase = -base
 --    i = length(numArray)
 --    while 1 do
 --        while 1 do
@@ -167,7 +167,7 @@ end ifdef
 --                return numArray
 --            end if
 --            b = numArray[i]
---            if b <= negativeRadix then
+--            if b <= negativeBase then
 --                exit
 --            end if
 --            i -= 1
@@ -175,10 +175,10 @@ end ifdef
 --                sleep(nanoSleep)
 --            end ifdef
 --        end while
---        -- b <= negativeRadix
+--        -- b <= negativeBase
 --        -- round function? for atoms --here
---        q = -(floor(b / negativeRadix)) -- bug fix
---        r = remainder(b, radix)
+--        q = -(floor(b / negativeBase)) -- bug fix
+--        r = remainder(b, base)
 --        numArray[i] = r
 --        if i = 1 then
 --            ifdef SMALL_CODE then

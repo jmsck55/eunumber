@@ -24,7 +24,7 @@ elsedef
 end ifdef
 end function
 
-global function ConvertRadix(sequence number, AtomRadix fromRadix, AtomRadix toRadix)
+global function ConvertBase(sequence number, AtomBase fromBase, AtomBase toBase)
     sequence target, base --, tmp
     -- atom digit
     integer isNeg
@@ -44,18 +44,18 @@ global function ConvertRadix(sequence number, AtomRadix fromRadix, AtomRadix toR
 --                      end for
 --                      target = Add(target, tmp)
             if isNeg then
-                target = NegativeCarry(target, toRadix)
+                target = NegativeCarry(target, toBase)
             else
-                target = Carry(target, toRadix)
+                target = Carry(target, toBase)
             end if
-            base = Carry(MultiplyByDigit(base, fromRadix), toRadix)
+            base = Carry(MultiplyByDigit(base, fromBase), toBase)
 --                      for j = 1 to length(base) do
---                              base[j] *= fromRadix
+--                              base[j] *= fromBase
 -- ifdef not NO_SLEEP_OPTION then
 --                              sleep(nanoSleep)
 -- end ifdef
 --                      end for
---                      base = Carry(base, toRadix)
+--                      base = Carry(base, toBase)
 ifdef not NO_SLEEP_OPTION then
             sleep(nanoSleep)
 end ifdef

@@ -173,7 +173,7 @@ global function Squared(sequence n1)
 end function
 
 -- integer multLastLen = 0
--- atom multLastRadix = 0
+-- atom multLastBase = 0
 -- integer multLen
 -- atom multlogt, multlogr
 
@@ -187,7 +187,7 @@ PositiveInteger baseMultiplyTargetLength = 1 -- might need to be a constant.
 --     return baseMultiplyTargetLength
 -- end function
 
-global function MultiplyExp(sequence n1, integer exp1, sequence n2, integer exp2, TargetLength targetLength, AtomRadix radix) --, integer len = -2)
+global function MultiplyExp(sequence n1, integer exp1, sequence n2, integer exp2, TargetLength targetLength, AtomBase base) --, integer len = -2)
     sequence numArray, ret
     integer newTargetLength, exponent, len
     exponent = exp1 + exp2
@@ -206,9 +206,9 @@ global function MultiplyExp(sequence n1, integer exp1, sequence n2, integer exp2
         --      multlogt = log(newTargetLength)
         --      flag = 1
         --end if
-        --if multLastRadix != radix then
-        --      multLastRadix = radix
-        --      multlogr = log(radix)
+        --if multLastBase != base then
+        --      multLastBase = base
+        --      multlogr = log(base)
         --      flag = 1
         --end if
         --if flag then
@@ -221,11 +221,11 @@ global function MultiplyExp(sequence n1, integer exp1, sequence n2, integer exp2
         end if
         numArray = Multiply(n1, n2, len)
     --end if
-    ret = AdjustRound(numArray, exponent, targetLength, radix, FALSE) -- TRUE for backwards compatability
+    ret = AdjustRound(numArray, exponent, targetLength, base, FALSE) -- TRUE for backwards compatability
     return ret
 end function
 
-global function SquaredExp(sequence n1, integer exp1, TargetLength targetLength, AtomRadix radix) --, integer len = -2)
-    return MultiplyExp(n1, exp1, n1, exp1, targetLength, radix) --, len)
+global function SquaredExp(sequence n1, integer exp1, TargetLength targetLength, AtomBase base) --, integer len = -2)
+    return MultiplyExp(n1, exp1, n1, exp1, targetLength, base) --, len)
 end function
 

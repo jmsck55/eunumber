@@ -20,14 +20,14 @@ global procedure SetZeroDividedByZero(Bool i)
     zeroDividedByZero = i
 end procedure
 
-global function DivideExp(sequence num1, integer exp1, sequence den2, integer exp2, TargetLength targetLength, AtomRadix radix)
+global function DivideExp(sequence num1, integer exp1, sequence den2, integer exp2, TargetLength targetLength, AtomBase base)
     sequence tmp
     if zeroDividedByZero and length(num1) = 0 and length(den2) = 0 then
-        return {{1}, 0, targetLength, radix}
+        return {{1}, 0, targetLength, base}
     end if
-    tmp = MultiplicativeInverseExp(den2, exp2, targetLength, radix)
+    tmp = MultiplicativeInverseExp(den2, exp2, targetLength, base)
     if length(tmp) then
-        tmp = MultiplyExp(num1, exp1, tmp[1], tmp[2], targetLength, radix)
+        tmp = MultiplyExp(num1, exp1, tmp[1], tmp[2], targetLength, base)
         return tmp
     else
         return {}

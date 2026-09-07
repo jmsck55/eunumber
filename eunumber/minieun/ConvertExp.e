@@ -4,23 +4,23 @@
 
 namespace convertexp
 
-include ../array/ConvertRadix.e
+include ../array/ConvertBase.e
 include Common.e
 include AdjustRound.e
 include Divide.e
 include TrimZeros.e
 include Eun.e
 
-global function ConvertExp(sequence n1, integer exp1, TargetLength targetLength, AtomRadix fromRadix, AtomRadix toRadix)
+global function ConvertExp(sequence n1, integer exp1, TargetLength targetLength, AtomBase fromBase, AtomBase toBase)
     sequence n2, n3, result
     integer exp2, exp3
     PositiveInteger d
-    if fromRadix = toRadix then
-        return AdjustRound(n1, exp1, targetLength, toRadix, NO_SUBTRACT_ADJUST)
+    if fromBase = toBase then
+        return AdjustRound(n1, exp1, targetLength, toBase, NO_SUBTRACT_ADJUST)
     end if
     n1 = TrimTrailingZeros(n1)
     if length(n1) = 0 then
-        result = {{}, 0, targetLength, toRadix}
+        result = {{}, 0, targetLength, toBase}
         return result
     end if
     if length(n1) <= exp1 then
@@ -36,20 +36,20 @@ global function ConvertExp(sequence n1, integer exp1, TargetLength targetLength,
 -- 12300 <=> 12300 / 1
 -- convert both numerator and denominator to LCD (Least Common Denominator), then divide.
 
-    n2 = ConvertRadix(n1, fromRadix, toRadix)
+    n2 = ConvertBase(n1, fromBase, toBase)
     exp2 = length(n2) - 1
     d = length(n1) - (exp1 + 1) -- it does work.
     if d then -- d is a PositiveInteger, d >= 0
-        n3 = ConvertRadix({1} & repeat(0, d), fromRadix, toRadix)
+        n3 = ConvertBase({1} & repeat(0, d), fromBase, toBase)
         exp3 = length(n3) - 1
-        result = DivideExp(n2, exp2, n3, exp3, targetLength, toRadix)
+        result = DivideExp(n2, exp2, n3, exp3, targetLength, toBase)
     else
-        result = AdjustRound(n2, exp2, targetLength, toRadix, NO_SUBTRACT_ADJUST)
+        result = AdjustRound(n2, exp2, targetLength, toBase, NO_SUBTRACT_ADJUST)
     end if
     return result
 end function
 
 -- EunConvert
-global function EunConvert(Eun n1, AtomRadix toRadix, TargetLength targetLength)
-    return ConvertExp(n1[1], n1[2], targetLength, n1[4], toRadix)
+global function EunConvert(Eun n1, AtomBase toBase, TargetLength targetLength)
+    return ConvertExp(n1[1], n1[2], targetLength, n1[4], toBase)
 end function
