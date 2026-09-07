@@ -136,7 +136,7 @@ end type
 
 elsedef
 
-global type AtomRadix(integer i)
+global type AtomBase(integer i)
     return i >= 2 and i <= INT_MAX
 end type
 
