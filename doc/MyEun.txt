@@ -9,7 +9,7 @@ Eun datatypes contain 4 to 6 parts:
 [1] number array (numArray)
 [2] exponent (exp)
 [3] target length (targetLength)
-[4] radix (radix)
+[4] base (base)
 (5) optional, rounded up or rounded down
-(6) optional, precision in radix of 2 (prec)
+(6) optional, precision in base of 2 (prec)
 

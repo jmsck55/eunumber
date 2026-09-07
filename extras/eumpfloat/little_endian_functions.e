@@ -66,15 +66,15 @@ public function reverse(sequence s)
 end function
 
 
-public function carry( sequence a, integer radix )
+public function carry( sequence a, integer base )
     atom q, r, b, rmax, i
-    rmax = radix - 1
+    rmax = base - 1
     i = 1
     while i <= length(a) do
         b = a[i]
         if b > rmax then
-            q = floor( b / radix )
-            r = remainder( b, radix )
+            q = floor( b / base )
+            r = remainder( b, base )
             a[i] = r
             if i = length(a) then
                 a &= 0
@@ -99,11 +99,11 @@ public function add( sequence a, sequence b )
     
 end function
 
-public function borrow( sequence a, integer radix )
+public function borrow( sequence a, integer base )
 -- "actual" little-endian borrow(), thanks to jmsck55
     for i = 1 to length(a) - 1 do
         if a[i] < 0 then
-            a[i] += radix
+            a[i] += base
             a[i+1] -= 1
         end if
     end for
@@ -151,7 +151,7 @@ public function bits_to_bytes(sequence bits, integer nbits = 8)
 end function
 
 
-public function convert_radix(sequence number, integer from_radix, integer to_radix)
+public function convert_base(sequence number, integer from_base, integer to_base)
 -- Thanks to jmsck55 for making this easier to trace.
     sequence target, base, a
     integer digit
@@ -165,11 +165,11 @@ public function convert_radix(sequence number, integer from_radix, integer to_ra
                 a[j] *= digit
             end for
             a = add( a, target )
-            target = carry( a, to_radix )
+            target = carry( a, to_base )
             for j = 1 to length(base) do
-                base[j] *= from_radix
+                base[j] *= from_base
             end for
-            base = carry( base, to_radix )
+            base = carry( base, to_base )
         end for
     end if
     return target
@@ -375,7 +375,7 @@ public  function scientific_to_eumpfloat( sequence s, object custom = NATIVE )
     if exp >= 0 then
         -- We have a large exponent, so it's all integral.  Pad it to account for 
         -- the positive exponent.
-        int_bits = trim_bits( bytes_to_bits( convert_radix( repeat( 0, exp ) & reverse( s ), 10, #100 ) ) )
+        int_bits = trim_bits( bytes_to_bits( convert_base( repeat( 0, exp ) & reverse( s ), 10, #100 ) ) )
         frac_bits = {}
     else
         if -exp > length(s) then
@@ -385,7 +385,7 @@ public  function scientific_to_eumpfloat( sequence s, object custom = NATIVE )
         
         else
             -- some int, some frac
-            int_bits = trim_bits( bytes_to_bits( convert_radix( reverse( s[1..$+exp] ), 10, #100 ) ) )
+            int_bits = trim_bits( bytes_to_bits( convert_base( reverse( s[1..$+exp] ), 10, #100 ) ) )
             frac_bits =  decimals_to_bits( s[$+exp+1..$], significand )
         end if
     end if

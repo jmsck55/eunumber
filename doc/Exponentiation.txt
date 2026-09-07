@@ -4,7 +4,7 @@
 "ln" is log[e](), "log" is log[10]()
 
 e^x = 10^n, solve for x
-10 = radix
+10 = base
 
 e^(n * ln(10)) = 10^n
 10^(x * log(e)) = e^x
@@ -29,13 +29,13 @@ m = x - n * ln(10) = 55 - 23 * ln(10) = 2.040542861
 
 e^x = (e^m) * (10^n) = 7.694785265 * 10^23 = e^55
 
-10 can be any radix.
+10 can be any base.
 n becomes the exponent.
 
 -- ----
 -- 
 -- 1. Precalculate:
--- c = ln(radix)
+-- c = ln(base)
 -- 
 -- 2. In exp(x), Eun's:
 -- n = floor( x / c )
@@ -47,5 +47,5 @@ n becomes the exponent.
 -- exponent = round(ToAtom(n))
 -- 
 -- 5. Return the Eun:
--- {numArray, exponent, targetLength = 70, radix = 10}
+-- {numArray, exponent, targetLength = 70, base = 10}
 

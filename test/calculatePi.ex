@@ -23,7 +23,7 @@ include ../eunumber/my.e
 --with trace
 trace(1)
 
-defaultRadix = 10
+defaultBase = 10
 defaultTargetLength = 5
 
 sequence mypi, Sum, numerator, denom, ans

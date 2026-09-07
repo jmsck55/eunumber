@@ -23,14 +23,14 @@ atom t, t0
 -- include std/pretty.e
 include ../eunumber/my.e
 
---defaultRadix = 10
+--defaultBase = 10
 
 -- trace(1)
 
 useTaskYield = TRUE
 --useExtraAdjustRound = FALSE -- Usually TRUE if you want to make sure you have accurate results.
 
-defaultRadix = 1000 -- NOTE: If you change this, also change "%03d", below, as well.
+defaultBase = 1000 -- NOTE: If you change this, also change "%03d", below, as well.
 
 type boolean(integer x)
     return Bool(x)
