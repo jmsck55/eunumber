@@ -122,11 +122,11 @@ global type TargetLength(integer i)
 end type
 
 
-ifdef USE_ATOM_RADIX then
+ifdef USE_ATOM_BASE then
 
-global type AtomRadix(atom a)
+global type AtomBase(atom a)
 
-    ifdef USE_SMALL_RADIX then
+    ifdef USE_SMALL_BASE then
         return a >= 1.001 and a <= DOUBLE_INT_MAX -- must be larger than 1.0
     elsedef
         return a >= 2 and a <= DOUBLE_INT_MAX -- must be 2.0 or larger
