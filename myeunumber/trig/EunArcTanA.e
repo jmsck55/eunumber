@@ -86,7 +86,7 @@ include arcTan.e
 --TODO: Write a complex version of ArcTanExpA().
 
 
-global function ArcTanExpA(sequence n1, integer exp1, TargetLength targetLength, AtomRadix radix)
+global function ArcTanExpA(sequence n1, integer exp1, TargetLength targetLength, AtomBase base)
 -- b = (z^2)/(z^2 + 1)
 --  NOTE: b is less than 1.
 -- arctan(z) = (b / z) * Sumation(n=0 to inf) of Product(k=1 to 'n') of (b - (b / (2 * k + 1)))
@@ -128,10 +128,10 @@ global function ArcTanExpA(sequence n1, integer exp1, TargetLength targetLength,
     -- targetLength += adjustPrecision
     protoTargetLength = targetLength + moreAccuracy + 1
     -- Step0:
-    a = SquaredExp(n1, exp1, protoTargetLength, radix)
-    a = AddExp(a[1], a[2], {1}, 0, protoTargetLength, radix)
-    a = DivideExp(n1, exp1, a[1], a[2], protoTargetLength, radix)
-    b = MultiplyExp(n1, exp1, a[1], a[2], protoTargetLength, radix)
+    a = SquaredExp(n1, exp1, protoTargetLength, base)
+    a = AddExp(a[1], a[2], {1}, 0, protoTargetLength, base)
+    a = DivideExp(n1, exp1, a[1], a[2], protoTargetLength, base)
+    b = MultiplyExp(n1, exp1, a[1], a[2], protoTargetLength, base)
     tmp = {{1}, 0}
     prod = tmp
     sum = tmp
@@ -143,16 +143,16 @@ global function ArcTanExpA(sequence n1, integer exp1, TargetLength targetLength,
     arcTanCount = 1
     while calculating and arcTanCount <= arcTanIter do
     -- for n = 1 to arcTanIter do -- NOTE: b is less than 1.
-        k2 = AddExp(k2[1], k2[2], {1}, 0, protoTargetLength, radix)
-        tmp = DivideExp(b[1], b[2], k2[1], k2[2], protoTargetLength, radix)
-        k2 = AddExp(k2[1], k2[2], {1}, 0, protoTargetLength, radix)
-        tmp = SubtractExp(b[1], b[2], tmp[1], tmp[2], protoTargetLength, radix)
-        prod = MultiplyExp(prod[1], prod[2], tmp[1], tmp[2], protoTargetLength, radix)
+        k2 = AddExp(k2[1], k2[2], {1}, 0, protoTargetLength, base)
+        tmp = DivideExp(b[1], b[2], k2[1], k2[2], protoTargetLength, base)
+        k2 = AddExp(k2[1], k2[2], {1}, 0, protoTargetLength, base)
+        tmp = SubtractExp(b[1], b[2], tmp[1], tmp[2], protoTargetLength, base)
+        prod = MultiplyExp(prod[1], prod[2], tmp[1], tmp[2], protoTargetLength, base)
         --lookat = sum
-        sum = AddExp(prod[1], prod[2], sum[1], sum[2], protoTargetLength, radix)
+        sum = AddExp(prod[1], prod[2], sum[1], sum[2], protoTargetLength, base)
         --ret = sum
         -- if useExtraAdjustRound then
-        --     ret = AdjustRound(ret[1], ret[2], targetLength + adjustRound, radix, NO_SUBTRACT_ADJUST)
+        --     ret = AdjustRound(ret[1], ret[2], targetLength + adjustRound, base, NO_SUBTRACT_ADJUST)
         -- end if
         -- if ret[2] = lookat[2] then
         --     arcTanHowComplete = Equaln(ret[1], lookat[1], arcTanHowComplete[1]) -- , targetLength - adjustRound)
@@ -165,7 +165,7 @@ global function ArcTanExpA(sequence n1, integer exp1, TargetLength targetLength,
         --      arcTanCount = n
         --      exit
         --end if
-        s = ReturnToUserCallBack(ID_ArcTan, arcTanHowComplete, targetLength, sum, lookat, radix)
+        s = ReturnToUserCallBack(ID_ArcTan, arcTanHowComplete, targetLength, sum, lookat, base)
         lookat = s[2]
         arcTanHowComplete = s[3]
         if s[1] then
@@ -182,8 +182,8 @@ end ifdef
         abort(1/0)
     end if
     -- Step2: exit out of the while loop above,
-    a = MultiplyExp(a[1], a[2], sum[1], sum[2], protoTargetLength, radix)
-    s = ReturnToUserCallBack(ID_ArcTan, {}, targetLength, a, lookat, radix) -- {} means, don't actually compare
+    a = MultiplyExp(a[1], a[2], sum[1], sum[2], protoTargetLength, base)
+    s = ReturnToUserCallBack(ID_ArcTan, {}, targetLength, a, lookat, base) -- {} means, don't actually compare
     a = s[2]
     -- targetLength -= adjustPrecision
     a = AdjustRound(a[1], a[2], targetLength, a[4], NO_SUBTRACT_ADJUST)

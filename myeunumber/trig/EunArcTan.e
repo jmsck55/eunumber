@@ -7,9 +7,9 @@ include EunArcTanA.e
 --include EunArcTanB.e
 
 
-global function ArcTanExp(sequence n1, integer exp1, integer targetLength, atom radix)
+global function ArcTanExp(sequence n1, integer exp1, integer targetLength, atom base)
 -- Use the faster, newer method: ArcTanExpA()
-    return ArcTanExpA(n1, exp1, targetLength, radix)
+    return ArcTanExpA(n1, exp1, targetLength, base)
 end function
 
 global function EunArcTan(Eun a)

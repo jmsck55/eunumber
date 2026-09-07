@@ -18,33 +18,33 @@ include ../../eunumber/minieun/WholeFracParts.e
 
 global constant FIND_POWER_LESS_THAN = 0, FIND_POWER_FLOOR = 1, FIND_POWER_CEIL = 2, FIND_POWER_INF = 3
 
-global function FindPowerOfGreaterThan(sequence n1, integer exp1, TargetLength targetLength, AtomRadix radix, sequence n2 = {2}, integer exp2 = 0, integer greaterThan = FIND_POWER_INF)
+global function FindPowerOfGreaterThan(sequence n1, integer exp1, TargetLength targetLength, AtomBase base, sequence n2 = {2}, integer exp2 = 0, integer greaterThan = FIND_POWER_INF)
     -- Defaults to power of 2.
     -- Find the first power of n2 that is greater than n1
     -- Or the first power of (1 / n2) that is less than n1
-    sequence x = {{1}, 0, targetLength, radix}
+    sequence x = {{1}, 0, targetLength, base}
     integer cmp
     atom n = 0
     if isRoundToZero then
         exp1 *= 2
-        n1 = AdjustRound(n1, exp1, targetLength, radix, NO_SUBTRACT_ADJUST)
+        n1 = AdjustRound(n1, exp1, targetLength, base, NO_SUBTRACT_ADJUST)
         exp1 = floor(n1[2] / 2)
         n1 = n1[1]
     end if
     if length(n1) then
         cmp = CompareExp({1}, 0, n1, exp1)
         if cmp = 1 then
-            x = MultiplicativeInverseExp(n1, exp1, targetLength, radix)
+            x = MultiplicativeInverseExp(n1, exp1, targetLength, base)
             n1 = x[1]
             exp1 = x[2]
         end if
-        x = DivideExp(n1, exp1, n2, exp2, targetLength, radix)
+        x = DivideExp(n1, exp1, n2, exp2, targetLength, base)
         x = WholeFracParts(x[1], x[2], WF_WHOLE_PART, 0, greaterThan)
-        x = x[1] & targetLength & radix
+        x = x[1] & targetLength & base
         n = ToAtom(x)
         x = {{1}, 0}
         for i = 1 to n do
-            x = MultiplyExp(x[1], x[2], n2, exp2, targetLength, radix)
+            x = MultiplyExp(x[1], x[2], n2, exp2, targetLength, base)
 ifdef not NO_SLEEP_OPTION then
             sleep(nanoSleep)
 end ifdef
@@ -57,14 +57,14 @@ end ifdef
 --    if length(n1) then
 --        cmp = CompareExp(x[1], x[2], n1, exp1)
 --        if cmp = 1 then
---            n1 = MultiplicativeInverseExp(n1, exp1, targetLength, radix)
+--            n1 = MultiplicativeInverseExp(n1, exp1, targetLength, base)
 --            exp1 = n1[2]
 --            n1 = n1[1]
 --            addOne = -1
 --            cmp = -1
 --        end if
 --        while cmp = -1 do
---            x = MultiplyExp(x[1], x[2], n2, exp2, targetLength, radix)
+--            x = MultiplyExp(x[1], x[2], n2, exp2, targetLength, base)
 --            n += addOne
 --            cmp = CompareExp(x[1], x[2], n1, exp1)
 --ifdef not NO_SLEEP_OPTION then
@@ -75,12 +75,12 @@ end ifdef
 end function
 
 
-global function SquareN(integer n, sequence n1, integer exp1, TargetLength targetLength, AtomRadix radix)
+global function SquareN(integer n, sequence n1, integer exp1, TargetLength targetLength, AtomBase base)
     -- n >= 0, or MultiplicativeInverse(x) with abs(n) >= 0
-    sequence x = {n1, exp1, targetLength, radix}
+    sequence x = {n1, exp1, targetLength, base}
     n = abs(n)
     for i = 1 to n do
-        x = SquaredExp(x[1], x[2], targetLength, radix)
+        x = SquaredExp(x[1], x[2], targetLength, base)
 ifdef not NO_SLEEP_OPTION then
         sleep(nanoSleep)
 end ifdef
@@ -115,7 +115,7 @@ global constant ID_Exp = 4
 
 -- Raw function: Natural Exponentiation
 
-global function NaturalExponentiation(sequence n1, integer exp1, TargetLength protoTargetLength, AtomRadix radix, TargetLength targetLength)
+global function NaturalExponentiation(sequence n1, integer exp1, TargetLength protoTargetLength, AtomBase base, TargetLength targetLength)
 --
 -- using taylor series
 -- https://en.wikipedia.org/wiki/TaylorSeries
@@ -141,19 +141,19 @@ global function NaturalExponentiation(sequence n1, integer exp1, TargetLength pr
     num = {{1}, 0}
     den = num
     count = num
-    sum = {{1}, 0, protoTargetLength, radix}
+    sum = {{1}, 0, protoTargetLength, base}
     lookat = {}
     calculating = ID_Exp -- begin calculating
     expExpCount = 1
     while calculating and expExpCount <= expExpIter do
     -- for i = 1 to expExpIter do
-        num = MultiplyExp(num[1], num[2], n1, exp1, protoTargetLength, radix)
-        den = MultiplyExp(den[1], den[2], count[1], count[2], protoTargetLength, radix)
-        tmp = DivideExp(num[1], num[2], den[1], den[2], protoTargetLength, radix)
+        num = MultiplyExp(num[1], num[2], n1, exp1, protoTargetLength, base)
+        den = MultiplyExp(den[1], den[2], count[1], count[2], protoTargetLength, base)
+        tmp = DivideExp(num[1], num[2], den[1], den[2], protoTargetLength, base)
         --lookat = sum
-        sum = AddExp(sum[1], sum[2], tmp[1], tmp[2], protoTargetLength, radix)
+        sum = AddExp(sum[1], sum[2], tmp[1], tmp[2], protoTargetLength, base)
         --if useExtraAdjustRound then
-        --     sum = AdjustRound(sum[1], sum[2], targetLength + adjustRound, radix, NO_SUBTRACT_ADJUST)
+        --     sum = AdjustRound(sum[1], sum[2], targetLength + adjustRound, base, NO_SUBTRACT_ADJUST)
         --end if
         --if sum[2] = lookat[2] then
         --    expHowComplete = Equaln(sum[1], lookat[1], expHowComplete[1]) -- , targetLength) -- + adjustRound)
@@ -162,14 +162,14 @@ global function NaturalExponentiation(sequence n1, integer exp1, TargetLength pr
         --        exit
         --    end if
         --end if
-        s = ReturnToUserCallBack(ID_Exp, expHowComplete, targetLength, sum, lookat, radix)
+        s = ReturnToUserCallBack(ID_Exp, expHowComplete, targetLength, sum, lookat, base)
         lookat = s[2]
         expHowComplete = s[3]
         if s[1] then
             exit
         end if
         expExpCount += 1
-        count = AddExp(count[1], count[2], {1}, 0, protoTargetLength, radix)
+        count = AddExp(count[1], count[2], {1}, 0, protoTargetLength, base)
 ifdef not NO_SLEEP_OPTION then
         sleep(nanoSleep)
 end ifdef
@@ -179,11 +179,11 @@ end ifdef
         printf(1, "Error %d\n", 3)
         abort(1/0)
     end if
-    -- sum = AdjustRound(sum[1], sum[2], targetLength, radix, NO_SUBTRACT_ADJUST)
+    -- sum = AdjustRound(sum[1], sum[2], targetLength, base, NO_SUBTRACT_ADJUST)
     return sum
 end function
 
-global function ExpExp(sequence n1, integer exp1, TargetLength targetLength, AtomRadix radix, Bool factor = TRUE)
+global function ExpExp(sequence n1, integer exp1, TargetLength targetLength, AtomBase base, Bool factor = TRUE)
 -- it doesn't like large numbers.
 -- so, factor.
 --
@@ -226,24 +226,24 @@ global function ExpExp(sequence n1, integer exp1, TargetLength targetLength, Ato
 -- Part 1 of Exp():
     if factor then
         sequence den, tmp, s
-        s = FindPowerOfGreaterThan(n1, exp1, protoTargetLength, radix, {2}, 0, FIND_POWER_INF)
+        s = FindPowerOfGreaterThan(n1, exp1, protoTargetLength, base, {2}, 0, FIND_POWER_INF)
         n = s[1]
         den = s[2]
-        tmp = DivideExp(n1, exp1, den[1], den[2], protoTargetLength, radix)
+        tmp = DivideExp(n1, exp1, den[1], den[2], protoTargetLength, base)
         n1 = tmp[1]
         exp1 = tmp[2]
     end if
 -- End Part 1 of Exp().
-    sum = NaturalExponentiation(n1, exp1, protoTargetLength, radix, targetLength)
+    sum = NaturalExponentiation(n1, exp1, protoTargetLength, base, targetLength)
 -- Part 2 of Exp():
     if factor then
-        sum = SquareN(n, sum[1], sum[2], protoTargetLength, radix)
+        sum = SquareN(n, sum[1], sum[2], protoTargetLength, base)
     end if
 -- End Part 2 of Exp().
     if isNeg then
-        sum = MultiplicativeInverseExp(sum[1], sum[2], protoTargetLength, radix)
+        sum = MultiplicativeInverseExp(sum[1], sum[2], protoTargetLength, base)
     end if
-    sum = AdjustRound(sum[1], sum[2], targetLength, radix, NO_SUBTRACT_ADJUST)
+    sum = AdjustRound(sum[1], sum[2], targetLength, base, NO_SUBTRACT_ADJUST)
     return sum
 end function
 

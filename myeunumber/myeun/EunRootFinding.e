@@ -64,13 +64,13 @@ global function GetLastDelta()
     return delta
 end function
 
-function Condition_1_Through_5(PositiveScalar len, AtomRadix radix)
+function Condition_1_Through_5(PositiveScalar len, AtomBase base)
     sequence sb, bc, cd
 
     --tmp1 = ((3 * a) + b) / 4
-    tmp1 = MultiplyExp({3}, 0, a[1], a[2], len, radix)
-    tmp1 = AddExp(tmp1[1], tmp1[2], b[1], b[2], len, radix)
-    tmp1 = DivideExp(tmp1[1], tmp1[2], {4}, 0, len, radix)
+    tmp1 = MultiplyExp({3}, 0, a[1], a[2], len, base)
+    tmp1 = AddExp(tmp1[1], tmp1[2], b[1], b[2], len, base)
+    tmp1 = DivideExp(tmp1[1], tmp1[2], {4}, 0, len, base)
 
     comp1 = MyCompareExp(s[1], s[2], tmp1[1], tmp1[2])
     comp2 = MyCompareExp(s[1], s[2], b[1], b[2])
@@ -80,14 +80,14 @@ function Condition_1_Through_5(PositiveScalar len, AtomRadix radix)
         return 1
     end if
 
-    sb = SubtractExp(s[1], s[2], b[1], b[2], len, radix)
+    sb = SubtractExp(s[1], s[2], b[1], b[2], len, base)
     sb[1] = AbsoluteValue(sb[1])
 
     if mflag = 1 then
-        bc = SubtractExp(b[1], b[2], c[1], c[2], len, radix)
+        bc = SubtractExp(b[1], b[2], c[1], c[2], len, base)
         bc[1] = AbsoluteValue(bc[1])
         -- condition 2:
-        tmp = DivideExp(bc[1], bc[2], {2}, 0, len, radix)
+        tmp = DivideExp(bc[1], bc[2], {2}, 0, len, base)
         comp1 = MyCompareExp(sb[1], sb[2], tmp[1], tmp[2])
         if comp1 >= 0 then
             return 1
@@ -98,10 +98,10 @@ function Condition_1_Through_5(PositiveScalar len, AtomRadix radix)
             return 1
         end if
     else
-        cd = SubtractExp(c[1], c[2], d[1], d[2], len, radix)
+        cd = SubtractExp(c[1], c[2], d[1], d[2], len, base)
         cd[1] = AbsoluteValue(cd[1])
         -- condition 3:
-        tmp = DivideExp(cd[1], cd[2], {2}, 0, len, radix)
+        tmp = DivideExp(cd[1], cd[2], {2}, 0, len, base)
         comp1 = MyCompareExp(sb[1], sb[2], tmp[1], tmp[2])
         if comp1 >= 0 then
             return 1
@@ -118,27 +118,27 @@ end function
 global constant ID_FindRootExp = 10
 
 global function FindRootExp(integer rid, sequence n1, integer exp1,
-        sequence n2, integer exp2, TargetLength targetLength, AtomRadix radix,
+        sequence n2, integer exp2, TargetLength targetLength, AtomBase base,
         integer littleEndian = 0, object passToFunc1 = {})
     sequence ret
     integer len
     len = targetLength + eurootsAdjustRound
-    if Eun(deltaC) and deltaC[4] = radix then
+    if Eun(deltaC) and deltaC[4] = base then
         delta = deltaC
     else
-        delta = NewEun({1}, floor((exp1 + exp2) / 2) - (len) + 2, len, radix)
+        delta = NewEun({1}, floor((exp1 + exp2) / 2) - (len) + 2, len, base)
     end if
 
     a = {n1, exp1}
     b = {n2, exp2}
     if littleEndian then
-        fa = call_func(rid, {reverse(n1), exp1, len, radix, passToFunc1})
+        fa = call_func(rid, {reverse(n1), exp1, len, base, passToFunc1})
         fa[1] = reverse(fa[1])
-        fb = call_func(rid, {reverse(n2), exp2, len, radix, passToFunc1})
+        fb = call_func(rid, {reverse(n2), exp2, len, base, passToFunc1})
         fb[1] = reverse(fb[1])
     else
-        fa = call_func(rid, {n1, exp1, len, radix, passToFunc1})
-        fb = call_func(rid, {n2, exp2, len, radix, passToFunc1})
+        fa = call_func(rid, {n1, exp1, len, base, passToFunc1})
+        fb = call_func(rid, {n2, exp2, len, base, passToFunc1})
     end if
 
     if length(fa[1]) and length(fb[1]) then
@@ -169,52 +169,52 @@ global function FindRootExp(integer rid, sequence n1, integer exp1,
         if comp1 != 0 and comp2 != 0 then
             -- calculate "s" (inverse quadratic interpolation)
             --s = (a*fb*fc) / ((fa-fb)*(fa-fc))
-            tmp1 = SubtractExp(fa[1], fa[2], fb[1], fb[2], len, radix)
-            tmp2 = SubtractExp(fa[1], fa[2], fc[1], fc[2], len, radix)
-            tmp1 = MultiplyExp(tmp1[1], tmp1[2], tmp2[1], tmp2[2], len, radix)
-            tmp2 = MultiplyExp(fb[1], fb[2], fc[1], fc[2], len, radix)
-            tmp2 = MultiplyExp(tmp2[1], tmp2[2], a[1], a[2], len, radix)
-            tmp1 = DivideExp(tmp2[1], tmp2[2], tmp1[1], tmp1[2], len, radix)
+            tmp1 = SubtractExp(fa[1], fa[2], fb[1], fb[2], len, base)
+            tmp2 = SubtractExp(fa[1], fa[2], fc[1], fc[2], len, base)
+            tmp1 = MultiplyExp(tmp1[1], tmp1[2], tmp2[1], tmp2[2], len, base)
+            tmp2 = MultiplyExp(fb[1], fb[2], fc[1], fc[2], len, base)
+            tmp2 = MultiplyExp(tmp2[1], tmp2[2], a[1], a[2], len, base)
+            tmp1 = DivideExp(tmp2[1], tmp2[2], tmp1[1], tmp1[2], len, base)
             s = tmp1
 
             --s += (b*fa*fc) / ((fb-fa)*(fb-fc))
-            tmp1 = SubtractExp(fb[1], fb[2], fa[1], fa[2], len, radix)
-            tmp2 = SubtractExp(fb[1], fb[2], fc[1], fc[2], len, radix)
-            tmp1 = MultiplyExp(tmp1[1], tmp1[2], tmp2[1], tmp2[2], len, radix)
-            tmp2 = MultiplyExp(fa[1], fa[2], fc[1], fc[2], len, radix)
-            tmp2 = MultiplyExp(tmp2[1], tmp2[2], b[1], b[2], len, radix)
-            tmp1 = DivideExp(tmp2[1], tmp2[2], tmp1[1], tmp1[2], len, radix)
-            s = AddExp(s[1], s[2], tmp1[1], tmp1[2], len, radix)
+            tmp1 = SubtractExp(fb[1], fb[2], fa[1], fa[2], len, base)
+            tmp2 = SubtractExp(fb[1], fb[2], fc[1], fc[2], len, base)
+            tmp1 = MultiplyExp(tmp1[1], tmp1[2], tmp2[1], tmp2[2], len, base)
+            tmp2 = MultiplyExp(fa[1], fa[2], fc[1], fc[2], len, base)
+            tmp2 = MultiplyExp(tmp2[1], tmp2[2], b[1], b[2], len, base)
+            tmp1 = DivideExp(tmp2[1], tmp2[2], tmp1[1], tmp1[2], len, base)
+            s = AddExp(s[1], s[2], tmp1[1], tmp1[2], len, base)
 
             --s += (c*fa*fb) / ((fc-fa)*(fc-fb))
-            tmp1 = SubtractExp(fc[1], fc[2], fa[1], fa[2], len, radix)
-            tmp2 = SubtractExp(fc[1], fc[2], fb[1], fb[2], len, radix)
-            tmp1 = MultiplyExp(tmp1[1], tmp1[2], tmp2[1], tmp2[2], len, radix)
-            tmp2 = MultiplyExp(fa[1], fa[2], fb[1], fb[2], len, radix)
-            tmp2 = MultiplyExp(tmp2[1], tmp2[2], c[1], c[2], len, radix)
-            tmp1 = DivideExp(tmp2[1], tmp2[2], tmp1[1], tmp1[2], len, radix)
-            s = AddExp(s[1], s[2], tmp1[1], tmp1[2], len, radix)
+            tmp1 = SubtractExp(fc[1], fc[2], fa[1], fa[2], len, base)
+            tmp2 = SubtractExp(fc[1], fc[2], fb[1], fb[2], len, base)
+            tmp1 = MultiplyExp(tmp1[1], tmp1[2], tmp2[1], tmp2[2], len, base)
+            tmp2 = MultiplyExp(fa[1], fa[2], fb[1], fb[2], len, base)
+            tmp2 = MultiplyExp(tmp2[1], tmp2[2], c[1], c[2], len, base)
+            tmp1 = DivideExp(tmp2[1], tmp2[2], tmp1[1], tmp1[2], len, base)
+            s = AddExp(s[1], s[2], tmp1[1], tmp1[2], len, base)
         else
             -- calculate "s" (secant rule)
             --s = b - (fb * (b-a)/(fb-fa))
-            tmp1 = SubtractExp(b[1], b[2], a[1], a[2], len, radix)
-            tmp2 = SubtractExp(fb[1], fb[2], fa[1], fa[2], len, radix)
-            tmp1 = MultiplyExp(tmp1[1], tmp1[2], fb[1], fb[2], len, radix)
-            tmp1 = DivideExp(tmp1[1], tmp1[2], tmp2[1], tmp2[2], len, radix)
-            s = SubtractExp(b[1], b[2], tmp1[1], tmp1[2], len, radix)
+            tmp1 = SubtractExp(b[1], b[2], a[1], a[2], len, base)
+            tmp2 = SubtractExp(fb[1], fb[2], fa[1], fa[2], len, base)
+            tmp1 = MultiplyExp(tmp1[1], tmp1[2], fb[1], fb[2], len, base)
+            tmp1 = DivideExp(tmp1[1], tmp1[2], tmp2[1], tmp2[2], len, base)
+            s = SubtractExp(b[1], b[2], tmp1[1], tmp1[2], len, base)
         end if
 
-        mflag = Condition_1_Through_5(len, radix)
+        mflag = Condition_1_Through_5(len, base)
         if mflag then
-            s = AddExp(a[1], a[2], b[1], b[2], len, radix)
-            s = DivideExp(s[1], s[2], {2}, 0, len, radix)
+            s = AddExp(a[1], a[2], b[1], b[2], len, base)
+            s = DivideExp(s[1], s[2], {2}, 0, len, base)
         end if
 
         if littleEndian then
-            fs = call_func(rid, {reverse(s[1]), s[2], len, radix, passToFunc1})
+            fs = call_func(rid, {reverse(s[1]), s[2], len, base, passToFunc1})
             fs[1] = reverse(fs[1])
         else
-            fs = call_func(rid, {s[1], s[2], len, radix, passToFunc1})
+            fs = call_func(rid, {s[1], s[2], len, base, passToFunc1})
         end if
 
         d = c -- (d is assigned for the first time here, it won't be used above on the first iteration because mflag is set)
@@ -234,13 +234,13 @@ global function FindRootExp(integer rid, sequence n1, integer exp1,
             a = tmp
         end if
 
-        tmp1 = SubtractExp(b[1], b[2], a[1], a[2], len, radix)
+        tmp1 = SubtractExp(b[1], b[2], a[1], a[2], len, base)
         tmp1[1] = AbsoluteValue(tmp1[1])
         comp1 = MyCompareExp(tmp1[1], tmp1[2], delta[1], delta[2])
         if length(fb[1]) = 0 or length(fs[1]) = 0 or comp1 = -1 then
             exit
         end if
-        ret = ReturnToUserCallBack(ID_FindRootExp, {lookatIter, 0}, targetLength, b, s, radix)
+        ret = ReturnToUserCallBack(ID_FindRootExp, {lookatIter, 0}, targetLength, b, s, base)
         if ret[1] then
             exit
         end if
@@ -251,8 +251,8 @@ end ifdef
     end while
 
     len -= eurootsAdjustRound
-    b = AdjustRound(b[1], b[2], len, radix)
-    s = AdjustRound(s[1], s[2], len, radix)
+    b = AdjustRound(b[1], b[2], len, base)
+    s = AdjustRound(s[1], s[2], len, base)
 
     return {b, s, lookatIter}
 end function
@@ -260,7 +260,7 @@ end function
 global function EunFindRoot(integer rid, Eun n1, Eun n2, integer littleEndian = 0, object passToFunc1 = {})
     object x
     if n1[4] != n2[4] then
-        puts(1, "Error, radixes are not the same.\n")
+        puts(1, "Error, basees are not the same.\n")
         abort(1/0)
     end if
     x = FindRootExp(rid, n1[1], n1[2], n2[1], n2[2], max(n1[3], n2[3]), n1[4], littleEndian, passToFunc1)

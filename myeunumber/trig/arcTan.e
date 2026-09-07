@@ -129,14 +129,14 @@ end function
 -- global integer arctanIter = 1000000000 -- 500
 -- global integer lastIterCountArctan = 0
 --
--- global function ArctanExp(sequence n1, integer exp1, TargetLength targetLength, integer radix)
+-- global function ArctanExp(sequence n1, integer exp1, TargetLength targetLength, integer base)
 -- -- works best with small numbers.
 -- -- arctan(x) = x - ((x^3)/3) + ((x^5)/5) - ((x^7)/7) + ..., where abs(x) < 1
 -- -- sine(x) = x - ((x^3)/(3!)) + ((x^5)/(5!)) - ((x^7)/(7!)) + ((x^9)/(9!)) - ...
 --      sequence ans, a, b, tmp, xSquared, lookat
 --      --integer step
 --      --step = 1 -- SinExp() uses 1
---      xSquared = SquaredExp(n1, exp1, targetLength, radix)
+--      xSquared = SquaredExp(n1, exp1, targetLength, base)
 --
 --      a = {n1, exp1} -- a is the numerator, SinExp() starts with x.
 --      b = {{1}, 0} -- b is the denominator.
@@ -147,20 +147,20 @@ end function
 --              lookat = ans
 --              -- first step is 3, for SinExp()
 --              --step += 2
---              --tmp = MultiplyExp({step-1}, 0, {step}, 0, targetLength, radix)
---              --b = MultiplyExp(b[1], b[2], tmp[1], tmp[2], targetLength, radix)
---              b = AddExp(b[1], b[2], {2}, 0, targetLength, radix)
+--              --tmp = MultiplyExp({step-1}, 0, {step}, 0, targetLength, base)
+--              --b = MultiplyExp(b[1], b[2], tmp[1], tmp[2], targetLength, base)
+--              b = AddExp(b[1], b[2], {2}, 0, targetLength, base)
 --              --b = {{step}, 0} -- "b" is "step" in arctan()
 --
---              a = MultiplyExp(a[1], a[2], xSquared[1], xSquared[2], targetLength, radix)
---              tmp = DivideExp(a[1], a[2], b[1], b[2], targetLength, radix)
+--              a = MultiplyExp(a[1], a[2], xSquared[1], xSquared[2], targetLength, base)
+--              tmp = DivideExp(a[1], a[2], b[1], b[2], targetLength, base)
 --
 --              if IsPositiveOdd(i) then
 --                      -- Subtract
 --                      tmp[1] = Negate(tmp[1])
 --              end if
 --
---              ans = AddExp(ans[1], ans[2], tmp[1], tmp[2], targetLength, radix)
+--              ans = AddExp(ans[1], ans[2], tmp[1], tmp[2], targetLength, base)
 --              if length(ans[1]) > targetLength then
 --                      ans[1] = ans[1][1..targetLength]
 --              end if

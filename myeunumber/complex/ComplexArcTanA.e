@@ -72,10 +72,10 @@ global function ComplexArcTanA(Complex z)
 --
     sequence a, b, tmp, prod, sum, k2, lookat, ret, one, s
     integer targetLength, protoTargetLength, protoMoreAccuracy
-    atom radix
+    atom base
     complexArcTanHowComplete = repeat({1, 0, {}}, 2)
     targetLength = z[1][3]
-    radix = z[1][4]
+    base = z[1][4]
     if complexArcTanMoreAccuracy >= 0 then
         protoMoreAccuracy = complexArcTanMoreAccuracy
     elsif calculationSpeed then
@@ -88,7 +88,7 @@ global function ComplexArcTanA(Complex z)
     z[IMAG][3] = protoTargetLength
     -- Step0:
     a = ComplexSquared(z)
-    one = NewComplex({{1}, 0, protoTargetLength, radix}, {{}, 0, protoTargetLength, radix}) -- Complex one (1).
+    one = NewComplex({{1}, 0, protoTargetLength, base}, {{}, 0, protoTargetLength, base}) -- Complex one (1).
     a = ComplexAdd(a, one)
     a = ComplexDivide(z, a)
     b = ComplexMultiply(a, z) -- NOTE: b is less than 1.
@@ -129,7 +129,7 @@ global function ComplexArcTanA(Complex z)
         --      complexArcTanCount = n
         --      exit
         --end if
-        s = ReturnToUserCallBack(ID_ComplexArcTan, complexArcTanHowComplete, targetLength, sum, lookat, radix)
+        s = ReturnToUserCallBack(ID_ComplexArcTan, complexArcTanHowComplete, targetLength, sum, lookat, base)
         lookat = s[2]
         complexArcTanHowComplete = s[3]
         if s[1] then

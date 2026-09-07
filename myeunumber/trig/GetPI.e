@@ -19,38 +19,38 @@ include EunArcTan.e
 
 global sequence quarterPI = {}
 
--- NOTE: To precalculate, put the largest value for targetLength first, then use the same radix for all your calculations, before switching to another radix.
+-- NOTE: To precalculate, put the largest value for targetLength first, then use the same base for all your calculations, before switching to another base.
 -- You can also use the "SwapQuarterPI()" function below:
 
-global function SwapQuarterPI(sequence s = quarterPI) -- SwapQuarterPI when changing radixes, then swap back when changing back.
+global function SwapQuarterPI(sequence s = quarterPI) -- SwapQuarterPI when changing basees, then swap back when changing back.
     object oldvalue = quarterPI
     quarterPI = s
     return oldvalue
 end function
 
-global function GetQuarterPI(TargetLength targetLength = defaultTargetLength, AtomRadix radix = defaultRadix, PositiveInteger multBy = 1)
+global function GetQuarterPI(TargetLength targetLength = defaultTargetLength, AtomBase base = defaultBase, PositiveInteger multBy = 1)
     sequence ret
     -- targetLength += adjustPrecision
-    if not length(quarterPI) or not length(quarterPI[1]) or quarterPI[3] <= targetLength or quarterPI[4] != radix then
-        quarterPI = ArcTanExp({1}, 0, targetLength + 1, radix)
+    if not length(quarterPI) or not length(quarterPI[1]) or quarterPI[3] <= targetLength or quarterPI[4] != base then
+        quarterPI = ArcTanExp({1}, 0, targetLength + 1, base)
     end if
-    ret = AdjustRound(quarterPI[1], quarterPI[2], targetLength, radix, NO_SUBTRACT_ADJUST)
+    ret = AdjustRound(quarterPI[1], quarterPI[2], targetLength, base, NO_SUBTRACT_ADJUST)
     if multBy != 1 then
-        object tmp = AdjustRound({multBy}, 0, targetLength, radix, 0) -- 0 makes it use Carry()
+        object tmp = AdjustRound({multBy}, 0, targetLength, base, 0) -- 0 makes it use Carry()
         ret = EunMultiply(ret, tmp)
     end if
     return ret
 end function
 
-global function GetHalfPI(TargetLength targetLength = defaultTargetLength, integer radix = defaultRadix)
-    return GetQuarterPI(targetLength, radix, 2)
+global function GetHalfPI(TargetLength targetLength = defaultTargetLength, integer base = defaultBase)
+    return GetQuarterPI(targetLength, base, 2)
 end function
 
-global function GetPI(TargetLength targetLength = defaultTargetLength, integer radix = defaultRadix)
-    return GetQuarterPI(targetLength, radix, 4)
+global function GetPI(TargetLength targetLength = defaultTargetLength, integer base = defaultBase)
+    return GetQuarterPI(targetLength, base, 4)
 end function
 
-global function GetTwoPI(TargetLength targetLength = defaultTargetLength, integer radix = defaultRadix)
-    return GetQuarterPI(targetLength, radix, 8)
+global function GetTwoPI(TargetLength targetLength = defaultTargetLength, integer base = defaultBase)
+    return GetQuarterPI(targetLength, base, 8)
 end function
 
