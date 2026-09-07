@@ -3,7 +3,7 @@
 include std/console.e
 include ../eunumber/my.e
 
-defaultRadix = 10
+defaultBase = 10
 
 function TestMultiplicativeInverse(Eun val)
 -- This function can be adapted to other functions that use "moreAccuracy" type variables.

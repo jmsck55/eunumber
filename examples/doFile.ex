@@ -18,7 +18,7 @@ include ../eunumber/my.e as my
 -- with trace
 -- trace(1)
 
-defaultRadix = 10
+defaultBase = 10
 
 constant OBJRid = 0
 constant SEQRid = 1
@@ -299,9 +299,9 @@ for i = 4 to length(cmd) do
 --                      case "lnMoreAccuracy" then
 --                              ob = Myget(INTEGERRid)
 --                              logMoreAccuracy = ob
-            case "defaultRadix" then
+            case "defaultBase" then
                 ob = Myget(INTEGERRid)
-                defaultRadix = ob
+                defaultBase = ob
             case "defaultTargetLength" then
                 ob = Myget(INTEGERRid)
                 defaultTargetLength = ob
@@ -364,7 +364,7 @@ for i = 4 to length(cmd) do
             stack:push(nums, ob)
         case "ifneq", "if not eq", "if true" then -- values are not equal
             ob = GetNum()
-            ob = EunCompare(ob, {{},0,defaultTargetLength,defaultRadix})
+            ob = EunCompare(ob, {{},0,defaultTargetLength,defaultBase})
             if ob then
                 ifStatement &= 1
             else
@@ -373,7 +373,7 @@ for i = 4 to length(cmd) do
             nestedIf += 1
         case "ifeq", "if eq", "if false" then -- values are equal
             ob = GetNum()
-            ob = EunCompare(ob, {{},0,defaultTargetLength,defaultRadix})
+            ob = EunCompare(ob, {{},0,defaultTargetLength,defaultBase})
             if not ob then
                 ifStatement &= 1
             else
@@ -382,7 +382,7 @@ for i = 4 to length(cmd) do
             nestedIf += 1
         case "ifgt", "if gt", "if pos" then -- one value is greater than the other
             ob = GetNum()
-            ob = EunCompare(ob, {{},0,defaultTargetLength,defaultRadix})
+            ob = EunCompare(ob, {{},0,defaultTargetLength,defaultBase})
             if ob > 0 then
                 ifStatement &= 1
             else
@@ -391,7 +391,7 @@ for i = 4 to length(cmd) do
             nestedIf += 1
         case "iflt", "if lt", "if neg" then -- one value is less than the other
             ob = GetNum()
-            ob = EunCompare(ob, {{},0,defaultTargetLength,defaultRadix})
+            ob = EunCompare(ob, {{},0,defaultTargetLength,defaultBase})
             if ob < 0 then
                 ifStatement &= 1
             else
@@ -400,7 +400,7 @@ for i = 4 to length(cmd) do
             nestedIf += 1
         case "ifgteq", "if gt or eq" then -- one value is greater than or equal to the other
             ob = GetNum()
-            ob = EunCompare(ob, {{},0,defaultTargetLength,defaultRadix})
+            ob = EunCompare(ob, {{},0,defaultTargetLength,defaultBase})
             if ob >= 0 then
                 ifStatement &= 1
             else
@@ -409,7 +409,7 @@ for i = 4 to length(cmd) do
             nestedIf += 1
         case "iflteq", "if lt or eq" then -- one value is less than or equal to the other
             ob = GetNum()
-            ob = EunCompare(ob, {{},0,defaultTargetLength,defaultRadix})
+            ob = EunCompare(ob, {{},0,defaultTargetLength,defaultBase})
             if ob <= 0 then
                 ifStatement &= 1
             else
@@ -467,10 +467,10 @@ for i = 4 to length(cmd) do
         case "convert" then
             s = GetNums(1)
             if 1 then
-                integer toRadix, targetLength
-                toRadix = Myget(INTEGERRid)
+                integer toBase, targetLength
+                toBase = Myget(INTEGERRid)
                 targetLength = Myget(INTEGERRid)
-                ans = EunConvert(s[1], toRadix, targetLength)
+                ans = EunConvert(s[1], toBase, targetLength)
             end if
             
             -- EuNumber: put "ob" into stack "nums"
@@ -536,9 +536,9 @@ for i = 4 to length(cmd) do
         case "getSign" then -- test for negative, use before using "sqrt2" below, to tell if number is imaginary or not
             s = GetNums(1)
             if length(s[1]) and s[1][1] < 0 then
-                ans = {{-1}, 0, defaultTargetLength, defaultRadix}
+                ans = {{-1}, 0, defaultTargetLength, defaultBase}
             else
-                ans = {{1}, 0, defaultTargetLength, defaultRadix}
+                ans = {{1}, 0, defaultTargetLength, defaultBase}
             end if
             
             -- EuNumber: put "ob" into stack "nums"
@@ -548,9 +548,9 @@ for i = 4 to length(cmd) do
         case "isZero" then -- toggles zero and one, can be used with "getSign" to test for zero.
             s = GetNums(1)
             if length(s[1]) = 0 then
-                ans = {{1}, 0, defaultTargetLength, defaultRadix}
+                ans = {{1}, 0, defaultTargetLength, defaultBase}
             else
-                ans = {{}, 0, defaultTargetLength, defaultRadix}
+                ans = {{}, 0, defaultTargetLength, defaultBase}
             end if
             
             -- EuNumber: put "ob" into stack "nums"
@@ -606,7 +606,7 @@ for i = 4 to length(cmd) do
                     
                 elsif types:number_array(ob) then
                     -- (this option might become unsupported)
-                    ob = {ob, length(ob) - 1, defaultRadix, defaultTargetLength}
+                    ob = {ob, length(ob) - 1, defaultBase, defaultTargetLength}
                 else
                     ErrorAbort(8)
                 end if

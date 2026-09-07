@@ -9,7 +9,7 @@
 
 include ../eunumber/my.e
 
-defaultRadix = 10
+defaultBase = 10
 
 trace(1)
 
@@ -34,7 +34,7 @@ puts(1, ToString(a) & "\n")
 
 puts(1, "Again, this time using: 4 * arctan(1); 10 decimal places\n")
 
-defaultRadix = 10
+defaultBase = 10
 defaultTargetLength = 10
 
 trace(1)
@@ -59,7 +59,7 @@ puts(1, "Again, this time using: 1000 decimal places (constant for pi)\n")
 
 -- puts(1, "wait for it\n")
 
-defaultRadix = 10
+defaultBase = 10
 defaultTargetLength = 1001
 calculationSpeed = defaultTargetLength -- doesn't need more accuracy for this equation
 

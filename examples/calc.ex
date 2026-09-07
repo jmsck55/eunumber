@@ -14,7 +14,7 @@ realMode = FALSE
 
 puts(1, "EuNumber Calculator [v1.0.0e]\nMade to varify against Microsoft's Calculator.\n")
 
-defaultRadix = 10
+defaultBase = 10
 defaultTargetLength = 32
 -- adjustRound = 5
 calculationSpeed = 32
@@ -133,7 +133,7 @@ procedure GetNew()
         n = length(vars)
     end if
     printf(1, "Stored as n%d.\n", {n})
-    printf(1, "[Using %d as radix, %d as targetLength, and %g for calculationSpeed]\n", {defaultRadix, defaultTargetLength, calculationSpeed})
+    printf(1, "[Using %d as base, %d as targetLength, and %g for calculationSpeed]\n", {defaultBase, defaultTargetLength, calculationSpeed})
 end procedure
 
 function ClearPrompt(integer i)
@@ -344,12 +344,12 @@ procedure Operations()
                 n2 = st[1][1]
                 c2 = st[1][2]
                 if n1[4] != n2[4] then
-                    n1 = EunConvert(n1, defaultRadix, defaultTargetLength)
-                    n2 = EunConvert(n2, defaultRadix, defaultTargetLength)
+                    n1 = EunConvert(n1, defaultBase, defaultTargetLength)
+                    n2 = EunConvert(n2, defaultBase, defaultTargetLength)
                 end if
                 if c1[4] != c2[4] then
-                    c1 = EunConvert(c1, defaultRadix, defaultTargetLength)
-                    c2 = EunConvert(c2, defaultRadix, defaultTargetLength)
+                    c1 = EunConvert(c1, defaultBase, defaultTargetLength)
+                    c2 = EunConvert(c2, defaultBase, defaultTargetLength)
                 end if
                 st = ComplexAdd({n1, c1}, {n2, c2})
                 n1 = st[1]
@@ -365,12 +365,12 @@ procedure Operations()
                 n2 = st[1][1]
                 c2 = st[1][2]
                 if n1[4] != n2[4] then
-                    n1 = EunConvert(n1, defaultRadix, defaultTargetLength)
-                    n2 = EunConvert(n2, defaultRadix, defaultTargetLength)
+                    n1 = EunConvert(n1, defaultBase, defaultTargetLength)
+                    n2 = EunConvert(n2, defaultBase, defaultTargetLength)
                 end if
                 if c1[4] != c2[4] then
-                    c1 = EunConvert(c1, defaultRadix, defaultTargetLength)
-                    c2 = EunConvert(c2, defaultRadix, defaultTargetLength)
+                    c1 = EunConvert(c1, defaultBase, defaultTargetLength)
+                    c2 = EunConvert(c2, defaultBase, defaultTargetLength)
                 end if
                 st = ComplexSubtract({n1, c1}, {n2, c2})
                 n1 = st[1]
@@ -386,12 +386,12 @@ procedure Operations()
                 n2 = st[1][1]
                 c2 = st[1][2]
                 if n1[4] != n2[4] then
-                    n1 = EunConvert(n1, defaultRadix, defaultTargetLength)
-                    n2 = EunConvert(n2, defaultRadix, defaultTargetLength)
+                    n1 = EunConvert(n1, defaultBase, defaultTargetLength)
+                    n2 = EunConvert(n2, defaultBase, defaultTargetLength)
                 end if
                 if c1[4] != c2[4] then
-                    c1 = EunConvert(c1, defaultRadix, defaultTargetLength)
-                    c2 = EunConvert(c2, defaultRadix, defaultTargetLength)
+                    c1 = EunConvert(c1, defaultBase, defaultTargetLength)
+                    c2 = EunConvert(c2, defaultBase, defaultTargetLength)
                 end if
                 st = ComplexMultiply({n1, c1}, {n2, c2})
                 n1 = st[1]
@@ -407,12 +407,12 @@ procedure Operations()
                 n2 = st[1][1]
                 c2 = st[1][2]
                 if n1[4] != n2[4] then
-                    n1 = EunConvert(n1, defaultRadix, defaultTargetLength)
-                    n2 = EunConvert(n2, defaultRadix, defaultTargetLength)
+                    n1 = EunConvert(n1, defaultBase, defaultTargetLength)
+                    n2 = EunConvert(n2, defaultBase, defaultTargetLength)
                 end if
                 if c1[4] != c2[4] then
-                    c1 = EunConvert(c1, defaultRadix, defaultTargetLength)
-                    c2 = EunConvert(c2, defaultRadix, defaultTargetLength)
+                    c1 = EunConvert(c1, defaultBase, defaultTargetLength)
+                    c2 = EunConvert(c2, defaultBase, defaultTargetLength)
                 end if
                 st = ComplexDivide({n1, c1}, {n2, c2})
                 n1 = st[1]
@@ -458,7 +458,7 @@ procedure Operations()
             puts(1, "SUCCESS!\n")
         case 'c' then
             puts(1, "convert:\n")
-            defaultRadix = prompt_number("enter new defaultRadix: ", {2, 1025})
+            defaultBase = prompt_number("enter new defaultBase: ", {2, 1025})
             defaultTargetLength = prompt_number("enter new defaultTargetLength: ", {2, INT_MAX})
             -- adjustRound = prompt_number("enter new adjustRound: ", {0, defaultTargetLength})
             printf(1, "Current Rounding method is %d\n", {ROUND})
@@ -475,9 +475,9 @@ procedure Operations()
             end if
             printf(1, "calculationSpeed is: %d\n", {calculationSpeed})
             calculationSpeed = prompt_number("enter new calculationSpeed: ", {})
-            n1 = EunConvert(n1, defaultRadix, defaultTargetLength)
+            n1 = EunConvert(n1, defaultBase, defaultTargetLength)
             ? n1
-            c1 = EunConvert(c1, defaultRadix, defaultTargetLength)
+            c1 = EunConvert(c1, defaultBase, defaultTargetLength)
             ? c1
             puts(1, "SUCCESS!\n")
         case '=' then
@@ -485,8 +485,8 @@ procedure Operations()
             st = GetVars(2)
             if length(st) then
                 if st[1][1][4] != st[2][1][4] then
-                    st[1][1] = EunConvert(st[1][1], defaultRadix, defaultTargetLength)
-                    st[2][1] = EunConvert(st[2][1], defaultRadix, defaultTargetLength)
+                    st[1][1] = EunConvert(st[1][1], defaultBase, defaultTargetLength)
+                    st[2][1] = EunConvert(st[2][1], defaultBase, defaultTargetLength)
                 end if
                 ch = EunCompare(st[1][1], st[2][1])
                 if ch = 0 then
@@ -552,14 +552,14 @@ procedure Operations()
                 n2 = st[1]
                 for i = 1 to 2 do
                     -- if EunFracPart is not equal to zero, then abort operation.
-                    if not equal(0, EunCompare(EunFracPart(st[i]), {{}, 0, defaultTargetLength, defaultRadix})) then
+                    if not equal(0, EunCompare(EunFracPart(st[i]), {{}, 0, defaultTargetLength, defaultBase})) then
                         puts(1, "aborted, not whole number integers, use [p]intpart on both operands.\n")
                         break
                     end if
                 end for
                 if n1[4] != n2[4] then
-                    n1 = EunConvert(n1, defaultRadix, defaultTargetLength)
-                    n2 = EunConvert(n2, defaultRadix, defaultTargetLength)
+                    n1 = EunConvert(n1, defaultBase, defaultTargetLength)
+                    n2 = EunConvert(n2, defaultBase, defaultTargetLength)
                 end if
                 n1 = EunExpWhole(n1, n2)
                 puts(1, "SUCCESS!\n")
@@ -587,8 +587,8 @@ procedure Operations()
             if length(st) then
                 n2 = st[1][1]
                 if n1[4] != n2[4] then
-                    n1 = EunConvert(n1, defaultRadix, defaultTargetLength)
-                    n2 = EunConvert(n2, defaultRadix, defaultTargetLength)
+                    n1 = EunConvert(n1, defaultBase, defaultTargetLength)
+                    n2 = EunConvert(n2, defaultBase, defaultTargetLength)
                 end if
                 st = EunPower(n1, n2)
                 n1 = st
@@ -625,9 +625,9 @@ procedure Operations()
                 n2 = st[2][1]
                 n3 = st[3][1]
                 if n1[4] != n2[4] or n1[4] != n3[4] then
-                    n1 = EunConvert(n1, defaultRadix, defaultTargetLength)
-                    n2 = EunConvert(n2, defaultRadix, defaultTargetLength)
-                    n3 = EunConvert(n3, defaultRadix, defaultTargetLength)
+                    n1 = EunConvert(n1, defaultBase, defaultTargetLength)
+                    n2 = EunConvert(n2, defaultBase, defaultTargetLength)
+                    n3 = EunConvert(n3, defaultBase, defaultTargetLength)
                 end if
                 c1 = st[1][2]
                 c2 = st[2][2]
@@ -635,9 +635,9 @@ procedure Operations()
                 st = {}
                 if length(c1[1]) or length(c2[1]) or length(c3[1]) then
                     if c1[4] != c2[4] or c1[4] != c3[4] then
-                        c1 = EunConvert(c1, defaultRadix, defaultTargetLength)
-                        c2 = EunConvert(c2, defaultRadix, defaultTargetLength)
-                        c3 = EunConvert(c3, defaultRadix, defaultTargetLength)
+                        c1 = EunConvert(c1, defaultBase, defaultTargetLength)
+                        c2 = EunConvert(c2, defaultBase, defaultTargetLength)
+                        c3 = EunConvert(c3, defaultBase, defaultTargetLength)
                     end if
                     puts(1, "Complex Quadratic Equation has at least two (2) answers:\n")
                     puts(1, "imaginary part can be both plus and minus, in some cases.\n")

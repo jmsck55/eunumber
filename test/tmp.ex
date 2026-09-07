@@ -87,7 +87,7 @@ ROUND = ROUND_ZERO
 
 abort(0)
 
--- Test ArcTanExpA(sequence n1, integer exp1, TargetLength targetLength, AtomRadix radix)
+-- Test ArcTanExpA(sequence n1, integer exp1, TargetLength targetLength, AtomBase base)
 
 a = ToEun(1)
 b = ToEun(4)
