@@ -17,9 +17,9 @@ global constant CARRY_ADJUST = 0, BORROW_ADJUST = 1, NO_SUBTRACT_ADJUST = 2
 
 -- TODO, test AdjustRound(), not done yet.
 
-global function AdjustRound(sequence num, integer exponent, TargetLength targetLength, AtomRadix radix, ThreeOptions isMixed = 1)
+global function AdjustRound(sequence num, integer exponent, TargetLength targetLength, AtomBase base, ThreeOptions isMixed = 1)
     integer oldlen, roundTargetLength, rounded, isNeg
-    atom halfRadix, compareHalfRadix, f
+    atom halfBase, compareHalfBase, f
     sequence ret, roundedDigits
     ifdef USE_TASK_YIELD then
         if useTaskYield then
@@ -27,8 +27,8 @@ global function AdjustRound(sequence num, integer exponent, TargetLength targetL
         end if
     end ifdef
     roundedDigits = {}
-    -- if not CheckLengthAndRadix(targetLength, radix) then
-    --      puts(2, "Error, bad length and radix.\n")
+    -- if not CheckLengthAndBase(targetLength, base) then
+    --      puts(2, "Error, bad length and base.\n")
     --      abort(1/0)
     -- end if
     if targetLength < 0 then
@@ -42,7 +42,7 @@ global function AdjustRound(sequence num, integer exponent, TargetLength targetL
     if isMixed != NO_SUBTRACT_ADJUST then
         --adjustExponent()
         -- in Subtract, the first element of num cannot be a zero.
-        num = Subtract(num, radix, isMixed)
+        num = Subtract(num, base, isMixed)
         -- NOTE: Use Subtract() when there are both negative and positive numbers.
         -- otherwise, you can use Carry().
         num = TrimLeadingZeros(num)
@@ -50,7 +50,7 @@ global function AdjustRound(sequence num, integer exponent, TargetLength targetL
     exponent += (length(num) - (oldlen))
     -- rounded = 0
     --if length(num) = 0 then
-    --    ret = {{}, exponent, targetLength, radix} --, rounded}
+    --    ret = {{}, exponent, targetLength, base} --, rounded}
     --    return ret
     --end if
 
@@ -58,7 +58,7 @@ global function AdjustRound(sequence num, integer exponent, TargetLength targetL
     --      f = num[1]
     --      if abs(f) <= COMPRESS_LEAD then
     --              num = num[2..$]
-    --              f *= radix
+    --              f *= base
     --              if length(num) then
     --                      num[1] += f
     --              else
@@ -68,7 +68,7 @@ global function AdjustRound(sequence num, integer exponent, TargetLength targetL
     --      end if
     --end if
 
-    -- Round2: num, exponent, targetLength, radix
+    -- Round2: num, exponent, targetLength, base
     roundTargetLength = targetLength
     if isRoundToZero then
         if targetLength then
@@ -96,17 +96,17 @@ global function AdjustRound(sequence num, integer exponent, TargetLength targetL
             num = num[1..roundTargetLength]
         else
             isNeg = num[1] < 0
-            halfRadix = floor(radix / 2)
+            halfBase = floor(base / 2)
             f = num[roundTargetLength + 1]
             if isNeg then
-                compareHalfRadix = - (halfRadix)
+                compareHalfBase = - (halfBase)
             else
-                compareHalfRadix = halfRadix
+                compareHalfBase = halfBase
             end if
-            if integer(radix) and IsIntegerOdd(radix) then
-                -- feature: support for odd radixes
+            if integer(base) and IsIntegerOdd(base) then
+                -- feature: support for odd basees
                 for i = roundTargetLength + 2 to length(num) do
-                    if f != compareHalfRadix then
+                    if f != compareHalfBase then
                         exit
                     end if
                     f = num[i]
@@ -115,40 +115,40 @@ ifdef not NO_SLEEP_OPTION then
 end ifdef
                 end for
             end if
-            if f = compareHalfRadix then
+            if f = compareHalfBase then
                 if length(num) > roundTargetLength then
                     f *= 2
                 else
                     if ROUND = ROUND_EVEN then
-                        halfRadix -= IsIntegerOdd(num[roundTargetLength])
+                        halfBase -= IsIntegerOdd(num[roundTargetLength])
                     elsif ROUND = ROUND_ODD then
-                        halfRadix -= IsIntegerEven(num[roundTargetLength])
+                        halfBase -= IsIntegerEven(num[roundTargetLength])
                     elsif ROUND = ROUND_ZERO then
                         f = 0
                     end if
                 end if
             elsif ROUND = ROUND_INF then -- round towards plus(+) and minus(-) infinity
-                halfRadix -= 1
+                halfBase -= 1
             elsif ROUND = ROUND_POS_INF then -- round towards plus(+) infinity
                 f += 1
             elsif ROUND = ROUND_NEG_INF then -- round towards minus(-) infinity
                 f -= 1
             end if
             num = num[1..roundTargetLength]
-            rounded = (f > halfRadix) - (f < - (halfRadix))
+            rounded = (f > halfBase) - (f < - (halfBase))
             if rounded then
                 roundedDigits[1][1] = - (rounded)
                 num[roundTargetLength] += rounded
                 if rounded >= 0 then
-                    num = Carry(num, radix)
+                    num = Carry(num, base)
                 else
-                    num = NegativeCarry(num, radix)
+                    num = NegativeCarry(num, base)
                 end if
                 --if COMPRESS_LEAD then -- Use function, CompressLeadingDigit(), instead.
                 --      f = num[1]
                 --      if abs(f) <= COMPRESS_LEAD then
                 --              num = num[2..$]
-                --              f *= radix
+                --              f *= base
                 --              if length(num) then
                 --                      num[1] += f
                 --              else
@@ -177,7 +177,7 @@ end ifdef
     else
         exponent = 0
     end if
-    ret = {num, exponent, targetLength, radix, roundedDigits} -- why do we need "rounded" variable?  Could it be significant digits?
+    ret = {num, exponent, targetLength, base, roundedDigits} -- why do we need "rounded" variable?  Could it be significant digits?
     return ret
 end function
 

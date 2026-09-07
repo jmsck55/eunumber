@@ -52,9 +52,9 @@ global constant ROUND_TRUNCATE = 3 -- Don't round, truncate
 global constant ROUND_POS_INF = 4 -- Round towards positive +infinity
 global constant ROUND_NEG_INF = 5 -- Round towards negative -infinity
 -- round even:
-global constant ROUND_EVEN = 6 -- Round making number even on halfRadix
+global constant ROUND_EVEN = 6 -- Round making number even on halfBase
 -- round odd:
-global constant ROUND_ODD = 7 -- Round making number odd on halfRadix
+global constant ROUND_ODD = 7 -- Round making number odd on halfBase
 
 global constant ROUND_AWAY_FROM_ZERO = ROUND_INF
 global constant ROUND_TOWARDS_ZERO = ROUND_ZERO

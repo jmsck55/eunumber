@@ -44,12 +44,12 @@ global function HowComplete(sequence n1, integer exp1, sequence n2, integer exp2
     return {clength + 1, cminlength, c}
 end function
 
-global function DefaultRTU(integer eunFunc, sequence p, integer targetLength, sequence ret, sequence lookat, atom radix)
+global function DefaultRTU(integer eunFunc, sequence p, integer targetLength, sequence ret, sequence lookat, atom base)
     integer isDone
     if not abort_calculating and length(p) then
         if atom(p[1]) then -- Eun number:
             isDone = 0 -- not done, continue loop
-            ret = AdjustRound(ret[1], ret[2], targetLength + 1, radix, NO_SUBTRACT_ADJUST)
+            ret = AdjustRound(ret[1], ret[2], targetLength + 1, base, NO_SUBTRACT_ADJUST)
             if length(lookat) >= 2 then
                 integer start = p[1]
                 p = HowComplete(ret[1], ret[2], lookat[1], lookat[2], start) --, targetLength + 1)
@@ -65,7 +65,7 @@ global function DefaultRTU(integer eunFunc, sequence p, integer targetLength, se
             isDone = 1 -- uses boolean, conditional "and" below.
             s = repeat(0, length(p))
             for i = 1 to length(p) do
-                s[i] = DefaultRTU(eunFunc, p[i], targetLength, ret[i], lookat[i], radix)
+                s[i] = DefaultRTU(eunFunc, p[i], targetLength, ret[i], lookat[i], base)
                 isDone = isDone and s[i][1] -- boolean, conditional "and" operation.
                 ret[i] = s[i][2]
                 p[i] = s[i][3]
@@ -91,7 +91,7 @@ global function GetReturnToUserCallBack()
     return return_to_user_id
 end function
 
-global function ReturnToUserCallBack(integer eunFunc, sequence a, integer targetLength, sequence ret, sequence lookat, atom radix)
+global function ReturnToUserCallBack(integer eunFunc, sequence a, integer targetLength, sequence ret, sequence lookat, atom base)
     object x
     ifdef USE_TASK_YIELD then
         if useTaskYield then
@@ -100,10 +100,10 @@ global function ReturnToUserCallBack(integer eunFunc, sequence a, integer target
     end ifdef
     if return_to_user_id > -1 then
         -- call_func(argument length==6) return value is {0, ret, a} to continue loop, {1, ret, a} to return answer.
-        x = call_func(return_to_user_id, {eunFunc, a, targetLength, ret, lookat, radix}) -- pass 6 variables to the function
+        x = call_func(return_to_user_id, {eunFunc, a, targetLength, ret, lookat, base}) -- pass 6 variables to the function
     else
     -- default is_equal() code:
-        x = DefaultRTU(eunFunc, a, targetLength, ret, lookat, radix)
+        x = DefaultRTU(eunFunc, a, targetLength, ret, lookat, base)
     end if
     return x
 end function

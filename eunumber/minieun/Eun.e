@@ -9,21 +9,21 @@ include Defaults.e
 include MathConst.e
 include UserMisc.e
 
--- Make sure our lengths and radixes are within safe limits for multiplication and carry.
+-- Make sure our lengths and basees are within safe limits for multiplication and carry.
 
-global function GetMaxLengthForRadix(AtomRadix radix)
+global function GetMaxLengthForBase(AtomBase base)
     atom d
-    d = radix - 1
+    d = base - 1
     return floor(INT_MAX / (d * d * 2))
 end function
 
-global function GetMaxRadixForLength(integer len)
+global function GetMaxBaseForLength(integer len)
     return sqrt(INT_MAX / (len * 2)) + 1
 end function
 
-global function CheckLengthAndRadix(integer len, AtomRadix radix)
+global function CheckLengthAndBase(integer len, AtomBase base)
     integer maxlen
-    maxlen = GetMaxLengthForRadix(radix)
+    maxlen = GetMaxLengthForBase(base)
     return len <= maxlen
 end function
 
@@ -35,9 +35,9 @@ global type Eun(object x)
         -- length can be either 4, 5, or 6
         --if length(x) >= 4 and length(x) <= 7 then
             if sequence(x[1]) then -- numArray (digits)
-            if integer(x[2]) then -- exponent, leading digit is muliplied by radix raised to the power of exponent
+            if integer(x[2]) then -- exponent, leading digit is muliplied by base raised to the power of exponent
             if TargetLength(x[3]) then -- targetLength
-            if AtomRadix(x[4]) then -- radix
+            if AtomBase(x[4]) then -- base
                 if length(x) = 4 then
                     return TRUE
                 end if
@@ -67,7 +67,7 @@ end type
 
 -- NewEun() function:
 
--- Use RoundFloat() and EunRoundDigits() if you are using a Double (non-Integer) for Radix.
+-- Use RoundFloat() and EunRoundDigits() if you are using a Double (non-Integer) for Base.
 
 global function RoundFloat(object a, integer correction = 4)
     return Round(a, power(2, 53 - correction))
@@ -80,10 +80,10 @@ end function
 
 -- Set precision:
 
-global function PrecisionToTargetLength(integer prec, atom radix = defaultRadix)
+global function PrecisionToTargetLength(integer prec, atom base = defaultBase)
     -- returns targetLength
-    return floor(prec * logTwo / log(radix)) + 1
-    -- return Ceil(prec * logTwo / log(radix))
+    return floor(prec * logTwo / log(base)) + 1
+    -- return Ceil(prec * logTwo / log(base))
 end function
 
 global function SetPrecision(Eun n1, integer prec)
@@ -94,13 +94,13 @@ global function SetPrecision(Eun n1, integer prec)
     return n1
 end function
 
---global function IsProperLengthAndRadix(TargetLength targetLength = defaultTargetLength, AtomRadix radix = defaultRadix)
+--global function IsProperLengthAndBase(TargetLength targetLength = defaultTargetLength, AtomBase base = defaultBase)
 --      if ROUND_TO_NEAREST_OPTION then
 --              targetLength += adjustRound
 --      else
 --              targetLength -= adjustRound
 --      end if
---      return (targetLength * power(radix - 1, 3) <= DOUBLE_INT_MAX)
+--      return (targetLength * power(base - 1, 3) <= DOUBLE_INT_MAX)
 --here
 --end function
 
@@ -118,29 +118,29 @@ global function NewEun(
             sequence num = {},
             integer exp = 0,
             integer targetLength = defaultTargetLength,
-            atom radix = defaultRadix,
+            atom base = defaultBase,
             sequence roundedDigits = {}, --here, make into significantDigits, or positiveHalf and negativeHalf, or last digit before roundedDigits last digit.
             integer prec = 0
 --                      integer roundingMethod = ROUND_INF, --here, what about "round to nearest option" ???
 --                      atom calculationSpeed = targetLength
         )
     if is_round_array then
-        if not integer(radix) then
+        if not integer(base) then
             num = RoundFloat(num)
         end if
-        -- return AdjustRound(num, exp, targetLength, radix, NO_SUBTRACT_ADJUST)
+        -- return AdjustRound(num, exp, targetLength, base, NO_SUBTRACT_ADJUST)
     end if
     -- else
         Eun ret -- does type checking.
         if prec then
-            targetLength = PrecisionToTargetLength(prec, radix)
-            ret = {num, exp, targetLength, radix, roundedDigits, prec}
+            targetLength = PrecisionToTargetLength(prec, base)
+            ret = {num, exp, targetLength, base, roundedDigits, prec}
         elsif length(roundedDigits) then
-            ret = {num, exp, targetLength, radix, roundedDigits}
+            ret = {num, exp, targetLength, base, roundedDigits}
         else
-            ret = {num, exp, targetLength, radix}
+            ret = {num, exp, targetLength, base}
         end if
-        --ret = {num, exp, targetLength, radix, roundedDigits, prec, roundingMethod, calculationSpeed}
+        --ret = {num, exp, targetLength, base, roundedDigits, prec, roundingMethod, calculationSpeed}
         return ret
     -- end if
 end function
@@ -159,7 +159,7 @@ global function GetTargetLength(Eun a)
     return a[3]
 end function
 
-global function GetRadix(Eun a)
+global function GetBase(Eun a)
     return a[4]
 end function
 
@@ -195,7 +195,7 @@ global function SetTargetLength(Eun a, integer targetLength)
     return a
 end function
 
-global function SetRadix(Eun a, atom radix)
-    a[4] = radix
+global function SetBase(Eun a, atom base)
+    a[4] = base
     return a
 end function

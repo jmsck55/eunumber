@@ -7,6 +7,6 @@ namespace array
 public include array/Add.e
 public include array/Borrow.e
 public include array/Carry.e
-public include array/ConvertRadix.e
+public include array/ConvertBase.e
 public include array/Negate.e
 public include array/Subtract.e

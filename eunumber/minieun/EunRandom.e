@@ -30,7 +30,7 @@ type Round3(integer i)
     return i >= 0 and i <= 5
 end type
 
-global function InaccurateFill(sequence n1, integer starting = length(n1) + 1, TargetLength targetLength, PositiveScalar radix, Round3 roundingRules = 0) -- roundingRules = 0 means don't round.
+global function InaccurateFill(sequence n1, integer starting = length(n1) + 1, TargetLength targetLength, PositiveScalar base, Round3 roundingRules = 0) -- roundingRules = 0 means don't round.
 --NOTE: Supply "roundingRules" with an integer from 0 to 5.
 -- global constant ROUND_INF = 1 -- Round towards +infinity or -infinity, (positive or negative infinity)
 -- global constant ROUND_ZERO = 2 -- Round towards zero
@@ -55,7 +55,7 @@ global function InaccurateFill(sequence n1, integer starting = length(n1) + 1, T
     if roundingRules = ROUND_TRUNCATE then
         return n1
     end if
-    tmp = rand(repeat(radix, targetLength - length(n1))) - 1
+    tmp = rand(repeat(base, targetLength - length(n1))) - 1
     isNeg = -1
     if length(n1) then
         sign = n1[1] < 0 -- if n1 is negative
@@ -88,18 +88,18 @@ global function InaccurateFill(sequence n1, integer starting = length(n1) + 1, T
     if sign != -1 then
         if sign xor isNeg then -- if isMixed then
             if sign then
-                tmp = NegativeBorrow(tmp, radix)
+                tmp = NegativeBorrow(tmp, base)
             else
-                tmp = Borrow(tmp, radix)
+                tmp = Borrow(tmp, base)
             end if
         end if
     end if
     return tmp
 end function
 
-global function InaccurateFillExp(sequence n1, integer exp1, TargetLength targetLength, PositiveScalar radix, integer exp0, Round3 roundingRules = ROUND)
+global function InaccurateFillExp(sequence n1, integer exp1, TargetLength targetLength, PositiveScalar base, integer exp0, Round3 roundingRules = ROUND)
     integer oldlen
-    n1 = InaccurateFill(n1, exp1 - exp0 + 1, targetLength, radix, roundingRules)
+    n1 = InaccurateFill(n1, exp1 - exp0 + 1, targetLength, base, roundingRules)
     if exp0 > exp1 then
         exp1 = exp0
     end if
@@ -110,7 +110,7 @@ global function InaccurateFillExp(sequence n1, integer exp1, TargetLength target
             exp1 += (length(n1) - (oldlen))
         end if
     end if
-    return NewEun(n1, exp1, targetLength, radix)
+    return NewEun(n1, exp1, targetLength, base)
 end function
 
 global function EunInaccurateFill(Eun a, integer exp0, Round3 roundingRules = ROUND)

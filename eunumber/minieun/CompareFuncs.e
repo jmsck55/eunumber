@@ -18,7 +18,7 @@ integer equalLength = 0
 integer compareMinLength = 0
 
 global function CompareExp(sequence n1, integer exp1, sequence n2, integer exp2, integer minlen = -1, PositiveInteger compareStart = 1)
--- It doesn't look at targetLength or radix, so both "targetLength" and "radix" should be the same.
+-- It doesn't look at targetLength or base, so both "targetLength" and "base" should be the same.
 -- Fixed.
     integer f, neg1, neg2
     -- Case of zero (0)

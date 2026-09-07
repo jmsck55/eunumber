@@ -105,10 +105,10 @@ global function ToEun10(object s)
     return s
 end function
 
-global function ToEun(object s, AtomRadix radix = defaultRadix, TargetLength targetLength = defaultTargetLength)
+global function ToEun(object s, AtomBase base = defaultBase, TargetLength targetLength = defaultTargetLength)
     s = ToEun10(s)
-    -- if radix != 10 or s[3] != targetLength then
-        s = ConvertExp(s[1], s[2], targetLength, 10, radix)
+    -- if base != 10 or s[3] != targetLength then
+        s = ConvertExp(s[1], s[2], targetLength, 10, base)
     -- end if
     return s
 end function

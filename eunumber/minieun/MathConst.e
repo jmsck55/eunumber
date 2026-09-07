@@ -20,10 +20,10 @@ ifdef BITS64 then
     global constant INT_MAX = 4611686018427387903 -- power(2, 62) - 1
     global constant INT_MIN = -4611686018427387904
     global constant INT_MAX10 = 1000000000000000000 -- power(10, 18)
-    --global constant MAX_RADIX10 = 1000000 -- power(10, 6)
-    --global constant MAX_RADIX = 4194304 -- power(2, floor(62/2)-4) -- value: 134217728
-    --global constant DOUBLE_RADIX = MAX_RADIX -- floor(sqrt(DOUBLE_INT_MAX)) + 1 -- 4294967296
-    --global constant DOUBLE_RADIX10 = MAX_RADIX10 -- 1000000000
+    --global constant MAX_BASE10 = 1000000 -- power(10, 6)
+    --global constant MAX_BASE = 4194304 -- power(2, floor(62/2)-4) -- value: 134217728
+    --global constant DOUBLE_BASE = MAX_BASE -- floor(sqrt(DOUBLE_INT_MAX)) + 1 -- 4294967296
+    --global constant DOUBLE_BASE10 = MAX_BASE10 -- 1000000000
     global constant ATOM_INT_MAX = LONG_DOUBLE_INT_MAX
     global constant ATOM_INT_MIN = LONG_DOUBLE_INT_MIN
 elsedef
@@ -32,10 +32,10 @@ elsedef
     global constant INT_MAX = 1073741823 -- power(2, 30) - 1
     global constant INT_MIN = -1073741824 -- power(2, 30) - 1
     global constant INT_MAX10 = 1000000000 -- power(10, 9)
-    --global constant MAX_RADIX10 = 1000 -- power(10, 3)
-    --global constant MAX_RADIX = 2048 -- MAX_RADIX10 -- power(2, floor(30/2)-4)
-    --global constant DOUBLE_RADIX = MAX_RADIX -- 94906266 -- floor(sqrt(DOUBLE_INT_MAX)) + 1
-    --global constant DOUBLE_RADIX10 = MAX_RADIX10 -- 10000000
+    --global constant MAX_BASE10 = 1000 -- power(10, 3)
+    --global constant MAX_BASE = 2048 -- MAX_BASE10 -- power(2, floor(30/2)-4)
+    --global constant DOUBLE_BASE = MAX_BASE -- 94906266 -- floor(sqrt(DOUBLE_INT_MAX)) + 1
+    --global constant DOUBLE_BASE10 = MAX_BASE10 -- 10000000
     global constant ATOM_INT_MAX = DOUBLE_INT_MAX
     global constant ATOM_INT_MIN = DOUBLE_INT_MIN
 end ifdef

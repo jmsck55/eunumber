@@ -59,7 +59,7 @@ end procedure
 global Bool useLongDivision = FALSE -- TRUE is slower.
 
 global procedure SetUseLongDivision(integer i)
-    useLongDivision = i -- increase this number for smaller radixes
+    useLongDivision = i -- increase this number for smaller basees
 end procedure
 
 global function GetUseLongDivision()
@@ -68,22 +68,22 @@ end function
 
 constant one = {1}, two = {2}
 
---here, Todo: figure out forSmallRadix, for radixes such as four (4).
+--here, Todo: figure out forSmallBase, for basees such as four (4).
 
-PositiveInteger forSmallRadix = 0 -- this number can be 0 or greater
+PositiveInteger forSmallBase = 0 -- this number can be 0 or greater
 
-global procedure SetForSmallRadix(PositiveInteger i)
-    forSmallRadix = i -- increase this number for smaller radixes
+global procedure SetForSmallBase(PositiveInteger i)
+    forSmallBase = i -- increase this number for smaller basees
 end procedure
 
-global function GetForSmallRadix()
-    return forSmallRadix
+global function GetForSmallBase()
+    return forSmallBase
 end function
 
 integer multiplicativeInverseOldVal = -1
 global PositiveInteger moreAccuracy = 10 -- could be any value greater than or equal to one (1).
 
-global function ProtoMultiplicativeInverseExp(sequence guess, integer exp0, sequence den1, integer exp1, TargetLength targetLength, AtomRadix radix, integer retLength)
+global function ProtoMultiplicativeInverseExp(sequence guess, integer exp0, sequence den1, integer exp1, TargetLength targetLength, AtomBase base, integer retLength)
     -- a = guess
     -- n1 = den1
     -- f(a) = a * (2 - n1 * a)
@@ -100,11 +100,11 @@ global function ProtoMultiplicativeInverseExp(sequence guess, integer exp0, sequ
     -- x = 0, 1/n1
     sequence tmp, numArray, ret
     integer exp2
-    tmp = MultiplyExp(guess, exp0, den1, exp1, targetLength, radix) -- den1 * a
+    tmp = MultiplyExp(guess, exp0, den1, exp1, targetLength, base) -- den1 * a
 -- tmp -- turns to one
     numArray = tmp[1]
     exp2 = tmp[2]
-    tmp = SubtractExp(two, 0, numArray, exp2, targetLength - (forSmallRadix), radix) -- 2 - tmp
+    tmp = SubtractExp(two, 0, numArray, exp2, targetLength - (forSmallBase), base) -- 2 - tmp
 -- tmp -- turns to one
     numArray = tmp[1]
     exp2 = tmp[2]
@@ -121,7 +121,7 @@ global function ProtoMultiplicativeInverseExp(sequence guess, integer exp0, sequ
         integer a, b, roundToZero
         roundToZero = isRoundToZero
         isRoundToZero = 0
-        tmp = SubtractExp(one, 0, numArray, exp2, retLength, radix) -- close to zero (0).
+        tmp = SubtractExp(one, 0, numArray, exp2, retLength, base) -- close to zero (0).
         isRoundToZero = roundToZero
         if length(tmp[1]) = 0 then
             return {guess, exp0}
@@ -133,20 +133,20 @@ global function ProtoMultiplicativeInverseExp(sequence guess, integer exp0, sequ
         end if
         multiplicativeInverseOldVal = b
     end if
-    ret = MultiplyExp(guess, exp0, numArray, exp2, targetLength, radix) -- a * tmp
+    ret = MultiplyExp(guess, exp0, numArray, exp2, targetLength, base) -- a * tmp
 -- ret -- turns to ans
     return ret
 end function
 
 
-global function IntToDigits(atom x, AtomRadix radix)
+global function IntToDigits(atom x, AtomBase base)
     sequence numArray
     atom a
     numArray = {}
     while x != 0 do
-        a = remainder(x, radix)
+        a = remainder(x, base)
         numArray = prepend(numArray, a)
-        x = RoundTowardsZero(x / radix) -- must be Round() to work on negative numbers
+        x = RoundTowardsZero(x / base) -- must be Round() to work on negative numbers
 ifdef not NO_SLEEP_OPTION then
         sleep(nanoSleep)
 end ifdef
@@ -157,32 +157,32 @@ end function
 integer sigDigits = 0
 integer minSigDigits = 0
 integer maxSigDigits = 0
-atom static_multInvRadix = 0
-atom static_logRadix = 0
+atom static_multInvBase = 0
+atom static_logBase = 0
 
-procedure set_div_static_vars(atom radix)
+procedure set_div_static_vars(atom base)
     atom tmp
-    static_multInvRadix = radix
-    static_logRadix = log(radix)
+    static_multInvBase = base
+    static_logBase = log(base)
     --ifdef BITS64 then
-    --      sigDigits = Ceil(18 / (static_logRadix / logTen))
+    --      sigDigits = Ceil(18 / (static_logBase / logTen))
     --elsedef
     -- Use double floating point, 52 explicitly stored bits
     --tmp = logTwo * 52 -- 53 bits at logTwo
     tmp = logTen * 13 -- 15 decimals at logTen
-    sigDigits = floor(tmp / static_logRadix)
+    sigDigits = floor(tmp / static_logBase)
     --end ifdef
-    --minSigDigits = floor(LOG_ATOM_SMALLEST / static_logRadix)
-    maxSigDigits = floor(LOG_DOUBLE_INT_MAX / static_logRadix)
+    --minSigDigits = floor(LOG_ATOM_SMALLEST / static_logBase)
+    maxSigDigits = floor(LOG_DOUBLE_INT_MAX / static_logBase)
     minSigDigits = - (maxSigDigits)
 end procedure
 
-global function LongDivision(atom num, integer exp1, atom denom, integer exp2, TargetLength protoTargetLength, AtomRadix radix)
+global function LongDivision(atom num, integer exp1, atom denom, integer exp2, TargetLength protoTargetLength, AtomBase base)
     integer exp0, optionNegOne
     atom quot
     sequence guess
-    if static_multInvRadix != radix then
-        set_div_static_vars(radix)
+    if static_multInvBase != base then
+        set_div_static_vars(base)
     end if
     optionNegOne = 1
     if num < 0 then
@@ -198,7 +198,7 @@ global function LongDivision(atom num, integer exp1, atom denom, integer exp2, T
         while 1 do
             quot = floor(num / denom) * optionNegOne
             num = remainder(num, denom)
-            num *= radix
+            num *= base
             exp0 -= 1
             if quot != 0 then
                 exit
@@ -211,14 +211,14 @@ end ifdef
     else
         quot = floor(num / denom) * optionNegOne
         num = remainder(num, denom)
-        num *= radix
-        exp0 = floor(log(quot) / static_logRadix)
-        guess = IntToDigits(quot, radix)
+        num *= base
+        exp0 = floor(log(quot) / static_logBase)
+        guess = IntToDigits(quot, base)
     end if
     while num != 0 and length(guess) < protoTargetLength do
         quot = floor(num / denom) * optionNegOne
         num = remainder(num, denom)
-        num *= radix
+        num *= base
 --        if length(guess) = 0 and quot = 0 then
 --            exp0 -= 1
 --        else
@@ -232,17 +232,17 @@ end ifdef
 --    guess = TrimLeadingZeros(guess)
 --    exp0 += length(guess) - oldlen
     exp0 += exp1 - exp2 + 1
-    return AdjustRound(guess, exp0, protoTargetLength, radix, NO_SUBTRACT_ADJUST)
+    return AdjustRound(guess, exp0, protoTargetLength, base, NO_SUBTRACT_ADJUST)
 end function
 
-global function ExpToAtom(sequence n1, integer exp1, PositiveInteger targetLen, AtomRadix radix)
+global function ExpToAtom(sequence n1, integer exp1, PositiveInteger targetLen, AtomBase base)
     atom p, ans, lookat, ele
     integer overflowBy
     if length(n1) = 0 then
         return 0 -- tried to divide by zero
     end if
-    if static_multInvRadix != radix then
-        set_div_static_vars(radix)
+    if static_multInvBase != base then
+        set_div_static_vars(base)
     end if
     -- what if exp1 is too large?
     overflowBy = exp1 - maxSigDigits + 2 -- +2 may need to be bigger
@@ -262,10 +262,10 @@ global function ExpToAtom(sequence n1, integer exp1, PositiveInteger targetLen, 
         end if
     end if
     exp1 -= targetLen
-    p = power(radix, exp1)
+    p = power(base, exp1)
     ans = n1[1] * p
     for i = 2 to length(n1) do
-        p = p / radix
+        p = p / base
         ele = n1[i]
         if ele != 0 then
             lookat = ans
@@ -279,17 +279,17 @@ ifdef not NO_SLEEP_OPTION then
 end ifdef
     end for
     -- if overflowBy is positive, then there was an overflow
-    -- overflowBy is an offset of that overflow in the given radix
+    -- overflowBy is an offset of that overflow in the given base
     return {ans, overflowBy}
 end function
 
-global function GetGuessExp(sequence den, integer exp1, TargetLength protoTargetLength, AtomRadix radix)
+global function GetGuessExp(sequence den, integer exp1, TargetLength protoTargetLength, AtomBase base)
     sequence guess, tmp
     atom denom, one, ans
     integer raised, mySigDigits, exp2
     object val
-    if static_multInvRadix != radix then
-        set_div_static_vars(radix)
+    if static_multInvBase != base then
+        set_div_static_vars(base)
     end if
     if protoTargetLength < sigDigits then
         mySigDigits = protoTargetLength
@@ -298,35 +298,35 @@ global function GetGuessExp(sequence den, integer exp1, TargetLength protoTarget
     end if
     
     if useLongDivision then
-        val = ToAtom(NewEun(den, exp1, protoTargetLength, radix))
+        val = ToAtom(NewEun(den, exp1, protoTargetLength, base))
         if atom(val) and val != 0 then
             denom = val
-            val = floor(log(abs(denom)) / static_logRadix)
+            val = floor(log(abs(denom)) / static_logBase)
             if integer(val) then
                 exp2 = val
-                denom = denom / power(radix, exp2)
-                tmp = LongDivision(1, 0, denom, exp2, protoTargetLength, radix)
+                denom = denom / power(base, exp2)
+                tmp = LongDivision(1, 0, denom, exp2, protoTargetLength, base)
                 return tmp
             end if
         end if
     end if
     raised = length(den) - 1
-    tmp = ExpToAtom(den, raised, mySigDigits, radix)
+    tmp = ExpToAtom(den, raised, mySigDigits, base)
     denom = tmp[1]
     raised -= tmp[2]
-    one = power(radix, raised)
+    one = power(base, raised)
     ans = Round(one / denom) -- try this.
     -- ans = RoundTowardsZero(one / denom)
-    guess = IntToDigits(ans, radix) -- works on negative numbers
-    -- tmp = AdjustRound(guess, exp1, mySigDigits - 1, radix, FALSE)
+    guess = IntToDigits(ans, base) -- works on negative numbers
+    -- tmp = AdjustRound(guess, exp1, mySigDigits - 1, base, FALSE)
     -- tmp[3] = protoTargetLength
-    tmp = AdjustRound(guess, - (exp1) - 1, protoTargetLength, radix, NO_SUBTRACT_ADJUST)
+    tmp = AdjustRound(guess, - (exp1) - 1, protoTargetLength, base, NO_SUBTRACT_ADJUST)
     return tmp
 end function
 
 global constant ID_MultiplicativeInverse = 2
 
-global function MultiplicativeInverseExp(sequence den1, integer exp1, TargetLength targetLength, AtomRadix radix, sequence guess = {})
+global function MultiplicativeInverseExp(sequence den1, integer exp1, TargetLength targetLength, AtomBase base, sequence guess = {})
     sequence lookat, ret, s
     integer exp0, protoTargetLength, protoMoreAccuracy
     howComplete = {1, 0, {}}
@@ -342,14 +342,14 @@ global function MultiplicativeInverseExp(sequence den1, integer exp1, TargetLeng
             exp0 = -(exp1)
             howComplete = {1, 1, {}}
             lastIterCount = 1
-            return NewEun(den1, exp0, targetLength, radix)
+            return NewEun(den1, exp0, targetLength, base)
         end if
         if den1[1] = 2 or den1[1] = -2 then
-            object half = floor(radix / 2)
+            object half = floor(base / 2)
             if den1[1] < 0 then
                 half = -(half)
             end if
-            if IsIntegerEven(radix) then
+            if IsIntegerEven(base) then
                 half = {half}
             else
                 half = repeat(half, targetLength)
@@ -357,7 +357,7 @@ global function MultiplicativeInverseExp(sequence den1, integer exp1, TargetLeng
             exp0 = -(exp1) - 1
             howComplete = {1, 1, {}}
             lastIterCount = 1
-            return NewEun(half, exp0, targetLength, radix)
+            return NewEun(half, exp0, targetLength, base)
         end if
     end if
     if FOR_ACCURACY then
@@ -375,11 +375,11 @@ global function MultiplicativeInverseExp(sequence den1, integer exp1, TargetLeng
     end if
     if length(guess) then
         exp0 = - (exp1) - 1
-        ret = AdjustRound(guess, exp0, protoTargetLength, radix, FALSE)
+        ret = AdjustRound(guess, exp0, protoTargetLength, base, FALSE)
     else
-        -- factor out a power of radix, from both the numerator and the denominator,
+        -- factor out a power of base, from both the numerator and the denominator,
         -- then multiply them later.
-        ret = GetGuessExp(den1, exp1, protoTargetLength, radix)
+        ret = GetGuessExp(den1, exp1, protoTargetLength, base)
         --guess = ret[1]
         --exp0 = ret[2]
     end if
@@ -389,13 +389,13 @@ global function MultiplicativeInverseExp(sequence den1, integer exp1, TargetLeng
     while calculating and lastIterCount < iter do
     -- for i = 1 to iter do
         --lookat = ret
-        ret = ProtoMultiplicativeInverseExp(ret[1], ret[2], den1, exp1, ret[3], radix, targetLength)
+        ret = ProtoMultiplicativeInverseExp(ret[1], ret[2], den1, exp1, ret[3], base, targetLength)
         --guess = ret[1]
         -- ? {length(guess), protoTargetLength}
         --exp0 = ret[2]
 
         --if useExtraAdjustRound then
-        --ret = AdjustRound(guess, exp0, targetLength + 1, radix, NO_SUBTRACT_ADJUST)
+        --ret = AdjustRound(guess, exp0, targetLength + 1, base, NO_SUBTRACT_ADJUST)
         --end if
 
         --if ret[2] = lookat[2] then
@@ -413,7 +413,7 @@ global function MultiplicativeInverseExp(sequence den1, integer exp1, TargetLeng
             -- solution found:
             howComplete = {}
         end if
-        s = ReturnToUserCallBack(ID_MultiplicativeInverse, howComplete, targetLength, ret, lookat, radix)
+        s = ReturnToUserCallBack(ID_MultiplicativeInverse, howComplete, targetLength, ret, lookat, base)
         lookat = s[2]
         howComplete = s[3]
         if s[1] then
@@ -430,7 +430,7 @@ end ifdef
         printf(1, "Error %d\n", 2)
         abort(1/0)
     end if
-    ret = AdjustRound(ret[1], ret[2], targetLength, radix, NO_SUBTRACT_ADJUST)
+    ret = AdjustRound(ret[1], ret[2], targetLength, base, NO_SUBTRACT_ADJUST)
     return ret
 end function
 
