@@ -18,7 +18,9 @@ Copyrighted version.
 
 Experimental.
 
-I don't care about money.  I care about saving people's lives.
+I care about money, and I care about saving people's lives.
+Invest money, wisely, and save people's lives.
+Don't enter a conflict that doesn't need to be entered upon, and only enter conflicts to save the most amount of lives -- on both sides.
 
 Details:
 
