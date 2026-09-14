@@ -129,7 +129,6 @@ include my.e
 
 --global function MyGetE(integer retid)
 --global function MyEunExp(integer retid, integer id1)
---global function MyEunExpFast(integer retid, integer id1, integer id2)
 --global function MyEunLog(integer id1, integer idguess = 0)
 --global function GetPrecision(integer id1)
 --global function MyEunPower(integer retid, integer id1, integer id2, integer round = adjustPrecision)
@@ -854,14 +853,6 @@ global function MyEunExp(integer retid, integer id1)
     Set(retid, x)
     return retid
 end function
-
---global function MyEunExpFast(integer retid, integer id1, integer id2)
---    Eun n1 = Get(id1)
---    Eun n2 = Get(id2)
---    object x = EunExpFast(n1, n2)
---    Set(retid, x)
---    return retid
---end function
 
 global function MyEunLog(integer id1) --, integer idguess = 0)
     Eun n1 = Get(id1)

@@ -34,7 +34,7 @@ trace(1)
 
 x = ToEun(-100)
 
-y = EunExpId(eunExp1RID, x)
+y = EunExpId(eunExpRID, x)
 
 ? x
 

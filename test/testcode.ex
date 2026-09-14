@@ -32,11 +32,6 @@ constant args = {
     {"EunExpA", {eunExpARID, {-999}, {"EunLog"}}},
     {"EunExpB", {-999, {-999}, {"EunLog"}}},
     {"EunExpC", {-999, {-999}, {"EunLog"}}},
-    {"EunExp1", {eunExp1RID, {-999}, {"EunLog"}}},
-    {"EunExp1A", {-999, {-999}, {"EunLog"}}},
-    --{"EunExpFast", {-999, {-999, NewEun({1})}, {"EunLog"}}},
-    --{"EunExpFast1", {-999, {-999}, {"EunLog"}}},
-    --{"EunExpFastA", {-999, {-999}, {"EunLog"}}},
     {"EunLog", {-999, {-999}, {"EunExp"}, {"ComplexExp"}}},
     {"EunLog1", {-999, {-999}, {"EunExp"}, {"ComplexExp"}}},
     
