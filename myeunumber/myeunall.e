@@ -9,7 +9,6 @@ public include myeun/ExpCommon.e
 public include myeun/ExpExp.e
 public include myeun/EunCubeRoot.e
 public include myeun/EunExp.e
-public include myeun/EunExp1.e
 public include myeun/EunExpWhole.e
 public include myeun/EunFourthRoot.e
 public include myeun/EunGeneralRoot.e
