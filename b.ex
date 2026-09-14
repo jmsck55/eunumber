@@ -12,7 +12,7 @@ object a, b, c, d
 
 a = ToEun("230")
 
-b = EunExp1(a)
+b = EunExp(a)
 
 ? b
 
