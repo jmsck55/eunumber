@@ -12,7 +12,7 @@ public include minieun/ConvertExp.e
 public include minieun/Defaults.e
 public include minieun/Divide.e
 public include minieun/Eun.e
-public include minieun/EunRandom.e
+-- public include minieun/EunRandom.e -- if you still need it, make your own.
 public include minieun/FindIter.e
 public include minieun/MathConst.e
 public include minieun/Memory.e
